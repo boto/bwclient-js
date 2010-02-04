@@ -10,12 +10,14 @@
 		<script src="/src/botoweb.js" type="text/javascript"></script>
 
 		<script type="text/javascript">
-			botoweb.init({
-				db: {
-					name: 'newscore',
-					title: 'NewsCore',
-					size_mb: 1,
-				}
+			$(document).ready(function() {
+				botoweb.init({
+					db: {
+						name: 'newscore',
+						title: 'NewsCore',
+						size_mb: 1,
+					}
+				});
 			});
 		</script>
 	</body>

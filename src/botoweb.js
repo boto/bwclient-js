@@ -22,6 +22,11 @@ var botoweb = {
 		 * An approximation of the database size in megabytes.
 		 */
 		size_mb: 1,
+		/**
+		 * The active local database handle.
+		 * @type Database
+		 */
+		dbh: null,
 
 		/**
 		 * Opens a connection to the local database and initializes the database
@@ -36,11 +41,13 @@ var botoweb = {
 			);
 
 			if (db) {
+				botoweb.ldb.dbh = db;
+
 				// Initialize the database schema
 				db.transaction(function (t) {
 					$.each(botoweb.env.models, function(name, model) {
 						t.executeSql(
-							'CREATE TABLE ' + botoweb.ldb.model_to_table(model) +
+							'CREATE TABLE IF NOT EXISTS ' + botoweb.ldb.model_to_table(model) +
 							' (id TEXT UNIQUE, ' + $.map(model.properties, botoweb.ldb.prop_to_column_defn).join(', ') + ')'
 						);
 
@@ -48,14 +55,14 @@ var botoweb = {
 							// lists are added in a separate table which links the list values.
 							if (this._type == 'list') {
 								t.executeSql(
-									'CREATE TABLE ' + botoweb.ldb.model_to_table(model) + '_ref_' + botoweb.ldb.prop_to_column(this) +
+									'CREATE TABLE IF NOT EXISTS ' + botoweb.ldb.prop_to_table(model, this) +
 									' (id TEXT, ' + botoweb.ldb.prop_to_column_defn({name: this.name, _type: this._item_type}) + ')'
 								);
 							}
 							// complexType mappings are added in a separate table which maps keys to values.
 							else if (this._type == 'complexType') {
 								t.executeSql(
-									'CREATE TABLE ' + botoweb.ldb.model_to_table(model) + '_map_' + botoweb.ldb.prop_to_column(this) +
+									'CREATE TABLE IF NOT EXISTS ' + botoweb.ldb.prop_to_table(model, this) +
 									' (id TEXT, key TEXT, val TEXT)'
 								);
 							}
@@ -70,8 +77,7 @@ var botoweb = {
 		/**
 		 * Formats the model name into a proper non-conflicting table name
 		 *
-		 * @param {botoweb.ModelMeta} model The model which will be stored in
-		 * the table.
+		 * @param {botoweb.ModelMeta} model The model which will be retrieved.
 		 * @return The table name.
 		 */
 		model_to_table: function (model) {
@@ -79,10 +85,32 @@ var botoweb = {
 		},
 
 		/**
+		 * Determines the table which will contain values for the property.
+		 *
+		 * @param {botoweb.ModelMeta} model The property's parent model.
+		 * @param {botoweb.Property} prop The property which will be retrieved.
+		 * @return The table name.
+		 */
+		prop_to_table: function (model, prop) {
+			var base_table = botoweb.ldb.model_to_table(model);
+
+			switch (prop._type) {
+				case 'list':
+					return base_table + '_list_' + botoweb.ldb.prop_to_column(prop);
+				case 'complexType':
+					return base_table + '_map_' + botoweb.ldb.prop_to_column(prop);
+				case 'query':
+					return botoweb.ldb.model_to_table(botoweb.env.models[prop._item_type]);
+				default:
+					return base_table;
+			}
+
+		},
+
+		/**
 		 * Formats the property name into a proper non-conflicting column name.
 		 *
-		 * @param {botoweb.Property} prop The property which will be stored in
-		 * the column.
+		 * @param {botoweb.Property} prop The property which will be retrieved.
 		 * @return The column name.
 		 */
 		prop_to_column: function (prop) {
@@ -129,12 +157,195 @@ var botoweb = {
 					col += ' TEXT';
 					return col;
 			}
+		},
+
+		/**
+		 * Converts implicit = operator filters (maps) into Array format queries
+		 * with explicit = operators.
+		 *
+		 * @param {Array|Object} The original filter specification.
+		 * @return A filter query in explicit operator format.
+		 */
+		normalize_filters: function (filters) {
+			if (!$.isArray(filters)) {
+				var query = [];
+				$.each(filters, function (k, v) {
+					query.push([k, 'is', v]);
+				});
+
+				return query;
+			}
+
+			return filters;
+		},
+
+		/**
+		 * Generates SQL suitable for use in a WHERE or JOIN...ON clause based
+		 * on the given filters. Filters may be specified in explicit or
+		 * implicit operator format.
+		 *
+		 * @param {Array|Object} The implicit or explicit operator filter defn.
+		 * @return An SQL string which will perform the filtering.
+		 */
+		parse_filters: function (filters) {
+			var where = [];
+			var bind_params = [];
+
+			var query = botoweb.ldb.normalize_filters(filters);
+
+			// Generate an expression for the query. Multiple filter queries
+			// implies AND logic.
+			$.each(query, function() {
+				var col = botoweb.ldb.prop_to_column({name:this[0]});
+				var op = this[1];
+				var values = this[2];
+				var expr = [];
+
+				if (!$.isArray(values))
+					values = [values];
+
+				// Generate an expression for each value. Multiple values
+				// implies OR logic
+				$.each(values, function(i, val) {
+					var sql_op = 'like';
+
+					switch (op) {
+						case 'contains':
+							val = '%' + val + '%';
+							break;
+						case 'starts-with':
+							val = val + '%';
+							break;
+						case 'ends-with':
+							val = '%' + val;
+							break;
+
+						// We have chosen to use IS and IS NOT rather than mapping
+						// these to the = and != operators. Using this syntax, NULL
+						// values will compare equal to one another.
+						default:
+							sql_op = op;
+					}
+
+					expr.push(col + ' ' + sql_op + ' ?');
+					bind_params.push(val);
+				});
+
+				// Join multiple value expressions with OR logic.
+				where.push('(' + expr.join(' OR ') + ')');
+			});
+
+			if (where.length == 0)
+				return;
+
+			// Join multiple filter query expressions with AND logic.
+			return {
+				where: where.join(' AND '),
+				bind_params: bind_params
+			};
+		},
+
+		/**
+		 * Selects a record from the database based on its model and id. The
+		 * resulting object will have all values loaded except complexType,
+		 * query, and list types.
+		 *
+		 * Options include:
+		 * * filters - apply conditions to restrict whether the object is loaded
+		 * * no_results - callback fnc when no results are found
+		 * * success - callback fcn, receives results as first arg
+		 *
+		 * @param {botoweb.ModelMeta} model The type of the object.
+		 * @param {String} id The id of the object.
+		 * @param {Object} opt Options.
+		 */
+		get: function (model, id, opt) {
+			if (!opt) opt = {};
+
+			botoweb.ldb.dbh.transaction(function (t) {
+				var query = 'SELECT * FROM ' + botoweb.ldb.model_to_table(model) + ' WHERE id = ?';
+				var bind_params = [id];
+
+				if (opt.filters) {
+					var conditions = botoweb.ldb.parse_filters(opt.filters);
+
+					if (conditions) {
+						query += ' AND ' + conditions.where;
+						$.each(conditions.bind_params, function () { bind_params.push(this) });
+					}
+				}
+
+				t.executeSql(
+					query,
+					bind_params,
+					function(t, results) {
+						// If there are no results, call a no_results fnc if provided
+						if (!results.length) {
+							if (opt.no_results)
+								opt.no_results();
+
+							return;
+						}
+
+						$.each(results, function() {
+							// TODO instantiate botoweb.Model from row
+						});
+					}
+				);
+			});
+		},
+
+		/**
+		 * Selects a related record from the database based on an object and the
+		 * property to follow. The resulting object will have all values loaded
+		 * except complexType, query, and list types.
+		 *
+		 * Options include:
+		 * * filters - apply conditions to restrict whether the object is loaded
+		 * * no_results - callback fnc when no results are found
+		 * * success - callback fcn, receives results as first arg
+		 *
+		 * @param {botoweb.Model} obj The object from which we follow the reference.
+		 * @param {botoweb.Property} prop The property to follow.
+		 * @param {Object} opt Options.
+		 */
+		follow: function (obj, prop, opt) {
+			if (!opt) opt = {};
+
+			if (prop._type == 'query') {
+				// TODO follow reverse references
+			}
+
+			var model = botoweb.env.models[obj.model];
+
+			botoweb.ldb.dbh.transaction(function (t) {
+				// TODO filters
+				t.executeSql(
+					'SELECT * FROM ' + botoweb.ldb.prop_to_table(model, prop) + ' WHERE id = ?',
+					[obj.id],
+					function(t, results) {
+						// If there are no results, call a no_results fnc if provided
+						if (!results.length) {
+							if (opt.no_results)
+								opt.no_results();
+
+							return;
+						}
+
+						$.each(results, function() {
+							// TODO instantiate botoweb.Model from row
+						});
+					}
+				);
+			});
 		}
 	},
 
 	env: {},
 
 	init: function (opt) {
+		if (!opt) opt = {};
+
 		// TODO re-integrate actual API loading code.
 		botoweb.env = {
 			version: '0.1',
