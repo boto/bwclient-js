@@ -27,6 +27,10 @@ var botoweb = {
 		 * @type Database
 		 */
 		dbh: null,
+		/**
+		 * A map of the tables in the database.
+		 */
+		tables: {},
 
 		/**
 		 * Opens a connection to the local database and initializes the database
@@ -44,33 +48,91 @@ var botoweb = {
 				botoweb.ldb.dbh = db;
 
 				// Initialize the database schema
-				db.transaction(function (t) {
-					$.each(botoweb.env.models, function(name, model) {
+				$.each(botoweb.env.models, function(name, model) {
+					// The columns here exclude query types, which are
+					// backlinks found in other tables.
+					db.transaction(function (t) {
 						t.executeSql(
 							'CREATE TABLE IF NOT EXISTS ' + botoweb.ldb.model_to_table(model) +
 							' (id TEXT UNIQUE, ' + $.map(model.properties, botoweb.ldb.prop_to_column_defn).join(', ') + ')'
 						);
+					}, error);
 
-						$.each(this.properties, function() {
-							// lists are added in a separate table which links the list values.
-							if (this._type == 'list') {
+					// The columns here include query types, but they will be
+					// linked to a different table.
+					var table = new botoweb.sql.Table(
+						// These names refer to the actual DB schema
+						botoweb.ldb.model_to_table(model),
+						$.map(model.properties, botoweb.ldb.prop_to_column),
+						// These friendlier names will be used in the abstraction
+						model.name,
+						$.map(model.properties, function (prop) { return prop.name; })
+					);
+
+					botoweb.ldb.tables[model.name] = table;
+
+					$.each(this.properties, function() {
+						// lists are added in a separate table which links the list values.
+						if (this._type == 'list') {
+							var table_name = botoweb.ldb.prop_to_table(model, this);
+
+							db.transaction(function (t) {
 								t.executeSql(
-									'CREATE TABLE IF NOT EXISTS ' + botoweb.ldb.prop_to_table(model, this) +
-									' (id TEXT, ' + botoweb.ldb.prop_to_column_defn({name: this.name, _type: this._item_type}) + ')'
+									'CREATE TABLE IF NOT EXISTS ' + table_name +
+									' (id TEXT, ' + botoweb.ldb.prop_to_column_defn({name: 'val', _type: this._item_type}) + ')'
 								);
-							}
-							// complexType mappings are added in a separate table which maps keys to values.
-							else if (this._type == 'complexType') {
+							}, error);
+
+							var list_table = new botoweb.sql.Table(
+								table_name,
+								['val']
+							).set_parent(table);
+
+							botoweb.ldb.tables[table_name] = list_table;
+
+							// The column for this property in the original table is actually a
+							// reference to the new list_table.
+							table.c[this.name] = list_table.c.val;
+						}
+						// complexType mappings are added in a separate table which maps keys to values.
+						else if (this._type == 'complexType') {
+							var table_name = botoweb.ldb.prop_to_table(model, this);
+
+							db.transaction(function (t) {
 								t.executeSql(
-									'CREATE TABLE IF NOT EXISTS ' + botoweb.ldb.prop_to_table(model, this) +
+									'CREATE TABLE IF NOT EXISTS ' + table_name +
 									' (id TEXT, key TEXT, val TEXT)'
 								);
-							}
-						});
-					});
+							}, error);
 
-					ready(db);
-				}, error);
+							var map_table = new botoweb.sql.Table(
+								table_name,
+								['key', 'val']
+							).set_parent(table);
+
+							botoweb.ldb.tables[table_name] = map_table;
+
+							// The column for this property in the original table is actually a
+							// reference to the new list_table.
+							table.c[this.name] = map_table.c.key;
+							table.c[this.name + '_val'] = map_table.c.val;
+						}
+					});
+				});
+
+				// "query" types are reverse references which must be linked to
+				// the appropriate table and column once all tables are created.
+				$.each(botoweb.env.models, function(name, model) {
+					$.each(this.properties, function() {
+						if (this._type == 'query') {
+							// Map the query column to the _ref_name column in
+							// the table corresponding to _item_type.
+							botoweb.ldb.tables[model.name].c[this.name] = botoweb.ldb.tables[this._item_type].c[this._ref_name];
+						}
+					});
+				});
+
+				ready(db);
 			}
 		},
 
@@ -81,7 +143,7 @@ var botoweb = {
 		 * @return The table name.
 		 */
 		model_to_table: function (model) {
-			return 'model_' + model.name.toLowerCase().replace(/\s+/g, '_');
+			return 'model_' + model.name.replace(/\s+/g, '__');
 		},
 
 		/**
@@ -114,7 +176,7 @@ var botoweb = {
 		 * @return The column name.
 		 */
 		prop_to_column: function (prop) {
-			return 'prop_' + prop.name.toLowerCase().replace(/\s+/g, '_');
+			return 'prop_' + prop.name.replace(/\s+/g, '__');
 		},
 
 		/**
@@ -359,7 +421,7 @@ var botoweb = {
 		botoweb.ldb.version = botoweb.env.version;
 
 		botoweb.ldb.prepare(function (db) {
-			alert('ready ' + db);
+			alert('ready ');
 		}, function (e) {
 			alert('error ' + e.message);
 		});
