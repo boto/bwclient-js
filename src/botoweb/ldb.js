@@ -35,16 +35,18 @@ botoweb.ldb = {
 	 * schema based on the botoweb API.
 	 */
 	prepare: function (ready, error) {
-		var db = openDatabase(
-			botoweb.ldb.name,
-			botoweb.ldb.version,
-			botoweb.ldb.title,
-			Math.round(botoweb.ldb.size_mb * 1024 * 1024)
-		);
+		var db = botoweb.ldb.dbh;
 
-		if (db) {
-			botoweb.ldb.dbh = db;
+		if (!db) {
+			botoweb.ldb.dbh = db = openDatabase(
+				botoweb.ldb.name,
+				botoweb.ldb.version,
+				botoweb.ldb.title,
+				Math.round(botoweb.ldb.size_mb * 1024 * 1024)
+			);
+		}
 
+		if (botoweb.ldb.dbh) {
 			// Initialize the database schema
 			$.each(botoweb.env.models, function(name, model) {
 				// The columns here exclude query types, which are
@@ -199,11 +201,11 @@ botoweb.ldb = {
 				return col;
 
 			case 'blob':
-			case 'mapping':
 				col += ' BLOB';
 				return col;
 
 			// Cannot be represented in a column
+			case 'complexType':
 			case 'query':
 			case 'list':
 				return null;
