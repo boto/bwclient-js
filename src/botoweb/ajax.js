@@ -8,29 +8,37 @@ botoweb.ajax = {
 	cachedRequests: {},
 	manager: $.manageAjax.create("cacheQueue", { queue: true, cacheResponse:false, preventDoubbleRequests: false, maxRequests: 3 }),
 	stop: function(name, id){
-		boto_web.ajax.cachedRequests = {};
-		boto_web.ajax.manager.abort(name, id);
+		botoweb.ajax.cachedRequests = {};
+		botoweb.ajax.manager.abort(name, id);
 	},
 	stop_by_url: function(url){
 		var ajaxID = 'GET_'+ url.replace(/\./g, '_');
-		boto_web.ajax.cachedRequests = {};
-		boto_web.ajax.manager.abort(null, ajaxID);
+		botoweb.ajax.cachedRequests = {};
+		botoweb.ajax.manager.abort(null, ajaxID);
 	},
 	get: function(url, callback){
 		var ajaxID = 'GET_'+ url.replace(/\./g, '_');
-		var cachedRequests = boto_web.ajax.cachedRequests;
+		var cachedRequests = botoweb.ajax.cachedRequests;
 		if(cachedRequests[ajaxID]){
 			cachedRequests[ajaxID].push(callback);
 		} else {
 			cachedRequests[ajaxID] = [callback];
 
-			boto_web.ajax.manager.add({
+			botoweb.ajax.manager.add({
 				success: function(data, status, xhr){
-					var xhr = boto_web.ajax.manager.getXHR(ajaxID);
+					var xhr = botoweb.ajax.manager.getXHR(ajaxID);
 					for(cbnum in cachedRequests[ajaxID]){
 						cachedRequests[ajaxID][cbnum](data, xhr);
 					}
 					delete cachedRequests[ajaxID];
+				},
+				error: function(data) {
+					if (data.status == 408) {
+						setTimeout(function() {
+							$.ajax(data);
+						}, 250);
+						return;
+					}
 				},
 				url: url
 			});
