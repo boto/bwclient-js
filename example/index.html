@@ -7,20 +7,29 @@
 	<body>
 
 		<script src="/lib/jquery.min.js" type="text/javascript"></script>
+		<script src="/lib/jquery.ajaxmanager.js" type="text/javascript"></script>
 		<script src="/src/botoweb.js" type="text/javascript"></script>
+		<script src="/src/botoweb/ajax.js" type="text/javascript"></script>
+		<script src="/src/botoweb/model.js" type="text/javascript"></script>
+		<script src="/src/botoweb/environment.js" type="text/javascript"></script>
 		<script src="/src/botoweb/ldb.js" type="text/javascript"></script>
+		<script src="/src/botoweb/ldb/sync.js" type="text/javascript"></script>
 		<script src="/src/botoweb/sql.js" type="text/javascript"></script>
+		<script src="/src/botoweb/ui.js" type="text/javascript"></script>
 
 		<script type="text/javascript">
 			$(document).ready(function() {
-				botoweb.init({
+				botoweb.sample_init({
 					db: {
-						name: 'newscore',
-						title: 'NewsCore',
-						size_mb: 1,
+						name: 'testdb',
+						title: 'Test',
+						size_mb: 10,
 					}
 				});
 			});
 		</script>
+
+		<button onclick="botoweb.ldb.sync.reset()">RESET</button>
+		<div id="loaded"></div>
 	</body>
 </html>
