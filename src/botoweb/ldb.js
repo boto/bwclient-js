@@ -76,8 +76,8 @@ botoweb.ldb = {
 					if (this._type == 'list') {
 						var table_name = botoweb.ldb.prop_to_table(model, this);
 
-						db.transaction(function (t) {
-							t.executeSql(
+						db.transaction(function (txn) {
+							txn.executeSql(
 								'CREATE TABLE IF NOT EXISTS ' + table_name +
 								' (id TEXT, ' + botoweb.ldb.prop_to_column_defn({name: 'val', _type: this._item_type}) + ')'
 							);
@@ -89,17 +89,18 @@ botoweb.ldb = {
 						).set_parent(table);
 
 						botoweb.ldb.tables[table_name] = list_table;
+						table.c[this.name + '_val'] = map_table.c.val;
 
 						// The column for this property in the original table is actually a
 						// reference to the new list_table.
-						table.c[this.name] = list_table.c.val;
+						table.c[this.name] = list_table.c.id;
 					}
 					// complexType mappings are added in a separate table which maps keys to values.
 					else if (this._type == 'complexType') {
 						var table_name = botoweb.ldb.prop_to_table(model, this);
 
-						db.transaction(function (t) {
-							t.executeSql(
+						db.transaction(function (txn) {
+							txn.executeSql(
 								'CREATE TABLE IF NOT EXISTS ' + table_name +
 								' (id TEXT, key TEXT, val TEXT)'
 							);
@@ -114,7 +115,8 @@ botoweb.ldb = {
 
 						// The column for this property in the original table is actually a
 						// reference to the new list_table.
-						table.c[this.name] = map_table.c.key;
+						table.c[this.name] = map_table.c.id;
+						table.c[this.name + '_key'] = map_table.c.key;
 						table.c[this.name + '_val'] = map_table.c.val;
 					}
 				});
@@ -123,11 +125,11 @@ botoweb.ldb = {
 			// "query" types are reverse references which must be linked to
 			// the appropriate table and column once all tables are created.
 			$.each(botoweb.env.models, function(name, model) {
-				$.each(this.properties, function() {
-					if (this._type == 'query') {
+				$.each(model.properties, function() {
+					if (this._type == 'query' && this._item_type in botoweb.ldb.tables) {
 						// Map the query column to the _ref_name column in
 						// the table corresponding to _item_type.
-						//botoweb.ldb.tables[model.name].c[this.name] = botoweb.ldb.tables[this._item_type].c[this._ref_name];
+						botoweb.ldb.tables[name].c[this.name] = botoweb.ldb.tables[this._item_type].c[this._ref_name];
 					}
 				});
 			});
@@ -200,11 +202,10 @@ botoweb.ldb = {
 				col += ' REAL';
 				return col;
 
+			// Should not be represented in the local DB due to unknown size
 			case 'blob':
-				col += ' BLOB';
-				return col;
 
-			// Cannot be represented in a column
+			// Cannot be represented in a single column
 			case 'complexType':
 			case 'query':
 			case 'list':
@@ -299,7 +300,7 @@ botoweb.ldb = {
 	get: function (model, id, opt) {
 		if (!opt) opt = {};
 
-		botoweb.ldb.dbh.transaction(function (t) {
+		botoweb.ldb.dbh.transaction(function (txn) {
 			var table = botoweb.ldb.model_to_table(model);
 
 			var query = new botoweb.sql.Query(table)
@@ -313,8 +314,8 @@ botoweb.ldb = {
 				}
 			}
 
-			query.all(t, function (t, results) {
-				return botoweb.ldb.process_results(t, results, opt);
+			query.all(txn, function (txn, results) {
+				return botoweb.ldb.process_results(txn, results, opt);
 			});
 		});
 	},
@@ -340,7 +341,7 @@ botoweb.ldb = {
 			// TODO follow reverse references
 		}
 
-		botoweb.ldb.dbh.transaction(function (t) {
+		botoweb.ldb.dbh.transaction(function (txn) {
 			var model = botoweb.env.models[obj.model];
 			var table = botoweb.ldb.tables[botoweb.ldb.prop_to_table(model, prop)];
 
@@ -355,8 +356,8 @@ botoweb.ldb = {
 				}
 			}
 
-			query.all(t, function (t, results) {
-				return botoweb.ldb.process_results(t, results, opt);
+			query.all(txn, function (txn, results) {
+				return botoweb.ldb.process_results(txn, results, opt);
 			});
 		});
 	},
