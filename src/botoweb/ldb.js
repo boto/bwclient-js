@@ -34,7 +34,7 @@ botoweb.ldb = {
 	 * Opens a connection to the local database and initializes the database
 	 * schema based on the botoweb API.
 	 */
-	prepare: function (ready, error) {
+	prepare: function (ready, error, attempts) {
 		var db = botoweb.ldb.dbh;
 
 		if (!db) {
@@ -44,6 +44,22 @@ botoweb.ldb = {
 				botoweb.ldb.title,
 				Math.round(botoweb.ldb.size_mb * 1024 * 1024)
 			);
+		}
+
+		// If the database does not open, try up to 10 times
+		if (!db) {
+			if (!attempts)
+				attempts = 0;
+
+			if (attempts > 10) {
+				error({message: 'The browser refuses to create or load the local database.'});
+				return;
+			}
+
+			setTimeout(function() {
+				botoweb.ldb.prepare(ready, error, attempts + 1);
+			}, 250);
+			return;
 		}
 
 		if (botoweb.ldb.dbh) {
@@ -89,7 +105,7 @@ botoweb.ldb = {
 						).set_parent(table);
 
 						botoweb.ldb.tables[table_name] = list_table;
-						table.c[this.name + '_val'] = map_table.c.val;
+						table.c[this.name].values = list_table.c.val;
 
 						// The column for this property in the original table is actually a
 						// reference to the new list_table.
@@ -116,8 +132,8 @@ botoweb.ldb = {
 						// The column for this property in the original table is actually a
 						// reference to the new list_table.
 						table.c[this.name] = map_table.c.id;
-						table.c[this.name + '_key'] = map_table.c.key;
-						table.c[this.name + '_val'] = map_table.c.val;
+						table.c[this.name].keys = map_table.c.key;
+						table.c[this.name].values = map_table.c.val;
 					}
 				});
 			});
