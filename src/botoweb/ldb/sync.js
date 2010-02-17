@@ -16,8 +16,8 @@ botoweb.ldb.sync = {
 
 	/**
 	 * Updates the local database by querying a model for recently updated
-	 * records. When called with no arguments, updates everything which extends
-	 * CoreModel. Records are updated if they exist or inserted if they do not.
+	 * records. When called with no arguments, updates all models in the
+	 * environment. Records are updated if they exist or inserted if they do not.
 	 * Unless the all parameter is true, updates anything which has changed
 	 * since the last_update localStorage key and also updates that key.
 	 *
@@ -32,7 +32,7 @@ botoweb.ldb.sync = {
 			return;
 
 		if (!model)
-			model = botoweb.env.models.CoreModel;
+			return;
 
 		self.running = true;
 
@@ -40,10 +40,10 @@ botoweb.ldb.sync = {
 		self.task_total = 0;
 
 		if (!all && localStorage.last_update) {
-			model.query([['modified', '>', localStorage.last_update]], self.process);
+			model.query([['modified_at', '>', localStorage.last_update]], self.process, { no_ldb: true });
 		}
 		else {
-			model.all(self.process);
+			model.all(self.process, { no_ldb: true });
 		}
 
 		var d = self.last_update = new Date();
@@ -62,10 +62,8 @@ botoweb.ldb.sync = {
 	reset: function() {
 		var db = botoweb.ldb.dbh;
 		$.each(botoweb.ldb.tables, function(i, table) {
-			db.transaction(function (t) {
-				t.executeSql(
-					'DROP TABLE ' + table
-				);
+			db.transaction(function (txn) {
+				table.__drop(txn);
 			});
 		});
 
@@ -96,7 +94,7 @@ botoweb.ldb.sync = {
 		var self = botoweb.ldb.sync;
 
 		if (page == 0) {
-			self.task_total += total_count;
+			self.task_total += 1 * total_count;
 
 			// The UI code can establish a listener for the begin event
 			$(self).trigger('begin', [{
@@ -118,8 +116,8 @@ botoweb.ldb.sync = {
 				if (this._type == 'query')
 					return;
 				else if (this._type == 'list' || this._type == 'complexType') {
-					db.transaction(function (t) {
-						t.executeSql(
+					db.transaction(function (txn) {
+						txn.executeSql(
 							'DELETE FROM ' + botoweb.ldb.prop_to_table(model, model_prop) +
 							' WHERE id = ?',
 							[obj.id]
@@ -145,8 +143,8 @@ botoweb.ldb.sync = {
 							values = '(?,?,?)';
 						}
 
-						db.transaction(function (t) {
-							t.executeSql(
+						db.transaction(function (txn) {
+							txn.executeSql(
 								'INSERT INTO ' + botoweb.ldb.prop_to_table(model, model_prop) +
 								' VALUES ' + values,
 								bp
@@ -164,8 +162,8 @@ botoweb.ldb.sync = {
 				}
 			});
 
-			db.transaction(function (t) {
-				t.executeSql(
+			db.transaction(function (txn) {
+				txn.executeSql(
 					'REPLACE INTO ' + botoweb.ldb.model_to_table(model) +
 					' VALUES (' + $.map(bind_params, function() { return '?' }).join(', ') + ')',
 					bind_params
