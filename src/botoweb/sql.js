@@ -281,14 +281,25 @@ botoweb.sql = {
 			txn.executeSql(
 				'DROP TABLE ' + this
 			);
-		}
+		};
+
+		/**
+		 * Empties the table, use with caution.
+		 *
+		 * @param {Transaction} txn A database transaction handle.
+		 */
+		this.__empty = function(txn) {
+			txn.executeSql(
+				'TRUNCATE TABLE ' + this
+			);
+		};
 
 		/**
 		 * @return The DB table name.
 		 */
 		this.toString = function () {
 			return this.tbl_name;
-		}
+		};
 	},
 
 	/**
