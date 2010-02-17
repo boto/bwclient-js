@@ -26,7 +26,8 @@ botoweb.Environment = function(base_url, fnc, opts){
 	var self = this;
 	self.base_url = base_url;
 	self.user = null;
-	self.opts = opts;
+	// TODO convert opts to cfg
+	self.cfg = self.opts = opts;
 	self.routes = [];
 	self.models = {};
 

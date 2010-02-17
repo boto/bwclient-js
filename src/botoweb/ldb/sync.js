@@ -13,45 +13,101 @@ botoweb.ldb.sync = {
 	 */
 	task_total: 0,
 	running: false,
+	update_queue: [],
+	refresh_queue: [],
 
 	/**
 	 * Updates the local database by querying a model for recently updated
 	 * records. When called with no arguments, updates all models in the
-	 * environment. Records are updated if they exist or inserted if they do not.
-	 * Unless the all parameter is true, updates anything which has changed
-	 * since the last_update localStorage key and also updates that key.
+	 * environment config db.sync_models array. Records are updated if they
+	 * exist or inserted if they do not. Unless the all parameter is true,
+	 * updates anything which has changed since the last_update localStorage key
+	 * and also updates that key.
 	 *
-	 * @param {botoweb.ModelMeta} model The model to query.
-	 * @param {Boolean} all If true, fetches all records regardless of update
-	 * timestamps.
+	 * @param {[botoweb.ModelMeta]} models The model to query.
+	 * @param {Boolean} refresh If true, fetches all records regardless of
+	 * update timestamps.
 	 */
-	update: function(model, all) {
+	update: function(models, refresh) {
 		var self = botoweb.ldb.sync;
+
+		if (!models)
+			models = botoweb.env.cfg.db.sync_models;
+
+		if (!$.isArray(models))
+			models = [models];
+
+		$.each(models, function() {
+			if (refresh)
+				self.refresh_queue.push(this);
+			else
+				self.update_queue.push(this);
+		});
 
 		if (self.running)
 			return;
 
-		if (!model)
-			return;
+		self.next_update();
+	},
 
-		self.running = true;
+	/**
+	 * Inspects the update and refresh queues to choose the next update to run.
+	 * The refresh queue contains jobs which explicitly ask for all results, so
+	 * these generally take longer and will be run when the update queue is
+	 * empty.
+	 */
+	next_update: function() {
+		var self = botoweb.ldb.sync;
+		var model;
+		var refresh = false;
+
+		// Choose from the update queue first (these are generally faster jobs)
+		if (this.update_queue.length)
+			model = this.update_queue.shift();
+		else if (this.refresh_queue.length) {
+			model = this.refresh_queue.shift();
+			refresh = true;
+		}
+
+		// All updates complete
+		else {
+			// The UI code can establish a listener for the end event
+			self.running = false;
+
+			$(self).trigger('end');
+
+			return;
+		}
+
+		if (!self.running)
+			self.running = true;
+
+		if (!model.name)
+			model = botoweb.env.models[model];
+
+		// Clear the table for a full refresh to ensure that deleted items are
+		// deleted locally as well.
+		if (refresh) {
+			botoweb.ldb.dbh.transaction(function (txn) {
+				botoweb.ldb.tables[model.name].__empty(txn);
+			}, function () { });
+		}
 
 		self.task_processed = 0;
 		self.task_total = 0;
+		self.update_model = model;
 
-		if (!all && localStorage.last_update) {
-			model.query([['modified_at', '>', localStorage.last_update]], self.process, { no_ldb: true });
-		}
-		else {
+		var timestamp = botoweb.util.timestamp();
+
+		if (!refresh && localStorage['last_update_' + model.name])
+			model.query([['modified_at', '>', localStorage['last_update_' + model.name]]], self.process, { no_ldb: true });
+		else
 			model.all(self.process, { no_ldb: true });
-		}
 
-		var d = self.last_update = new Date();
-		var timestamp = [d.getUTCFullYear(),'0' + (d.getUTCMonth()+1),'0' + d.getUTCDate()].join('-') +
-			'T' + ['0' + d.getUTCHours(),'0' + d.getUTCMinutes(),'0' + d.getUTCSeconds()].join(':');
-		timestamp = timestamp.replace(/([:T-])0(\d\d)/g, '$1$2');
-
-		localStorage.setItem('last_update', timestamp);
+		// Although we may fetch multiple pages of results, these results are a
+		// snapshot of the current state, so the update time is now, not when
+		// the query ends.
+		localStorage.setItem('last_update_' + model.name, timestamp);
 	},
 
 	/**
@@ -98,7 +154,8 @@ botoweb.ldb.sync = {
 
 			// The UI code can establish a listener for the begin event
 			$(self).trigger('begin', [{
-				num_updates: self.task_total
+				num_updates: self.task_total,
+				model: self.update_model
 			}]);
 		}
 
@@ -175,18 +232,14 @@ botoweb.ldb.sync = {
 
 		// The UI code can establish a listener for the change event
 		$(self).trigger('change', [{
-			percent_complete: Math.round(100 * self.task_processed / self.task_total)
+			percent_complete: (self.task_total) ? Math.round(100 * self.task_processed / self.task_total) : 100
 		}]);
 
-		// The UI code can establish a listener for the load event
+		// When we finish, run the next queued update
 		if (self.task_processed >= self.task_total) {
-			self.running = false;
+			self.next_update();
 
-			$(self).trigger('end', [{
-				num_updates: self.task_total,
-				num_updated: self.task_processed,
-				last_update: localStorage.last_update
-			}]);
+			return false;
 		}
 
 		// Signals botoweb to fetch more pages
