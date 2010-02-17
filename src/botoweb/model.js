@@ -29,18 +29,20 @@ botoweb.ModelMeta = function(xml){
 
 	self.properties = $('properties property', xml).map(function(){
 		var xml = $(this);
-		var property = {};
+		var property = {
+			_DEBUG_MODEL_PROPERTIES: 1,
+		};
 
 		// Pull attributes from the property node
 		var map = {
-			_DEBUG_MODEL_PROPERTIES: 1,
 			name: 'name',
 			_type: 'type',
 			_item_type: 'item_type',
 			maxlength: 'max_length',
 			min_value: 'min',
 			max_value: 'max',
-			_perm: 'perm'
+			_perm: 'perm',
+			_ref_name: 'reference_name',
 		};
 
 		for (var i in map) {
@@ -87,8 +89,27 @@ botoweb.ModelMeta = function(xml){
 		return property;
 	});
 
-	this.find = function(filters, fnc){
+	this.query_ldb = function(filters, fnc) {
+		var tbl = botoweb.ldb.tables[this.name];
+		var query = new botoweb.sql.Query(tbl);
+
+		query.apply_bw_filters(filters, tbl);
+
+		// Perform query asynchronously
+		setTimeout(function() {
+
+		}, 1);
+	};
+
+	this.find = function(filters, fnc, opt){
+		if (!opt) opt = {};
+
+		if (botoweb.ldb.dbh && !opt.no_ldb) {
+			return this.query_ldb(filters, fnc);
+		}
+
 		var self = this;
+
 		botoweb.find(botoweb.env.base_url + this.href, filters, $.map(botoweb.env.routes, function(m) { return m.obj }).join(', '), function(data, page, count){
 			if(fnc){
 				var objects = [];
@@ -101,7 +122,13 @@ botoweb.ModelMeta = function(xml){
 		});
 	}
 
-	this.query = function(query, fnc){
+	this.query = function(query, fnc, opt){
+		if (!opt) opt = {};
+
+		if (botoweb.ldb.dbh && !opt.no_ldb) {
+			return this.query_ldb(query, fnc);
+		}
+
 		var self = this;
 		botoweb.query(botoweb.env.base_url + this.href, query, $.map(botoweb.env.routes, function(m) { return m.obj }).join(', '), function(data, page, count){
 			if(fnc){
@@ -114,8 +141,8 @@ botoweb.ModelMeta = function(xml){
 			}
 		});
 	}
-	this.all = function(fnc){
-		return this.find([], fnc);
+	this.all = function(fnc, opt){
+		return this.find([], fnc, opt);
 	}
 
 	this.count = function(query, fnc){
@@ -140,6 +167,11 @@ botoweb.ModelMeta = function(xml){
 			fnc(self._cache[id]);
 			return;
 		}
+
+		if (botoweb.ldb.dbh) {
+			return this.query_ldb({id: id}, fnc);
+		}
+
 		botoweb.get_by_id(botoweb.env.base_url + self.href, id, function(obj){
 			if(obj){
 				return fnc(self.cache(new botoweb.Model(self.href, self.name, obj)));
