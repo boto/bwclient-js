@@ -10,7 +10,7 @@ botoweb.sql = {
 	 * Builds a SQL query by connecting various components. Tables are joined
 	 * implicitly as needed when they are used in filters or columns. The query
 	 * can be converted to SQL at any time simply by using it as a string. Most
-	 * methods return the Query object to allow chaining.
+	 * methods modify the Query in place and also return it to allow chaining.
 	 *
 	 * @param {[botoweb.sql.Table|botoweb.sql.Column]} columns May be a single
 	 * column or table or an array of columns and tables.
@@ -77,6 +77,31 @@ botoweb.sql = {
 		};
 
 		/**
+		 * Convenience function to apply botoweb filters related to the given
+		 * table to the Query.
+		 *
+		 * @param {Object|Array} filters Botoweb filters specified in either
+		 * implicit = or explicit operator format.
+		 * @param {botoweb.sql.Table} tbl The table containing the properties
+		 * referenced in the filters.
+		 * @return The Query for chaining.
+		 */
+		this.apply_bw_filters = function (filters, tbl) {
+			var query = this;
+
+			// Convert implicit = (hash map) filters to explicit format
+			filters = botoweb.ldb.normalize_filters(filters);
+
+			// Convert each filter into a column comparison expression
+			$.each(filters, function() {
+				if (this[0] in tbl.c)
+					query.filter(tbl.c[this[0]].cmp(this[2], this[1]));
+			});
+
+			return query;
+		};
+
+		/**
 		 * Adds a new column or entire table to the SELECT clause. The column's
 		 * parent table will be automatically joined into the query. Tables
 		 * added here will later be broken into their columns (some columns will
@@ -88,11 +113,12 @@ botoweb.sql = {
 		 */
 		this.append_column = function (column) {
 			this.columns.push(column);
-
-			if (column instanceof botoweb.sql.Table)
+			/*
+			 * if (column instanceof botoweb.sql.Table)
 				this._add_table(column);
 			else
 				this._add_table(column.table);
+			*/
 
 			return this;
 		};
@@ -100,11 +126,11 @@ botoweb.sql = {
 		/**
 		 * Adds a table to the list of tables that should be joined, unless it
 		 * is already in the list.
-		 * @param {botoweb.sql.Table} t The table to add.
+		 * @param {botoweb.sql.Table} tbl The table to add.
 		 */
-		this._add_table = function (t) {
-			if ($.inArray(t, this.tables) == -1)
-				this.tables.push(t);
+		this._add_table = function (tbl) {
+			if ($.inArray(tbl, this.tables) == -1)
+				this.tables.push(tbl);
 		};
 
 		/**
@@ -136,12 +162,12 @@ botoweb.sql = {
 		/**
 		 * Executes the query and selects all matching results.
 		 *
-		 * @param {Transaction} expr A valid GROUP BY expression.
+		 * @param {Transaction} txn A database transaction.
 		 * @param {Function} fnc Called when the results are retrieved, gets
 		 * (transaction, results) as arguments.
 		 */
-		this.all = function (t, fnc) {
-			t.executeSql(this, this.bind_params, fnc);
+		this.all = function (txn, fnc) {
+			txn.executeSql(this, this.bind_params, fnc);
 		};
 
 		/**
@@ -167,6 +193,9 @@ botoweb.sql = {
 			$.each(this.columns, function (i, column) {
 				if (column instanceof botoweb.sql.Table) {
 					$.each(column.c, function (i, c) {
+						if (!c)
+							return;
+
 						if (c.table != column) {
 							if (!self.follow_refs)
 								return;
@@ -238,10 +267,21 @@ botoweb.sql = {
 			this.c[columns[c] || tbl_columns[c]] = new botoweb.sql.Column(tbl_columns[c], this);
 		}
 
-		this.set_parent = function (t) {
-			this.parent = t;
+		this.set_parent = function (tbl) {
+			this.parent = tbl;
 			return this;
 		};
+
+		/**
+		 * Drops the table, use with caution.
+		 *
+		 * @param {Transaction} txn A database transaction handle.
+		 */
+		this.__drop = function(txn) {
+			txn.executeSql(
+				'DROP TABLE ' + this
+			);
+		}
 
 		/**
 		 * @return The DB table name.
@@ -330,9 +370,9 @@ botoweb.sql = {
 		this.tables = [];
 		this.bind_params = [];
 
-		this._add_table = function (t) {
-			if ($.inArray(t, this.tables) == -1)
-				this.tables.push(t);
+		this._add_table = function (tbl) {
+			if ($.inArray(tbl, this.tables) == -1)
+				this.tables.push(tbl);
 		};
 
 		$.each(columns, function(i, c) {
