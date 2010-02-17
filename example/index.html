@@ -19,11 +19,12 @@
 
 		<script type="text/javascript">
 			$(document).ready(function() {
-				botoweb.sample_init({
+				botoweb.init('/api/', {
 					db: {
-						name: 'testdb',
-						title: 'Test',
-						size_mb: 10,
+						name: 'test',
+						title: 'Test DB',
+						size_mb: 50,
+						sync_models: ['BaseObject']
 					}
 				});
 			});
