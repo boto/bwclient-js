@@ -19,5 +19,40 @@ botoweb.util = {
 
 		// Remove unnecessary leading 0s
 		return timestamp.replace(/([:T-])0(\d\d)/g, '$1$2');
+	},
+
+	log: function (msg, err_type) {
+		if (!msg)
+			return;
+
+		// Support use in catching errors
+		if (msg.message)
+			msg = msg.message;
+
+		err_type = err_type || 'm';
+
+		switch (err_type.charAt(0)) {
+			case 'e':
+				msg = '[BW ERROR] ' + msg;
+				break;
+			case 'w':
+				msg = '[BW  WARN] ' + msg;
+				break;
+			default:
+				msg = '[BW  MESG] ' + msg;
+		}
+
+		if (console)
+			console.log(msg);
+		else
+			alert(msg);
+	},
+
+	error: function (msg) {
+		botoweb.util.log(msg, 'e');
+	},
+
+	warn: function (msg) {
+		botoweb.util.log(msg, 'w');
 	}
 };
