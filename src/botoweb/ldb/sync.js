@@ -79,11 +79,18 @@ botoweb.ldb.sync = {
 			return;
 		}
 
+		var model_name = model;
+
 		if (!self.running)
 			self.running = true;
 
 		if (!model.name)
 			model = botoweb.env.models[model];
+
+		if (!model || !model.name) {
+			botoweb.util.error('Cannot sync unknown model: ' + model_name, 'warning');
+			return;
+		}
 
 		// Clear the table for a full refresh to ensure that deleted items are
 		// deleted locally as well.
@@ -123,7 +130,11 @@ botoweb.ldb.sync = {
 			});
 		});
 
-		localStorage.setItem('last_update', '');
+		for (var key in localStorage) {
+			if (key.indexOf('last_update') == 0)
+				localStorage.setItem(key, '');
+		}
+
 		botoweb.ldb.prepare(function() {
 			botoweb.ldb.sync.update();
 		}, function() {});
@@ -170,7 +181,7 @@ botoweb.ldb.sync = {
 				var model_prop = this;
 				var prop = obj.properties[this.name];
 
-				if (this._type == 'query')
+				if (this._type == 'query' || this._type == 'blob')
 					return;
 				else if (this._type == 'list' || this._type == 'complexType') {
 					db.transaction(function (txn) {
@@ -179,7 +190,7 @@ botoweb.ldb.sync = {
 							' WHERE id = ?',
 							[obj.id]
 						);
-					}, function(e) { alert(e.message) });
+					}, botoweb.util.error);
 
 					if (!prop)
 						return;
@@ -206,7 +217,7 @@ botoweb.ldb.sync = {
 								' VALUES ' + values,
 								bp
 							);
-						}, function(e) { alert(e.message) });
+						}, botoweb.util.error);
 					});
 				}
 				else {
@@ -225,7 +236,7 @@ botoweb.ldb.sync = {
 					' VALUES (' + $.map(bind_params, function() { return '?' }).join(', ') + ')',
 					bind_params
 				);
-			}, function(e) { alert(e.message); });
+			}, botoweb.util.error);
 		});
 
 		self.task_processed += results.length;
