@@ -34,8 +34,9 @@ botoweb.ajax = {
 				},
 				error: function(data) {
 					if (data.status == 408) {
+						var r = this;
 						setTimeout(function() {
-							$.ajax(data);
+							$.ajax(r);
 						}, 250);
 						return;
 					}
