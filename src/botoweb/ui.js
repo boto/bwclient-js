@@ -12,7 +12,7 @@ botoweb.ui = {
 	 */
 	init: function() {
 		$(botoweb.ldb.sync).bind('begin', function (e, data) {
-			alert('starting update of ' + data.model.name + ', ' + data.num_updates + ' records to update');
+			botoweb.util.log('starting update of ' + data.model.name + ', ' + data.num_updates + ' records to update');
 		});
 
 		$(botoweb.ldb.sync).bind('change', function (e, data) {
@@ -20,7 +20,7 @@ botoweb.ui = {
 		});
 
 		$(botoweb.ldb.sync).bind('end', function (e, data) {
-			alert('update is done');
+			botoweb.util.log('update is done');
 		});
 	}
 };

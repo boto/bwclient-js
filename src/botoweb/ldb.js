@@ -67,10 +67,10 @@ botoweb.ldb = {
 			$.each(botoweb.env.models, function(name, model) {
 				// The columns here exclude query types, which are
 				// backlinks found in other tables.
-				db.transaction(function (t) {
-					t.executeSql(
+				db.transaction(function (txn) {
+					txn.executeSql(
 						'CREATE TABLE IF NOT EXISTS ' + botoweb.ldb.model_to_table(model) +
-						' (id TEXT UNIQUE, ' + $.map(model.properties, botoweb.ldb.prop_to_column_defn).join(', ') + ')'
+						' (id TEXT UNIQUE, ' + $.map(model.props, botoweb.ldb.prop_to_column_defn).join(', ') + ')'
 					);
 				}, error);
 
@@ -79,41 +79,45 @@ botoweb.ldb = {
 				var table = new botoweb.sql.Table(
 					// These names refer to the actual DB schema
 					botoweb.ldb.model_to_table(model),
-					$.map(model.properties, botoweb.ldb.prop_to_column),
+					$.map(model.props, botoweb.ldb.prop_to_column),
+					model,
 					// These friendlier names will be used in the abstraction
 					model.name,
-					$.map(model.properties, function (prop) { return prop.name; })
+					$.map(model.props, function (prop) { return prop.meta.name; })
 				);
 
 				botoweb.ldb.tables[model.name] = table;
 
-				$.each(this.properties, function() {
+				$.each(this.props, function() {
+					var prop = this;
+
 					// lists are added in a separate table which links the list values.
-					if (this._type == 'list') {
-						var table_name = botoweb.ldb.prop_to_table(model, this);
+					if (this.is_type('list')) {
+						var table_name = botoweb.ldb.prop_to_table(this);
 
 						db.transaction(function (txn) {
 							txn.executeSql(
 								'CREATE TABLE IF NOT EXISTS ' + table_name +
-								' (id TEXT, ' + botoweb.ldb.prop_to_column_defn({name: 'val', _type: this._item_type}) + ')'
+								' (id TEXT, val TEXT)'
 							);
 						}, error);
 
 						var list_table = new botoweb.sql.Table(
 							table_name,
-							['val']
+							['val'],
+							model
 						).set_parent(table);
 
 						botoweb.ldb.tables[table_name] = list_table;
-						table.c[this.name].values = list_table.c.val;
+						table.c[this.meta.name].values = list_table.c.val;
 
 						// The column for this property in the original table is actually a
 						// reference to the new list_table.
-						table.c[this.name] = list_table.c.id;
+						table.c[this.meta.name] = list_table.c.id;
 					}
 					// complexType mappings are added in a separate table which maps keys to values.
-					else if (this._type == 'complexType') {
-						var table_name = botoweb.ldb.prop_to_table(model, this);
+					else if (this.is_type('complexType')) {
+						var table_name = botoweb.ldb.prop_to_table(this);
 
 						db.transaction(function (txn) {
 							txn.executeSql(
@@ -124,16 +128,17 @@ botoweb.ldb = {
 
 						var map_table = new botoweb.sql.Table(
 							table_name,
-							['key', 'val']
+							['key', 'val'],
+							model
 						).set_parent(table);
 
 						botoweb.ldb.tables[table_name] = map_table;
 
 						// The column for this property in the original table is actually a
 						// reference to the new list_table.
-						table.c[this.name] = map_table.c.id;
-						table.c[this.name].keys = map_table.c.key;
-						table.c[this.name].values = map_table.c.val;
+						table.c[this.meta.name] = map_table.c.id;
+						table.c[this.meta.name].keys = map_table.c.key;
+						table.c[this.meta.name].values = map_table.c.val;
 					}
 				});
 			});
@@ -141,11 +146,11 @@ botoweb.ldb = {
 			// "query" types are reverse references which must be linked to
 			// the appropriate table and column once all tables are created.
 			$.each(botoweb.env.models, function(name, model) {
-				$.each(model.properties, function() {
-					if (this._type == 'query' && this._item_type in botoweb.ldb.tables) {
+				$.each(model.props, function() {
+					if (this.is_type('query') && this.meta.item_type in botoweb.ldb.tables) {
 						// Map the query column to the _ref_name column in
 						// the table corresponding to _item_type.
-						botoweb.ldb.tables[name].c[this.name] = botoweb.ldb.tables[this._item_type].c[this._ref_name];
+						botoweb.ldb.tables[name].c[this.meta.name] = botoweb.ldb.tables[this.meta.item_type].c[this.meta.ref_name];
 					}
 				});
 			});
@@ -157,7 +162,7 @@ botoweb.ldb = {
 	/**
 	 * Formats the model name into a proper non-conflicting table name
 	 *
-	 * @param {botoweb.ModelMeta} model The model which will be retrieved.
+	 * @param {botoweb.Model} model The model which will be retrieved.
 	 * @return The table name.
 	 */
 	model_to_table: function (model) {
@@ -167,24 +172,23 @@ botoweb.ldb = {
 	/**
 	 * Determines the table which will contain values for the property.
 	 *
-	 * @param {botoweb.ModelMeta} model The property's parent model.
+	 * @param {botoweb.Model} model The property's parent model.
 	 * @param {botoweb.Property} prop The property which will be retrieved.
 	 * @return The table name.
 	 */
-	prop_to_table: function (model, prop) {
-		var base_table = botoweb.ldb.model_to_table(model);
+	prop_to_table: function (prop) {
+		var base_table = botoweb.ldb.model_to_table(prop.meta.model);
 
-		switch (prop._type) {
+		switch (prop.meta.type) {
 			case 'list':
 				return base_table + '_list_' + botoweb.ldb.prop_to_column(prop);
 			case 'complexType':
 				return base_table + '_map_' + botoweb.ldb.prop_to_column(prop);
 			case 'query':
-				return botoweb.ldb.model_to_table(botoweb.env.models[prop._item_type]);
+				return botoweb.ldb.model_to_table(botoweb.env.models[prop.meta.item_type]);
 			default:
 				return base_table;
 		}
-
 	},
 
 	/**
@@ -194,7 +198,7 @@ botoweb.ldb = {
 	 * @return The column name.
 	 */
 	prop_to_column: function (prop) {
-		return 'prop_' + prop.name.replace(/\s+/g, '__');
+		return 'prop_' + prop.meta.name.replace(/\s+/g, '__');
 	},
 
 	/**
@@ -208,7 +212,7 @@ botoweb.ldb = {
 	prop_to_column_defn: function (prop) {
 		var col = botoweb.ldb.prop_to_column(prop);
 
-		switch (prop._type) {
+		switch (prop.meta.type) {
 			case 'integer':
 			case 'boolean':
 				col += ' INTEGER';
@@ -309,7 +313,7 @@ botoweb.ldb = {
 	 * * no_results - callback fnc when no results are found
 	 * * success - callback fcn, receives results as first arg
 	 *
-	 * @param {botoweb.ModelMeta} model The type of the object.
+	 * @param {botoweb.Model} model The type of object.
 	 * @param {String} id The id of the object.
 	 * @param {Object} opt Options.
 	 */

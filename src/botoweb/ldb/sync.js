@@ -24,7 +24,7 @@ botoweb.ldb.sync = {
 	 * updates anything which has changed since the last_update localStorage key
 	 * and also updates that key.
 	 *
-	 * @param {[botoweb.ModelMeta]} models The model to query.
+	 * @param {[botoweb.Model]} models The model to query.
 	 * @param {Boolean} refresh If true, fetches all records regardless of
 	 * update timestamps.
 	 */
@@ -153,7 +153,7 @@ botoweb.ldb.sync = {
 	 * finished (useful for a progress bar), and "end" when all results have
 	 * been loaded.
 	 *
-	 * @param {[botoweb.Model]} results The objects to be inserted.
+	 * @param {[botoweb.Object]} results The objects to be inserted.
 	 * @param {Integer} page The current results page.
 	 * @param {Integer} total_count The total results count.
 	 */
@@ -164,29 +164,31 @@ botoweb.ldb.sync = {
 			self.task_total += 1 * total_count;
 
 			// The UI code can establish a listener for the begin event
-			$(self).trigger('begin', [{
-				num_updates: self.task_total,
-				model: self.update_model
-			}]);
+			if (self.task_total) {
+				$(self).trigger('begin', [{
+					num_updates: self.task_total,
+					model: self.update_model
+				}]);
+			}
 		}
 
 		$.each(results, function(i, obj) {
 			var db = botoweb.ldb.dbh;
 			var bind_params = [obj.id];
-			var model = botoweb.env.models[obj.model];
+			var model = obj.model;
 			var column_names = [];
 
 			// Find all the bound parameters in the order specified in the table
-			$.each(model.properties, function() {
+			$.each(model.props, function() {
 				var model_prop = this;
-				var prop = obj.properties[this.name];
+				var prop = obj.data[this.meta.name];
 
-				if (this._type == 'query' || this._type == 'blob')
+				if (this.is_type('query', 'blob'))
 					return;
-				else if (this._type == 'list' || this._type == 'complexType') {
+				else if (this.is_type('list', 'complexType')) {
 					db.transaction(function (txn) {
 						txn.executeSql(
-							'DELETE FROM ' + botoweb.ldb.prop_to_table(model, model_prop) +
+							'DELETE FROM ' + botoweb.ldb.prop_to_table(model_prop) +
 							' WHERE id = ?',
 							[obj.id]
 						);
@@ -195,10 +197,8 @@ botoweb.ldb.sync = {
 					if (!prop)
 						return;
 
-					var v = prop;
+					var v = prop.val();
 
-					if (v.value)
-						v = v.value;
 					if (!$.isArray(v))
 						v = [v];
 
@@ -206,14 +206,14 @@ botoweb.ldb.sync = {
 						var bp = [obj.id, (this.value || this)];
 						var values = '(?,?)';
 
-						if (model_prop._type == 'complexType') {
+						if (model_prop.is_type('complexType')) {
 							bp = [obj.id, this.name, this.value];
 							values = '(?,?,?)';
 						}
 
 						db.transaction(function (txn) {
 							txn.executeSql(
-								'INSERT INTO ' + botoweb.ldb.prop_to_table(model, model_prop) +
+								'INSERT INTO ' + botoweb.ldb.prop_to_table(model_prop) +
 								' VALUES ' + values,
 								bp
 							);
@@ -224,7 +224,7 @@ botoweb.ldb.sync = {
 					column_names.push(botoweb.ldb.prop_to_column(this));
 
 					if (prop)
-						bind_params.push(prop.id || prop);
+						bind_params.push(prop.val());
 					else
 						bind_params.push(null);
 				}
