@@ -21,30 +21,32 @@ var botoweb = {
 	// @param filters: The Filters to apply (or null for none), this should be of the form {name: value, name2: value2}
 	// @param fnc: The function to call back to
 	//
-	find: function(url, filters, obj_name, fnc){
+	find: function(url, filters, model_names, fnc){
 		// Apply the filters
 		url += "?";
-		for (filter in filters){
+		for (var filter in filters){
 			url += filter + "=" + filters[filter] + "&";
 		}
 
 		var page = 0;
 		var process = function(xml, xhr){
+			xml = $(xml);
 			var data = [];
-			$(xml).find(obj_name).each(function(){
-				var obj = botoweb.parseObject(this);
-				if(obj.length > 0){
+
+			xml.find(model_names.join(', ')).each(function () {
+				var obj = botoweb.xml.to_obj(this);
+				if(obj.id){
 					data.push(obj);
 				}
 			});
-			url = $(xml).find('link[rel=next]').attr('href');
+			url = xml.find('link[rel=next]').attr('href');
 
-			var count;
+			var count = 0;
 
 			if (xhr && typeof xhr.getResponseHeader == 'function')
 				count = xhr.getResponseHeader('X-Result-Count');
 
-			// Get the next page
+			// Get the next page if the callback returns true
 			if (fnc(data, page++, count) && url)
 				botoweb.ajax.get(url, process);
 		}
@@ -60,7 +62,9 @@ var botoweb = {
 	// 		"op" must be one of the following: (=|>=|<=|!=|<|>|starts-with|ends-with|like)
 	// @param fnc: The callback function
 	//
-	query: function(url, query, obj_name, fnc){
+	query: function(url, query, obj_name, fnc, opt){
+		if (!opt) opt = {};
+
 		// Build the query string
 		parts = [];
 		for (query_num in query){
@@ -82,14 +86,14 @@ var botoweb = {
 		var process = function(xml, xhr){
 			var data = [];
 			$(xml).find(obj_name).each(function(){
-				var obj = botoweb.parseObject(this);
+				var obj = botoweb.xml.to_obj(this, opt);
 				if(obj.length > 0){
 					data.push(obj);
 				}
 			});
 			url = $(xml).find('link[rel=next]').attr('href');
 
-			var count;
+			var count = 0;
 
 			if (xhr && typeof xhr.getResponseHeader == 'function')
 				count = xhr.getResponseHeader('X-Result-Count');
@@ -103,62 +107,15 @@ var botoweb = {
 	},
 
 	//
-	// Function: parseObject
-	// Parse this XML into an object
-	//
-	parseObject: function(data){
-		var obj = {};
-		obj.length = 0;
-		obj.id = $(data).attr('id');
-		obj.model = data.tagName;
-
-		$(data).children().each(function(){
-			var value = null;
-			if($(this).attr("type") in {reference:1,blob:1}){
-				value = {
-					name: this.tagName,
-					type: $(this).attr("type"),
-					href: $(this).attr("href"),
-					id: $(this).attr("id"),
-					item_type: $(this).attr('item_type')
-				};
-			}
-			else if($(this).children().length){
-				value = [];
-				$(this).children().each(function() {
-					value.push({
-						name: $(this).attr('name'),
-						type: $(this).attr('type'),
-						value: $(this).text()
-					});
-				});
-			}
-			else {
-				value = $(this).text();
-			}
-			if (obj[this.tagName]) {
-				if (!$.isArray(obj[this.tagName]))
-					obj[this.tagName] = [obj[this.tagName]];
-				obj[this.tagName].push(value);
-			}
-			else {
-				obj[this.tagName] = value;
-			}
-			obj.length++;
-		});
-		return obj;
-	},
-
-	//
 	// Function: get_by_id
 	// Find a specific object by ID
 	//
 	get_by_id: function(url, id, fnc){
 		botoweb.ajax.get(url + "/" + id, function(data){
 			$(data).children().each(function(){
-				var curobj = botoweb.parseObject(this);
-				if(curobj.length > 0){
-					fnc(curobj);
+				var obj = botoweb.xml.to_obj(this);
+				if(obj.id){
+					fnc(obj);
 				}
 			});
 		});
@@ -209,19 +166,6 @@ var botoweb = {
 				botoweb.encode_prop(this, prop, type);
 
 				$(prop).attr("type", type);
-				/*
-				if(this.constructor.toString().indexOf("Array") != -1){
-					$(prop).attr("type", "List");
-				} else if (this.constructor.toString().indexOf("Class") != -1){
-					$(prop).attr("type", "Reference");
-				}
-				else if (/\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2})?/.test(this)){
-					$(prop).attr("type", "dateTime");
-				}
-				else {
-					$(prop).attr("type", "string");
-				}
-				*/
 				obj.appendChild(prop);
 			});
 		}
@@ -273,10 +217,7 @@ var botoweb = {
 
 				// Update the local database every 2 minutes
 				setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);
-			}, function (e) {
-				alert('You are not using a WebKit enabled browser (Safari or Google Chrome). Performance enhancements will be disabled for this session.\n\n' + e.message);
-				botoweb.ui.init();
-			});
+			}, botoweb.util.error);
 		}, opt);
 	},
 
