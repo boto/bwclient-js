@@ -28,36 +28,37 @@ botoweb.Environment = function(base_url, fnc, opts){
 	self.user = null;
 	// TODO convert opts to cfg
 	self.cfg = self.opts = opts;
-	self.routes = [];
+	self.model_names = [];
 	self.models = {};
 
 
 	// __init__ object
 	// Get our route info
 	botoweb.ajax.get(self.base_url, function(xml){
+		xml = $(xml);
+
 		// Setup our name
-		self.name = $(xml).find("Index").attr("name");
+		self.name = xml.find("Index").attr("name");
+
 		// Get our version
-		self.version = $(xml).find("Index").attr("version");
+		self.version = xml.find("Index").attr("version");
 		$("#apiversion").text(self.version);
+
 		// Set our routes and model APIs
-		$(xml).find('api').map(function(){
-			var mm = new botoweb.ModelMeta(this);
-			var route = {
-				href: mm.href,
-				obj: mm.name
-			};
-			mm.href = mm.href;
-			self.routes.push(route);
-			eval("self.models." + mm.name + " = mm");
+		xml.find('api').map(function(){
+			var m = botoweb.xml.to_model(this);
+			self.models[m.name] = m;
+			self.model_names.push(m.name);
 		});
 		// Set our user object
+		/*
 		$(xml).find("User").each(function(){
 			var obj = botoweb.parseObject(this);
 			if(obj.length > 0){
 				self.user = obj;
 			}
 		});
+		*/
 
 		if(fnc){ fnc(self); }
 	});
