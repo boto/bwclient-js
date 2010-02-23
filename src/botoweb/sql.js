@@ -167,7 +167,26 @@ botoweb.sql = {
 		 * (transaction, results) as arguments.
 		 */
 		this.all = function (txn, fnc) {
-			txn.executeSql(this, this.bind_params, fnc);
+			txn.executeSql(this, this.bind_params, this.simplify_results(fnc), function (txn, e) {
+				botoweb.util.error(e);
+			});
+		};
+
+		/**
+		 * Returns function which will trigger the callback with a simple native
+		 * array representing the results as the first argument. Actual
+		 * SQLResultSet object is passed as second param in case it is needed.
+		 */
+		this.simplify_results = function (fnc) {
+			return function(txn, results) {
+				var rows = [];
+
+				for (var i = 0; i < results.rows.length; i++) {
+					rows.push(results.rows.item(i));
+				}
+
+				fnc(rows, results, txn);
+			};
 		};
 
 		/**
@@ -192,16 +211,20 @@ botoweb.sql = {
 			// columns to another array.
 			$.each(this.columns, function (i, column) {
 				if (column instanceof botoweb.sql.Table) {
-					$.each(column.c, function (i, c) {
+					var tbl = column; // less confusing
+
+					$.each(tbl.c, function (prop_name, c) {
 						if (!c)
 							return;
 
-						if (c.table != column) {
+						if (prop_name != 'id' && tbl.model.prop_map[prop_name].is_type('query', 'list', 'complexType')) {
 							if (!self.follow_refs)
 								return;
 
+							// c refers to the column in the other table, so we
+							// join the tables by linking the id to this column
 							self._add_table(c.table);
-							self.filter(c.table.c.id.cmp(column.c.id));
+							self.filter(tbl.c.id.cmp(c));
 						}
 
 						columns.push(c);
@@ -250,11 +273,12 @@ botoweb.sql = {
 	 * @param {[String]} columns The internal JS names for the columns.
 	 * @constructor
 	 */
-	Table: function (tbl_name, tbl_columns, name, columns) {
+	Table: function (tbl_name, tbl_columns, model, name, columns) {
 		this.name = name || tbl_name;
 		this.tbl_name = tbl_name;
 		this.c = {};
 		this.parent = null;
+		this.model = model;
 
 		// Prevent array indexing errors if columns is undef
 		if (!columns)
@@ -327,7 +351,7 @@ botoweb.sql = {
 		 * @return A botoweb.sql.Expression capturing the comparison.
 		 */
 		this.cmp = function(val, op) {
-			op = op || 'is';
+			op = op || '=';
 
 			var sql_op = 'like';
 
@@ -342,9 +366,11 @@ botoweb.sql = {
 					val = '%' + val;
 					break;
 
-				// We have chosen to use IS and IS NOT rather than mapping
-				// these to the = and != operators. Using this syntax, NULL
-				// values will compare equal to one another.
+				case 'is':
+				case 'is not':
+					sql_op = {is: '=', 'is not': '!='}[op];
+					break;
+
 				default:
 					sql_op = op;
 			}
