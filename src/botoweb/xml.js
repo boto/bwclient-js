@@ -97,10 +97,12 @@ botoweb.xml = {
 	 * @return The corresponding object
 	 * @type botoweb.Object
 	 */
-	to_obj: function(xml) {
+	to_obj: function(xml, opt) {
+		if (!opt) opt = {};
+
 		xml = $(xml);
 
-		var model = botoweb.env.models[xml.get(0).tagName];
+		var model = botoweb.env.models[opt.item_type || xml.get(0).tagName];
 		var data = {};
 
 		$.each(model.props, function() {
