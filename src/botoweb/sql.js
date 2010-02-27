@@ -113,12 +113,6 @@ botoweb.sql = {
 		 */
 		this.append_column = function (column) {
 			this.columns.push(column);
-			/*
-			 * if (column instanceof botoweb.sql.Table)
-				this._add_table(column);
-			else
-				this._add_table(column.table);
-			*/
 
 			return this;
 		};
@@ -178,11 +172,40 @@ botoweb.sql = {
 		 * SQLResultSet object is passed as second param in case it is needed.
 		 */
 		this.simplify_results = function (fnc) {
+			var tbl = this.columns[0];
+
 			return function(txn, results) {
 				var rows = [];
 
+				// TODO support querying more than one object
+				// If the Query is fetching all rows in a particular table, and
+				// that table is assigned to a Model, generate an Object for it.
+				var make_obj = tbl instanceof botoweb.sql.Table
+					&& !tbl.parent
+					&& tbl.model;
+
 				for (var i = 0; i < results.rows.length; i++) {
-					rows.push(results.rows.item(i));
+					var row = results.rows.item(i);
+
+					// Construct an Object for the row.
+					if (make_obj) {
+						var data = {};
+
+						$.each(tbl.model.props, function (i, prop) {
+							var col = botoweb.ldb.prop_to_column(prop);
+
+							if (col in row)
+								data[prop.meta.name] = new prop.instance(row[col]);
+						});
+
+						row[0] = new botoweb.Object(
+							row.id,
+							tbl.model.name,
+							data
+						);
+					}
+
+					rows.push(row);
 				}
 
 				fnc(rows, results, txn);
