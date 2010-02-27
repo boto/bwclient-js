@@ -21,6 +21,22 @@ botoweb.util = {
 		return timestamp.replace(/([:T-])0(\d\d)/g, '$1$2');
 	},
 
+	/**
+	 * Joins any number of URL parts into a single URL. Preserves leading and
+	 * trailing slashes on the first and last items, respectively.
+	 */
+	url_join: function () {
+		return $.map(arguments, function (part, i) {
+			if (i > 0)
+				part = part.replace(/^\/+/, '');
+
+			if (i < arguments.length - 1)
+				part = part.replace(/\/+$/, '');
+
+			return part
+		}).join('/');
+	},
+
 	log: function (msg, err_type) {
 		if (!msg)
 			return;
