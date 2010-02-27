@@ -26,8 +26,7 @@ botoweb.Environment = function(base_url, fnc, opts){
 	var self = this;
 	self.base_url = base_url;
 	self.user = null;
-	// TODO convert opts to cfg
-	self.cfg = self.opts = opts;
+	self.cfg = $.extend({}, opts);
 	self.model_names = [];
 	self.models = {};
 
