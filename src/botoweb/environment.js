@@ -17,23 +17,53 @@
  *
  * @param {String} base_url The base URL that we are operating on
  * @param {Function} fnc Optional callback function to call after we finish loading
+ * @param {Object} cfg The environment configuration.
  */
-botoweb.Environment = function(base_url, fnc, opts){
-	// This is to support some weird things that
-	// jQuery does while doing ajax processing, if
-	// we ever need to refer to the Environment
-	// object, we use "self"
+botoweb.Environment = function(base_url, fnc, cfg) {
+	this.base_url = base_url;
+	this.user = null;
+	this.model_names = [];
+	this.models = {};
+
+	// Default environment
+	this.cfg = $.extend(true, {
+		static_host: '',
+		model_template: '*.html',
+
+		// URLs for pages intended for use in editing or creating Objects
+		editing_templates: {},
+
+		// Local database metadata
+		db: {
+			name: '',
+			title: '',
+			size_mb: 5,
+
+			// These models will be downloaded locally and kept synchronized
+			sync_models: []
+		},
+
+		// Functions allowing custom markup modification, such as expanding a
+		// container of a certain class into multiple nested divs
+		markup: {
+			// Functions to run before storing static HTML of a page or template
+			page_store: [],
+
+			// Functions to run on static DOM after synchronous markup is parsed
+			page_show: []
+		},
+
+		// Allows parts of DOM to be removed
+		conditions: {},
+
+		// Allows generic modification of the DOM
+		triggers: {}
+	}, cfg);
+
 	var self = this;
-	self.base_url = base_url;
-	self.user = null;
-	self.cfg = $.extend({}, opts);
-	self.model_names = [];
-	self.models = {};
 
-
-	// __init__ object
-	// Get our route info
-	botoweb.ajax.get(self.base_url, function(xml){
+	// Parse API xml to set up environment
+	botoweb.ajax.get(this.base_url, function(xml){
 		xml = $(xml);
 
 		// Setup our name
@@ -49,7 +79,8 @@ botoweb.Environment = function(base_url, fnc, opts){
 			self.models[m.name] = m;
 			self.model_names.push(m.name);
 		});
-		// Set our user object
+
+		// TODO Set our user object
 		/*
 		$(xml).find("User").each(function(){
 			var obj = botoweb.parseObject(this);
