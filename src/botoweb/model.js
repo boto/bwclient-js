@@ -39,7 +39,7 @@ botoweb.Model = function (name, href, methods, props) {
 		setTimeout(function() {
 			botoweb.ldb.dbh.transaction(function (txn) {
 				query.all(txn, function(results) {
-					// TODO Convert results to objects
+					fnc($.map(results, function (row) { return row[0]; }));
 				});
 			});
 		}, 1);
