@@ -6,10 +6,14 @@
  */
 botoweb.ajax = {
 	cachedRequests: {},
-	manager: $.manageAjax.create("cacheQueue", { queue: true, cacheResponse:false, preventDoubbleRequests: false, maxRequests: 3 }),
+	manager: $.manageAjax.create('cacheQueue', { queue: true, cacheResponse:false, preventDoubbleRequests: false, maxRequests: 3 }),
 	stop: function(name, id){
 		botoweb.ajax.cachedRequests = {};
 		botoweb.ajax.manager.abort(name, id);
+	},
+	stop_all: function(){
+		botoweb.ajax.cachedRequests = {};
+		botoweb.ajax.manager.abort('cacheQueue');
 	},
 	stop_by_url: function(url){
 		var ajaxID = 'GET_'+ url.replace(/\./g, '_');
