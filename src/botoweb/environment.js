@@ -28,7 +28,7 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 	// Default environment
 	this.cfg = $.extend(true, {
 		static_host: '',
-		model_template: '*.html',
+		model_template: '{{ name }}.html',
 
 		// URLs for pages intended for use in editing or creating Objects
 		editing_templates: {},

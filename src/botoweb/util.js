@@ -37,6 +37,22 @@ botoweb.util = {
 		}).join('/');
 	},
 
+	/**
+	 * Interpolates variables offset in strings by {{ var_name }} notation.
+	 *
+	 * @param {String} str The string containing interpolation markup.
+	 * @param {Object} data The data available for interpolation.
+	 * @return The interpolated string.
+	 */
+	interpolate: function (str, data) {
+		if (!str) return str;
+		if (!data) return data = {};
+
+		return str.replace(/\{\{\s*(\w+)\s*\}\}/g, function (m, key) {
+			return data[key] || '';
+		});
+	},
+
 	log: function (msg, err_type) {
 		if (!msg)
 			return;
