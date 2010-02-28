@@ -9,47 +9,47 @@ botoweb.ui.markup = new function () {
 	 * Property accessors, used in $(node).attr(prop)
 	 */
 	this.prop = {
-		'model':          'bwModel',
-		'link':           'bwLink',
 		'attribute':      'bwAttribute',
 		'attributes':     'bwAttributes',
-		'condition':      'bwCondition',
-		'trigger':        'bwTrigger',
-		'template':       'bwTemplate',
-		'editable':       'bwEditable',
 		'class_name':     'bwClass',
-		'filter':         'bwFilter',
-		'existing_only':  'bwExistingOnly',
+		'condition':      'bwCondition',
 		'def':            'bwDefault',
-		'widget':         'bwWidget',
-		'input_type':     'bwInputType'
+		'editable':       'bwEditable',
+		'existing_only':  'bwExistingOnly',
+		'filter':         'bwFilter',
+		'input_type':     'bwInputType',
+		'link':           'bwLink',
+		'model':          'bwModel',
+		'template':       'bwTemplate',
+		'trigger':        'bwTrigger',
+		'widget':         'bwWidget'
 	};
 
 	/**
 	 * Node selectors, used in $(sel)
 	 */
 	this.sel = {
-		'section':        'section',
-		'object':         'article, .bwObject',
+		'attribute':      '*[bwAttribute]',
+		'attribute_list': '*[bwWidget=attributeList]',
+		'breadcrumbs':    '*[bwWidget=breadcrumbs]',
+		'class_name':     '*[bwClass]',
+		'condition':      '*[bwCondition]',
+		'date_time':      '*[bwWidget=dateTime]',
+		'editable':       '*[bwEditable]',
+		'editing_tools':  '*[bwWidget=editingTools]',
+		'existing_only':  '*[bwExistingOnly]',
 		'header':         'header',
-		'widget':         '*[bwWidget]',
-		'relations':      '*[bwWidget=relations]',
+		'link':           'a[bwLink]',
+		'model':          '*[bwModel]',
+		'object':         'article, .bwObject',
+		'relation':       '*[bwWidget=relation]',
 		'report':         '*[bwWidget=report]',
 		'search':         '*[bwWidget=search]',
 		'search_results': '*[bwWidget=searchResults]',
-		'breadcrumbs':    '*[bwWidget=breadcrumbs]',
-		'attribute_list': '*[bwWidget=attributeList]',
-		'editing_tools':  '*[bwWidget=editingTools]',
-		'date_time':      '*[bwWidget=dateTime]',
-		'model':          '*[bwModel]',
-		'condition':      '*[bwCondition]',
-		'trigger':        '*[bwTrigger]',
-		'editable':       '*[bwEditable]',
-		'attribute':      '*[bwAttribute]',
+		'section':        'section',
 		'template':       '*[bwTemplate]',
-		'class_name':     '*[bwClass]',
-		'existing_only':  '*[bwExistingOnly]',
-		'link':           'a[bwLink]'
+		'trigger':        '*[bwTrigger]',
+		'widget':         '*[bwWidget]'
 	};
 
 	/**
@@ -60,10 +60,9 @@ botoweb.ui.markup = new function () {
 	*
 	* @private
 	*/
-	var sel_nesting = [
+	var nesting = [
 		this.sel.search_results,
-		this.sel.relations,
-		this.sel.attribute_list,
+		this.sel.relation,
 
 		// Only properties which refer to a different object may be nested, the
 		// parser must provide the names of any such properties.
@@ -101,8 +100,8 @@ botoweb.ui.markup = new function () {
 		}
 
 		// Run single-pass custom markup functions once all templates are loaded
-		else if (botoweb.env.markup.page_store) {
-			$.each(botoweb.env.markup.page_store, function (node) {
+		else if (botoweb.env.cfg.markup.page_store) {
+			$.each(botoweb.env.cfg.markup.page_store, function (node) {
 				this(node);
 			});
 		}
@@ -121,41 +120,10 @@ botoweb.ui.markup = new function () {
 	this.page_show = function (html, fnc) {
 		var node = $(html);
 
-		var obj = {};
+		// Create a new block and wait for any synchronous parsing to finish.
+		var block = new botoweb.ui.markup.Block(node);
 
-		var nested = [];
-
-		$.each(sel_nesting, function () {
-			var sel = botoweb.util.interpolate(this);
-
-			// Selector can interpolate data... in this case it wants the meta
-			// data of properties which refer to different objects.
-			if (sel != this) {
-				sel = this;
-				$.each(obj.model.props, function () {
-					// Interpolation allows the selector to use any of the
-					// property's metadata items to find specific DOM matches
-					node.find(botoweb.util.interpolate(sel, this.meta)).each(function() {
-						// Temporarily replace the nestable nodes empty divs
-						var tmp = $('<div/>');
-						nested.push([tmp, $(this).replaceWith(tmp)]);
-					});
-				});
-			}
-		});
-
-
-		this.parse.condition(node, obj);
-		this.parse.trigger(node, obj);
-
-		// Add nested structures back to the node so that they can be parsed.
-		$.each(nested, function () {
-			$(this[0]).replaceWith(this[1]);
-		});
-
-
-
-		fnc(node);
+		fnc(block.node);
 	};
 
 	/**
@@ -177,5 +145,47 @@ botoweb.ui.markup = new function () {
 
 			fnc.call(node, [val, prop]);
 		});
+	};
+
+	/**
+	 * Temporarily replaces all nestable child nodes with empty divs.
+	 */
+	this.remove_nested = function (block) {
+		block.nested = [];
+
+		$.each(nesting, function () {
+			function remove_nesting(sel) {
+				block.node.find(sel).each(function() {
+					// Temporarily replace the nestable block.nodes empty divs
+					var tmp = $('<div/>');
+					block.nested.push([tmp, $(this).replaceWith(tmp)]);
+				});
+			}
+
+			var sel = botoweb.util.interpolate(this);
+
+			// Selector can interpolate data... in this case it wants the meta
+			// data of properties which refer to different objects.
+			if (sel != this) {
+				sel = this;
+				$.each(block.model.props, function () {
+					// Interpolation allows the selector to use any of the
+					// property's metadata items to find specific DOM matches
+					remove_nesting(botoweb.util.interpolate(sel, this.meta));
+				});
+			}
+			else
+				remove_nesting(sel);
+		});
+	};
+
+	/**
+	 * Add nested structures back to the node so that they can be parsed.
+	 */
+	this.restore_nested = function (block) {
+		$.each(block.nested, function () {
+			$(this[0]).replaceWith(this[1]);
+		});
+		block.nested = [];
 	};
 }();
