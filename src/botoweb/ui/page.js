@@ -28,10 +28,18 @@ botoweb.ui.page = new function() {
 
 		var html;
 
-		if (typeof loc == 'string')
+		if (typeof loc == 'string') {
 			html = retrieve(loc);
+
+			var l = this.location();
+			l.hash_href = loc;
+			loc = l;
+		}
 		else
 			html = retrieve(loc.hash_href);
+
+		if (!fnc)
+			fnc = show_page;
 
 		if (html)
 			fnc(html);
@@ -53,13 +61,44 @@ botoweb.ui.page = new function() {
 	this.location = function () {
 		var url = '' + document.location.href;
 
-		return {
+		var loc = {
 			href: url.replace(/#.*/, ''),
-			hash: url.replace(/.*#/, ''),
-			hash_href: url.replace(/.*#|\?.*/g, ''),
-			query: url.replace(/.*\?/, ''),
-			base_href: url.replace(/([^\/])\/[^\/].*/, '$1')
+			base_href: url.replace(/([^\/])\/[^\/].*/, '$1'),
+			hash: '',
+			hash_href: '',
+			query: ''
 		};
+
+		if (url.indexOf('#') >= 0) {
+			loc.hash = url.replace(/.*#/, '');
+			loc.hash_href = loc.hash.replace(/\?.*/g, '');
+			loc.query = loc.hash.replace(/.*\?/, '');
+		}
+
+		return loc;
+	};
+
+	/**
+	 * Starts the page change interval check, should be called once environment
+	 * is set up.
+	 */
+	this.init = function () {
+		check();
+
+		setInterval(check, 250);
+		this.init = function() {};
+	};
+
+	/**
+	 * Removes all cached pages from localStorage and refreshes the browser.
+	 */
+	this.reset = function () {
+		for (var key in localStorage) {
+			if (key.indexOf('page_') == 0)
+				localStorage.setItem(key, '');
+		}
+
+		document.location.reload();
 	};
 
 	/**
@@ -72,6 +111,9 @@ botoweb.ui.page = new function() {
 		botoweb.ajax.stop_all();
 
 		$('#botoweb_content').empty();
+
+		if (!$(botoweb.ui.page).data('events'))
+			return;
 
 		// Some low-level stuff here... the bound events are stored in a data
 		// store called events.
@@ -162,10 +204,8 @@ botoweb.ui.page = new function() {
 			// change listeners. This allows pages to maintain state when the
 			// URL changes, otherwise the page will just be reloaded by the
 			// default listener.
-			if (!self.history.length || loc.hash_href != self.history[0].hash_href) {
-				self.load(loc, show_page);
+			if (!self.history.length || loc.hash_href != self.history[0].hash_href)
 				new_page = true;
-			}
 
 			// If a new page was loaded there probably will not be anything
 			// bound to the change event, but we trigger it anyway to support a
@@ -176,8 +216,9 @@ botoweb.ui.page = new function() {
 
 			if (self.history.length > 10)
 				self.history.pop();
+
+			if (new_page)
+				self.load(loc);
 		}
 	}
-
-	setInterval(check, 250);
 }();
