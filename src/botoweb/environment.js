@@ -28,10 +28,14 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 	// Default environment
 	this.cfg = $.extend(true, {
 		static_host: '',
-		model_template: '{{ name }}.html',
 
-		// URLs for pages intended for use in editing or creating Objects
-		editing_templates: {},
+		templates: {
+			home: 'index.html',
+			model: '{{ name }}.html',
+
+			// URLs for pages intended for use in editing or creating Objects
+			editor: {}
+		},
 
 		// Local database metadata
 		db: {
