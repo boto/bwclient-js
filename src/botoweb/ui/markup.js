@@ -32,7 +32,6 @@ botoweb.ui.markup = new function () {
 		'section':        'section',
 		'object':         'article, .bwObject',
 		'header':         'header',
-		'details':        'fieldset.details',
 		'widget':         '*[bwWidget]',
 		'relations':      '*[bwWidget=relations]',
 		'report':         '*[bwWidget=report]',
@@ -52,6 +51,24 @@ botoweb.ui.markup = new function () {
 		'existing_only':  '*[bwExistingOnly]',
 		'link':           'a[bwLink]'
 	};
+
+	/**
+	 * All selectors which hold content pertaining to a different object, such
+	* as formatting markup for an attributeList, will be temporarily removed
+	* from the node while processing. This saves a lot of complexity in markup
+	* processing routines and reduces uncertainty due to processing order.
+	*
+	* @private
+	*/
+	var sel_nesting = [
+		this.sel.search_results,
+		this.sel.relations,
+		this.sel.attribute_list,
+
+		// Only properties which refer to a different object may be nested, the
+		// parser must provide the names of any such properties.
+		this.sel.attribute.replace(']', '={{ name }}]')
+	];
 
 	/**
 	 * Formats a raw template according to formatting functions specified by the
@@ -104,6 +121,95 @@ botoweb.ui.markup = new function () {
 	this.page_show = function (html, fnc) {
 		var node = $(html);
 
+		var obj = {};
+
+		var nested = [];
+
+		$.each(sel_nesting, function () {
+			var sel = botoweb.util.interpolate(this);
+
+			// Selector can interpolate data... in this case it wants the meta
+			// data of properties which refer to different objects.
+			if (sel != this) {
+				sel = this;
+				$.each(obj.model.props, function () {
+					// Interpolation allows the selector to use any of the
+					// property's metadata items to find specific DOM matches
+					node.find(botoweb.util.interpolate(sel, this.meta)).each(function() {
+						// Temporarily replace the nestable nodes empty divs
+						var tmp = $('<div/>');
+						nested.push([tmp, $(this).replaceWith(tmp)]);
+					});
+				});
+			}
+		});
+
+
+		this.parse.condition(node, obj);
+		this.parse.trigger(node, obj);
+
+		// Add nested structures back to the node so that they can be parsed.
+		$.each(nested, function () {
+			$(this[0]).replaceWith(this[1]);
+		});
+
+
+
 		fnc(node);
+	};
+
+	/**
+	 * @param {jQuery} node The parent node.
+	 * @param {String} sel The internal name of the botoweb markup selector.
+	 * @param {Function} fcn Called once per matched node, value of the property
+	 * corresponding to the selector is passed as the argument. Called in
+	 * context of jQuery enhanced matched node.
+	 */
+	this.find = function (node, sel, fnc) {
+		var prop = this.prop[sel];
+
+		node.find(this.sel[sel]).each(function () {
+			var val = '';
+			var node = $(this);
+
+			if (prop)
+				val = node.attr(prop);
+
+			fnc.call(node, [val, prop]);
+		});
+	};
+
+	var self = this;
+
+
+	this.parse = {
+		/**
+		 * Parse conditional tags and remove them from the node if the
+		 * corresponding condition function returns false.
+		 */
+		condition: function (node, obj) {
+			self.find(node, 'condition', function (val, prop) {
+				if (val in boto_web.env.cfg.conditions){
+					if(boto_web.env.cfg.conditions[val](obj, this) === false)
+						this.remove();
+				}
+				else {
+					botoweb.util.error('UI condition does not exist: ' + val);
+					this.removeAttr(prop);
+				}
+			});
+		},
+
+		/**
+		 * Parse triggers and execute them.
+		 */
+		trigger: function (node, obj) {
+			self.find(node, 'trigger', function (val, prop) {
+				if (val in boto_web.env.cfg.triggers)
+					boto_web.env.cfg.triggers[val](obj, this);
+				else
+					this.removeAttr(prop);
+			});
+		}
 	};
 }();
