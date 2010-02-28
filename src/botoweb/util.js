@@ -27,6 +27,9 @@ botoweb.util = {
 	 */
 	url_join: function () {
 		return $.map(arguments, function (part, i) {
+			if (!part)
+				return;
+
 			if (i > 0)
 				part = part.replace(/^\/+/, '');
 

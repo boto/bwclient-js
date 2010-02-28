@@ -203,6 +203,7 @@ var botoweb = {
 		if (!opt) opt = {};
 
 		new botoweb.Environment(href, function(env) {
+			botoweb.util.log('Data initialization complete');
 			botoweb.env = env;
 
 			botoweb.ldb.name = opt.db.name;
