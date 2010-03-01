@@ -18,6 +18,7 @@ botoweb.Model = function (name, href, methods, props) {
 	this.methods = methods;
 	this.props = [];
 	this.prop_map = {};
+	this.local = false;
 
 	this.set_props = function(props) {
 		var self = this;
@@ -48,7 +49,7 @@ botoweb.Model = function (name, href, methods, props) {
 	this.find = function(filters, fnc, opt){
 		if (!opt) opt = {};
 
-		if (botoweb.ldb.dbh && !opt.no_ldb) {
+		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
 			return this.query_ldb(filters, fnc);
 		}
 

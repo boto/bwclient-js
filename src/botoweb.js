@@ -47,7 +47,7 @@ var botoweb = {
 				count = xhr.getResponseHeader('X-Result-Count');
 
 			// Get the next page if the callback returns true
-			if (fnc(data, page++, count) && url)
+			if (fnc && fnc(data, page++, count) && url)
 				botoweb.ajax.get(url, process);
 		}
 
@@ -203,7 +203,7 @@ var botoweb = {
 		if (!opt) opt = {};
 
 		new botoweb.Environment(href, function(env) {
-			botoweb.util.log('Data initialization complete');
+			botoweb.util.log('API initialization complete');
 			botoweb.env = env;
 
 			botoweb.ldb.name = opt.db.name;
@@ -213,6 +213,7 @@ var botoweb = {
 
 			// Prepare the database according to the environment settings
 			botoweb.ldb.prepare(function (db) {
+				botoweb.util.log('Data initialization complete, begin synchronizing');
 				botoweb.ui.init();
 				botoweb.ldb.sync.update();
 

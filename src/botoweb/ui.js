@@ -11,7 +11,14 @@ botoweb.ui = {
 	 * NOTE: currently this is used for testing the local DB sync.
 	 */
 	init: function() {
-		botoweb.ui.page.init();
+		$(botoweb.ldb.sync).bind('end.init', function () {
+			botoweb.util.log('Synchronizing complete');
+			botoweb.ui.page.init();
+			$(botoweb.ldb.sync).unbind('end.init');
+
+			botoweb.env.models.Contact.all();
+			botoweb.env.models.User.all();
+		});
 
 		var loc = botoweb.ui.page.location();
 
