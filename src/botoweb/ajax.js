@@ -28,7 +28,7 @@ botoweb.ajax = {
 		} else {
 			cachedRequests[ajaxID] = [callback];
 
-			botoweb.ajax.manager.add({
+			var cfg = {
 				success: function(data, status, xhr){
 					var xhr = botoweb.ajax.manager.getXHR(ajaxID);
 					for(cbnum in cachedRequests[ajaxID]){
@@ -38,15 +38,17 @@ botoweb.ajax = {
 				},
 				error: function(data) {
 					if (data.status == 408) {
-						var r = this;
 						setTimeout(function() {
-							$.ajax(r);
+							// TODO investigate whether this results in a memory leak
+							botoweb.ajax.manager.add(cfg);
 						}, 250);
 						return;
 					}
 				},
 				url: url
-			});
+			};
+
+			botoweb.ajax.manager.add(cfg);
 		}
 	}
 };
