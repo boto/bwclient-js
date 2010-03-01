@@ -17,28 +17,32 @@ botoweb.Object = function(id, model, data) {
 	self.model = model;
 	self.data = data || {};
 
-	self.follow = function(property, fnc, filters) {
-		var props = self.data[property];
+	self.follow = function(prop, fnc, filters, opt) {
+		var data = self.data[prop];
 
-		if (typeof props == 'undefined')
+		if (typeof data == 'undefined')
 			return;
 
-		if (!$.isArray(props))
-			props = [props];
+		if (!$.isArray(data))
+			data = [data];
 
-		$(props).each(function(prop) {
-			if (typeof this.id != 'undefined') {
-				if (this.meta.item_type) {
-					botoweb.env.models[prop.meta.item_type].get(prop.id, function(obj) {
-						return fnc([obj], 0, 1);
-					});
+		$.each(data, function(i, prop) {
+			if (prop.meta.type == 'reference') {
+				if (prop.meta.item_type && prop.toString()) {
+					botoweb.env.models[prop.meta.item_type].get(prop.toString(), function(obj) {
+						if (!$.isArray(obj))
+							obj = [obj];
+
+						return fnc(obj, 0, 1);
+					}, opt);
 				}
 				return;
-			} else {
-				botoweb.query(botoweb.env.base_url + self.href + '/' + self.id + '/' + prop.href,
-					filters, '*>*[id]', fnc, {
-						item_type: prop.item_type
-					}
+			}
+			else {
+				opt.item_type = prop.meta.item_type;
+
+				botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.href),
+					filters, '*>*[id]', fnc, opt
 				);
 			}
 		});
