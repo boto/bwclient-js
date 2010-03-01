@@ -24,13 +24,17 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	this.instance = function (data) {
 		var self = this;
 
-		self.data = data || {};
+		self.data = model_prop.format_data(data) || {};
 
 		self.meta = model_prop.meta;
 
-		$.each(['equals','is_type','val'], function () {
+		$.each(['equals','is_type','val','toString'], function () {
 			self[this] = model_prop[this];
 		});
+	};
+
+	this.toString = function () {
+		return this.val();
 	};
 
 	switch (type) {
@@ -46,8 +50,13 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 				return true;
 			};
+
 			this.val = function() {
 				return this.data;
+			};
+
+			this.toString = function () {
+				return $.makeArray(this.val());
 			};
 			break;
 
@@ -76,6 +85,14 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				return this.data.id == other.data.id
 					&& this.data.href == other.data.href;
 			};
+
+			this.format_data = function (data) {
+				return {id: data};
+			};
+
+			this.toString = function () {
+				return this.data.id;
+			};
 			break;
 
 		case 'query':
@@ -92,6 +109,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	this.val = this.val || function () {
 		return this.data.value || this.data;
 	};
+
+	this.format_data = this.format_data || function (data) {
+		return data;
+	}
 
 	this.is_type = function () {
 		var type = this.meta.type;
