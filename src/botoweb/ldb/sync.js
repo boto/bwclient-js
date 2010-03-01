@@ -15,6 +15,7 @@ botoweb.ldb.sync = {
 	running: false,
 	update_queue: [],
 	refresh_queue: [],
+	first_sync: true,
 
 	/**
 	 * Updates the local database by querying a model for recently updated
@@ -67,6 +68,30 @@ botoweb.ldb.sync = {
 		else if (this.refresh_queue.length) {
 			model = this.refresh_queue.shift();
 			refresh = true;
+		}
+
+		else if (self.first_sync) {
+			botoweb.ldb.dbh.transaction(function (txn) {
+				var c = 0;
+
+				$.each(botoweb.env.models, function (i, model) {
+					txn.executeSql('SELECT 1 FROM ' + botoweb.ldb.model_to_table(model) + ' LIMIT 1', [], function (txn, results) {
+						if (results.rows.length)
+							model.local = true;
+
+						if (c == botoweb.env.model_names.length - 1) {
+							self.first_sync = false;
+							self.running = false;
+
+							$(self).trigger('end');
+						}
+
+						c++;
+					})
+				});
+			});
+
+			return;
 		}
 
 		// All updates complete
