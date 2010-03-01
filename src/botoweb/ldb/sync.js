@@ -162,7 +162,7 @@ botoweb.ldb.sync = {
 
 		botoweb.ldb.prepare(function() {
 			botoweb.ldb.sync.update();
-		}, function() {});
+		}, botoweb.util.error);
 	},
 
 	/**
@@ -249,7 +249,7 @@ botoweb.ldb.sync = {
 					column_names.push(botoweb.ldb.prop_to_column(this));
 
 					if (prop)
-						bind_params.push(prop.val());
+						bind_params.push(prop.toString());
 					else
 						bind_params.push(null);
 				}

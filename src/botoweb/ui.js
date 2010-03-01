@@ -15,10 +15,20 @@ botoweb.ui = {
 			botoweb.util.log('Synchronizing complete');
 			botoweb.ui.page.init();
 			$(botoweb.ldb.sync).unbind('end.init');
-
-			botoweb.env.models.Contact.all();
-			botoweb.env.models.User.all();
 		});
+
+		$(botoweb.ldb.sync).bind('begin', function (e, data) {
+			botoweb.util.log('starting update of ' + data.model.name + ', ' + data.num_updates + ' records to update');
+		});
+
+		$(botoweb.ldb.sync).bind('change', function (e, data) {
+			$('#loaded').html('percent done: ' + data.percent_complete + '%');
+		});
+
+		$(botoweb.ldb.sync).bind('end', function (e, data) {
+			botoweb.util.log('update is done');
+		});
+
 
 		var loc = botoweb.ui.page.location();
 

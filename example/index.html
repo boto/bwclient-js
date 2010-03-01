@@ -3,9 +3,6 @@
 	<head>
 		<meta charset="utf-8"/>
 		<title>bwclient-js example</title>
-	</head>
-	<body>
-
 		<script src="/lib/jquery.min.js" type="text/javascript"></script>
 		<script src="/lib/jquery.ajaxmanager.js" type="text/javascript"></script>
 		<script src="/src/botoweb.js" type="text/javascript"></script>
@@ -21,22 +18,35 @@
 		<script src="/src/botoweb/xml.js" type="text/javascript"></script>
 		<script src="/src/botoweb/ui.js" type="text/javascript"></script>
 		<script src="/src/botoweb/ui/markup.js" type="text/javascript"></script>
+		<script src="/src/botoweb/ui/markup/parse.js" type="text/javascript"></script>
+		<script src="/src/botoweb/ui/markup/block.js" type="text/javascript"></script>
 		<script src="/src/botoweb/ui/page.js" type="text/javascript"></script>
-
+	</head>
+	<body>
 		<script type="text/javascript">
 			$(document).ready(function() {
 				botoweb.init('/api/', {
+					static_host: '/example',
+
 					db: {
 						name: 'test',
 						title: 'Test DB',
 						size_mb: 50,
 						sync_models: ['BaseObject']
+					},
+					templates: {
+						home: 'home.html'
 					}
 				});
 			});
 		</script>
 
-		<button onclick="botoweb.ldb.sync.reset()">RESET</button>
+		<div id="botoweb_content">
+
+		</div>
+
+		<button onclick="botoweb.ldb.sync.reset()">REFRESH DATA CACHE</button>
+		<button onclick="botoweb.ui.page.reset()">REFRESH PAGE CACHE</button>
 		<div id="loaded"></div>
 	</body>
 </html>
