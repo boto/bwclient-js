@@ -30,27 +30,32 @@ botoweb.Model = function (name, href, methods, props) {
 		});
 	}
 
-	this.query_ldb = function(filters, fnc) {
+	this.query_ldb = function(filters, fnc, opt) {
 		var tbl = botoweb.ldb.tables[this.name];
 		var query = new botoweb.sql.Query(tbl);
 
 		query.apply_bw_filters(filters, tbl);
 
-		// Perform query asynchronously
-		setTimeout(function() {
-			botoweb.ldb.dbh.transaction(function (txn) {
-				query.all(txn, function(results) {
-					fnc($.map(results, function (row) { return row[0]; }));
-				});
+		function do_query (txn) {
+			query.all(txn, function(results) {
+				fnc($.map(results, function (row) { return row[0]; }));
 			});
-		}, 1);
+		}
+
+		if (opt.txn)
+			do_query(opt.txn);
+		else {
+			botoweb.ldb.dbh.transaction(function (txn) {
+				do_query(txn);
+			});
+		}
 	};
 
 	this.find = function(filters, fnc, opt){
 		if (!opt) opt = {};
 
 		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
-			return this.query_ldb(filters, fnc);
+			return this.query_ldb(filters, fnc, opt);
 		}
 
 		botoweb[(opt.query) ? 'query' : 'find'](botoweb.env.base_url + this.href, filters, botoweb.env.model_names, fnc);
@@ -71,29 +76,20 @@ botoweb.Model = function (name, href, methods, props) {
 	}
 
 	this.cache = function(obj) {
-		self._cache[obj.id] = obj;
-		clearTimeout(self.cache_timeouts[obj.id]);
-		self.cache_timeouts[obj.id] = setTimeout(function() {
-			delete self._cache[obj.id];
-		}, 10000);
-		return self._cache[obj.id];
+		return obj;
 	}
 
 
-	this.get = function(id, fnc){
-		var self = this;
-		if (self._cache[id]) {
-			fnc(self._cache[id]);
-			return;
+	this.get = function(id, fnc, opt){
+		if (!opt) opt = {};
+
+		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
+			return this.query_ldb({id: id}, fnc, opt);
 		}
 
-		if (botoweb.ldb.dbh) {
-			return this.query_ldb({id: id}, fnc);
-		}
-
-		botoweb.get_by_id(botoweb.env.base_url + self.href, id, function(obj){
-			if(obj){
-				return fnc(self.cache(new botoweb.Object(self.href, self.name, obj)));
+		botoweb.get_by_id(botoweb.env.base_url + this.href, id, function(obj){
+			if(obj) {
+				return fnc(obj);
 			}
 		});
 	}
