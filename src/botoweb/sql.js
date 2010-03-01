@@ -68,7 +68,7 @@ botoweb.sql = {
 			this.filters.push(expr);
 
 			$.each(expr.tables, function(i, t) {
-				self._add_table(t);
+				add_table(t);
 			});
 
 			$.each(expr.bind_params, function() { self.bind_params.push(this) });
@@ -121,10 +121,11 @@ botoweb.sql = {
 		 * Adds a table to the list of tables that should be joined, unless it
 		 * is already in the list.
 		 * @param {botoweb.sql.Table} tbl The table to add.
+		 * @private
 		 */
-		this._add_table = function (tbl) {
-			if ($.inArray(tbl, this.tables) == -1)
-				this.tables.push(tbl);
+		function add_table (tbl) {
+			if ($.inArray(tbl, self.tables) == -1)
+				self.tables.push(tbl);
 		};
 
 		/**
@@ -235,6 +236,7 @@ botoweb.sql = {
 			$.each(this.columns, function (i, column) {
 				if (column instanceof botoweb.sql.Table) {
 					var tbl = column; // less confusing
+					add_table(tbl);
 
 					$.each(tbl.c, function (prop_name, c) {
 						if (!c)
@@ -246,15 +248,17 @@ botoweb.sql = {
 
 							// c refers to the column in the other table, so we
 							// join the tables by linking the id to this column
-							self._add_table(c.table);
+							add_table(c.table);
 							self.filter(tbl.c.id.cmp(c));
 						}
 
 						columns.push(c);
 					});
 				}
-				else
+				else {
 					columns.push(column);
+					add_table(column.table);
+				}
 			});
 
 			var sql = 'SELECT ' + columns.join(', ');
@@ -430,20 +434,20 @@ botoweb.sql = {
 		this.tables = [];
 		this.bind_params = [];
 
-		this._add_table = function (tbl) {
-			if ($.inArray(tbl, this.tables) == -1)
-				this.tables.push(tbl);
+		function add_table (tbl) {
+			if ($.inArray(tbl, self.tables) == -1)
+				self.tables.push(tbl);
 		};
 
 		$.each(columns, function(i, c) {
 			if (c instanceof botoweb.sql.Expression) {
 				self.columns.push(c);
-				$.each(c.tables, function() { self._add_table(this); });
+				$.each(c.tables, function() { add_table(this); });
 				$.each(c.bind_params, function() { self.bind_params.push(this); });
 			}
 			else if (c instanceof botoweb.sql.Column) {
 				self.columns.push(c);
-				self._add_table(c.table);
+				add_table(c.table);
 			}
 			// Literal
 			else {
