@@ -5,6 +5,8 @@
  */
 
 botoweb.ui = {
+	widget: {},
+
 	/**
 	 * Initializes the interface.
 	 *
@@ -17,17 +19,8 @@ botoweb.ui = {
 			$(botoweb.ldb.sync).unbind('end.init');
 		});
 
-		$(botoweb.ldb.sync).bind('begin', function (e, data) {
-			botoweb.util.log('starting update of ' + data.model.name + ', ' + data.num_updates + ' records to update');
-		});
-
-		$(botoweb.ldb.sync).bind('change', function (e, data) {
-			$('#loaded').html('percent done: ' + data.percent_complete + '%');
-		});
-
-		$(botoweb.ldb.sync).bind('end', function (e, data) {
-			botoweb.util.log('update is done');
-		});
+		$('header nav li').addClass('ui-state-default ui-corner-top');
+		$('header nav').show();
 
 
 		var loc = botoweb.ui.page.location();

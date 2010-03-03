@@ -110,7 +110,7 @@ botoweb.ui.page = new function() {
 	function destroy (old_url) {
 		botoweb.ajax.stop_all();
 
-		$('#botoweb_content').empty();
+		$('#botoweb.page').empty();
 
 		if (!$(botoweb.ui.page).data('events'))
 			return;
@@ -173,6 +173,8 @@ botoweb.ui.page = new function() {
 	 * will be destroyed and the new page will be displayed. Any asynchronous
 	 * parsing or data retrieval will be filled in after the page is displayed.
 	 *
+	 * Any JavaScript snippets in the HTML will be executed
+	 *
 	 * Triggers the load event on botoweb.ui.page which can be used to reverse
 	 * any interface changes made while the page was loading.
 	 *
@@ -182,7 +184,7 @@ botoweb.ui.page = new function() {
 		botoweb.ui.markup.page_show(html, function (node) {
 			destroy();
 			$(botoweb.ui.page).triggerHandler('load');
-			$('#botoweb_content').append(node);
+			$('#botoweb.page').append(node);
 		});
 	}
 

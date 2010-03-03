@@ -20,6 +20,10 @@
 		<script src="/src/botoweb/ui/markup.js" type="text/javascript"></script>
 		<script src="/src/botoweb/ui/markup/parse.js" type="text/javascript"></script>
 		<script src="/src/botoweb/ui/markup/block.js" type="text/javascript"></script>
+		<script src="/src/botoweb/ui/markup/block.js" type="text/javascript"></script>
+		<script src="/src/botoweb/ui/widget/search.js" type="text/javascript"></script>
+		<script src="/src/botoweb/ui/widget/search_results.js" type="text/javascript"></script>
+		<script src="/src/botoweb/ui/widget/data_table.js" type="text/javascript"></script>
 		<script src="/src/botoweb/ui/page.js" type="text/javascript"></script>
 	</head>
 	<body>
@@ -41,9 +45,7 @@
 			});
 		</script>
 
-		<div id="botoweb_content">
-
-		</div>
+		<div id="botoweb_content"></div>
 
 		<button onclick="botoweb.ldb.sync.reset()">REFRESH DATA CACHE</button>
 		<button onclick="botoweb.ui.page.reset()">REFRESH PAGE CACHE</button>

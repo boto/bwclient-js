@@ -206,9 +206,9 @@ var botoweb = {
 			botoweb.util.log('API initialization complete');
 			botoweb.env = env;
 
-			botoweb.ldb.name = opt.db.name;
-			botoweb.ldb.title = opt.db.title;
-			botoweb.ldb.size_mb = opt.db.size_mb;
+			botoweb.ldb.name = env.cfg.db.name;
+			botoweb.ldb.title = env.cfg.db.title;
+			botoweb.ldb.size_mb = env.cfg.db.size_mb;
 			botoweb.ldb.version = env.version;
 
 			// Prepare the database according to the environment settings
