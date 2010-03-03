@@ -87,7 +87,7 @@ botoweb.ldb.sync = {
 						}
 
 						c++;
-					})
+					}, botoweb.util.error)
 				});
 			});
 
@@ -155,6 +155,8 @@ botoweb.ldb.sync = {
 			});
 		});
 
+		self.first_sync = true;
+
 		for (var key in localStorage) {
 			if (key.indexOf('last_update') == 0)
 				localStorage.setItem(key, '');
@@ -197,79 +199,88 @@ botoweb.ldb.sync = {
 			}
 		}
 
-		$.each(results, function(i, obj) {
-			var db = botoweb.ldb.dbh;
-			var bind_params = [obj.id];
-			var model = obj.model;
-			var column_names = [];
+		var result_id = self.task_processed;
 
-			// Find all the bound parameters in the order specified in the table
-			$.each(model.props, function() {
-				var model_prop = this;
-				var prop = obj.data[this.meta.name];
+		botoweb.ldb.dbh.transaction(function (txn) {
+			$.each(results, function(i, obj) {
+				var db = botoweb.ldb.dbh;
+				var bind_params = [obj.id];
+				var model = obj.model;
+				var column_names = [];
 
-				if (this.is_type('query', 'blob'))
-					return;
-				else if (this.is_type('list', 'complexType')) {
-					db.transaction(function (txn) {
-						txn.executeSql(
-							'DELETE FROM ' + botoweb.ldb.prop_to_table(model_prop) +
-							' WHERE id = ?',
-							[obj.id]
-						);
-					}, botoweb.util.error);
+				result_id++;
 
-					if (!prop)
+				// Find all the bound parameters in the order specified in the table
+				$.each(model.props, function() {
+					var model_prop = this;
+					var prop = obj.data[this.meta.name];
+
+					if (this.is_type('query', 'blob'))
 						return;
-
-					var v = prop.val();
-
-					if (!$.isArray(v))
-						v = [v];
-
-					$.each(v, function() {
-						var bp = [obj.id, (this.value || this)];
-						var values = '(?,?)';
-
-						if (model_prop.is_type('complexType')) {
-							bp = [obj.id, this.name, this.value];
-							values = '(?,?,?)';
+					else if (this.is_type('list', 'complexType')) {
+						// Ignore lookups to accelerate the first sync
+						if (!self.first_sync) {
+							txn.executeSql(
+								'DELETE FROM ' + botoweb.ldb.prop_to_table(model_prop) +
+								' WHERE id = ?',
+								[obj.id]
+							);
 						}
 
-						db.transaction(function (txn) {
+						if (!prop)
+							return;
+
+						var v = prop.val();
+
+						if (!$.isArray(v))
+							v = [v];
+
+						$.each(v, function() {
+							var bp = [obj.id, (this.value || this)];
+							var values = '(?,?)';
+
+							if (model_prop.is_type('complexType')) {
+								bp = [obj.id, this.name, this.value];
+								values = '(?,?,?)';
+							}
+
 							txn.executeSql(
 								'INSERT INTO ' + botoweb.ldb.prop_to_table(model_prop) +
 								' VALUES ' + values,
 								bp
 							);
-						}, botoweb.util.error);
-					});
-				}
-				else {
-					column_names.push(botoweb.ldb.prop_to_column(this));
+						});
+					}
+					else {
+						column_names.push(botoweb.ldb.prop_to_column(this));
 
-					if (prop)
-						bind_params.push(prop.toString());
-					else
-						bind_params.push(null);
-				}
-			});
+						if (prop)
+							bind_params.push(prop.toString());
+						else
+							bind_params.push(null);
+					}
+				});
 
-			db.transaction(function (txn) {
-				txn.executeSql(
-					'REPLACE INTO ' + botoweb.ldb.model_to_table(model) +
+				var rid = result_id + 0;
+
+				txn.executeSql( ((self.first_sync) ? 'INSERT' : 'REPLACE') +
+					' INTO ' + botoweb.ldb.model_to_table(model) +
 					' VALUES (' + $.map(bind_params, function() { return '?' }).join(', ') + ')',
-					bind_params
+					bind_params,
+					function () {
+						if (rid % 50 == 0) {
+							// The UI code can establish a listener for the change event
+							$(self).trigger('change', [{
+								percent_updated: (self.task_total) ? Math.round(10000 * rid / self.task_total) / 100 : 100,
+								percent_downloaded: (self.task_total) ? Math.round(10000 * self.task_processed / self.task_total) / 100 : 100
+							}]);
+						}
+					}
 				);
-			}, botoweb.util.error);
+			});
 		});
 
 		self.task_processed += results.length;
-
-		// The UI code can establish a listener for the change event
-		$(self).trigger('change', [{
-			percent_complete: (self.task_total) ? Math.round(100 * self.task_processed / self.task_total) : 100
-		}]);
 
 		// When we finish, run the next queued update
 		if (self.task_processed >= self.task_total) {
