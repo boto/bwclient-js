@@ -16,6 +16,7 @@ botoweb.Model = function (name, href, methods, props) {
 	this.name = name;
 	this.href = href;
 	this.methods = methods;
+	this.ref_props = [];
 	this.props = [];
 	this.prop_map = {};
 	this.local = false;
@@ -26,6 +27,9 @@ botoweb.Model = function (name, href, methods, props) {
 		this.prop_map = {};
 
 		$.each(this.props, function() {
+			if (this.is_type('query', 'reference'))
+				self.ref_props.push(this);
+
 			self.prop_map[this.meta.name] = this;
 		});
 	}
@@ -37,8 +41,14 @@ botoweb.Model = function (name, href, methods, props) {
 		query.apply_bw_filters(filters, tbl);
 
 		function do_query (txn) {
-			query.all(txn, function(results) {
-				fnc($.map(results, function (row) { return row[0]; }));
+			var total_results = 0;
+
+			query.count(txn, function (count) {
+				total_results = count;
+			});
+
+			query.page(txn, function(results, page) {
+				return fnc($.map(results, function (row) { return row[0]; }), page, total_results);
 			});
 		}
 
