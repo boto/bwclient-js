@@ -54,12 +54,12 @@ botoweb.ui.markup = new function () {
 
 	/**
 	 * All selectors which hold content pertaining to a different object, such
-	* as formatting markup for an attributeList, will be temporarily removed
-	* from the node while processing. This saves a lot of complexity in markup
-	* processing routines and reduces uncertainty due to processing order.
-	*
-	* @private
-	*/
+	 * as formatting markup for an attributeList, will be temporarily removed
+	 * from the node while processing. This saves a lot of complexity in markup
+	 * processing routines and reduces uncertainty due to processing order.
+	 *
+	 * @private
+	 */
 	var nesting = [
 		this.sel.search_results,
 		this.sel.relation,
@@ -70,6 +70,14 @@ botoweb.ui.markup = new function () {
 	];
 
 	/**
+	 * Stores the final selector generated for a particular model so that it
+	 * need not be generated every time it is needed. It contains all of the
+	 * static nesting selectors plus any selectors generated dynamically based
+	 * on the model properties.
+	 */
+	var model_nesting = {};
+
+	/**
 	 * Formats a raw template according to formatting functions specified by the
 	 * markup.page_store env configuration. Requires callback function in the
 	 * event that templates included in the page must be loaded asynchronously.
@@ -77,13 +85,28 @@ botoweb.ui.markup = new function () {
 	 * @param {String} html The page HTML.
 	 * @param {Function} fnc The function to call when processing is complete.
 	 */
-	this.page_store = function (html, fnc) {
+	this.page_store = function (html, fnc, scripts) {
+		var self = this;
 		var node = html;
+
+		// Special handling is required to remove scripts, otherwise they will
+		// be executed...
+		scripts = scripts || [];
+
+		function remove_scripts(html) {
+			return html.replace(/<script[^>]*>([\s\S]*?)<\/script>/g, function (m, js) {
+				scripts.push(js);
+				return '';
+			});
+		}
 
 		// Wrap HTML into a jQuery parent container to allow traversing. If it
 		// is not a string, this is a recursive page_store call.
-		if (typeof node == 'string')
-			node = $('<div/>').append(html);
+		if (typeof node == 'string') {
+			html = remove_scripts(html);
+
+			node = $('<div/>').html(html);
+		}
 
 		var tmpl = node.find(this.sel.template + ':first');
 
@@ -91,8 +114,9 @@ botoweb.ui.markup = new function () {
 			// Use botoweb.ui.page.load which will cache the template in
 			// localStorage for future requests.
 			botoweb.ui.page.load(tmpl.attr(this.prop.template), function (html) {
-				tmpl.replace(html);
-				fnc(node);
+				html = remove_scripts(html);
+				tmpl.replaceWith(html);
+				self.page_store(node, fnc, scripts);
 			});
 
 			// Do not allow the callback to fire yet, we're not done.
@@ -101,13 +125,19 @@ botoweb.ui.markup = new function () {
 
 		// Run single-pass custom markup functions once all templates are loaded
 		else if (botoweb.env.cfg.markup.page_store) {
-			$.each(botoweb.env.cfg.markup.page_store, function (node) {
+			$.each(botoweb.env.cfg.markup.page_store, function () {
 				this(node);
 			});
 		}
 
+		html = node.html();
+
+		// Join all scripts into one
+		if (scripts.length)
+			html += '\n<script type="text/javascript">\n' + scripts.join(';\n') + '\n</script>\n';
+
 		// When everything is done, return the HTML to the callback
-		fnc(node.html());
+		fnc(html);
 	};
 
 	/**
@@ -151,32 +181,62 @@ botoweb.ui.markup = new function () {
 	 * Temporarily replaces all nestable child nodes with empty divs.
 	 */
 	this.remove_nested = function (block) {
+		var matches = false;
 		block.nested = [];
 
-		$.each(nesting, function () {
-			function remove_nesting(sel) {
-				block.node.find(sel).each(function() {
-					// Temporarily replace the nestable block.nodes empty divs
-					var tmp = $('<div/>');
-					block.nested.push([tmp, $(this).replaceWith(tmp)]);
-				});
-			}
+		var sel = block.nested_sel;
 
-			var sel = botoweb.util.interpolate(this);
+		if (!sel && block.model)
+			sel = model_nesting[block.model.name];
 
-			// Selector can interpolate data... in this case it wants the meta
-			// data of properties which refer to different objects.
-			if (sel != this) {
-				sel = this;
-				$.each(block.model.props, function () {
-					// Interpolation allows the selector to use any of the
-					// property's metadata items to find specific DOM matches
-					remove_nesting(botoweb.util.interpolate(sel, this.meta));
-				});
+		if (!sel) {
+			sel = [];
+
+			$.each(nesting, function () {
+				// Selector can interpolate data... in this case it wants the meta
+				// data of properties which refer to different objects.
+				if (this.indexOf('{{') >= 0) {
+					if (!block.model)
+						return;
+
+					var s = this;
+
+					$.each(block.model.ref_props, function () {
+						// Interpolation allows the selector to use any of
+						// the property's metadata items to find specific
+						// DOM matches
+						sel.push(botoweb.util.interpolate(s, this.meta));
+					});
+				}
+				else {
+					sel.push('' + this);
+				}
+			});
+
+			if (block.model)
+				model_nesting[block.model.name] = sel;
+		}
+
+		block.nested_sel = [];
+
+		// It is faster to do each query separately than to join them into 1
+		$.each(sel, function (i, s) {
+			var sel_matches = false;
+
+			block.node.find(s).each(function() {
+				sel_matches = matches = true;
+
+				// Temporarily replace the nestable block.nodes empty divs
+				var tmp = $('<div/>');
+				block.nested.push([tmp, $(this).replaceWith(tmp)]);
+			});
+
+			if (sel_matches) {
+				block.nested_sel.push(s);
 			}
-			else
-				remove_nesting(sel);
 		});
+
+		return matches;
 	};
 
 	/**
