@@ -57,6 +57,14 @@ botoweb.sql = {
 		 * @type {Boolean}
 		 */
 		this.follow_refs = false;
+		/**
+		 * The starting index for retrieving query results.
+		 */
+		this.start = 0;
+		/**
+		 * The maximum number of entries to retrieve.
+		 */
+		this.max_results = null;
 
 		/**
 		 * Adds a new filtering expression which will go to the WHERE clause.
@@ -129,6 +137,23 @@ botoweb.sql = {
 		};
 
 		/**
+		 * Adds a new column or entire table to the SELECT clause. The column's
+		 * parent table will be automatically joined into the query. Tables
+		 * added here will later be broken into their columns (some columns will
+		 * be exluded unless the query follows references).
+		 *
+		 * @param {botoweb.sql.Column|botoweb.sql.Table} column The column or
+		 * entire table to add to the SELECT clause.
+		 * @return The Query for chaining.
+		 */
+		this.limit = function (lim, start) {
+			this.max_results = lim;
+			this.start = start || 0;
+
+			return this;
+		};
+
+		/**
 		 * Adds an expression to the GROUP BY clause.
 		 *
 		 * @param {botoweb.sql.Expression} expr A valid GROUP BY expression.
@@ -168,14 +193,62 @@ botoweb.sql = {
 		};
 
 		/**
+		 * Executes the query and selects all matching results.
+		 *
+		 * @param {Transaction} txn A database transaction.
+		 * @param {Function} fnc Called when the results are retrieved, gets
+		 * (transaction, results) as arguments.
+		 */
+		this.page = function (txn, fnc, page) {
+			if (!page)
+				page = 0;
+
+			this.limit(50, 50 * page);
+
+			txn.executeSql(this, this.bind_params, this.simplify_results(fnc, page), function (txn, e) {
+				botoweb.util.error(e);
+			});
+		};
+
+		/**
+		 * Counts the results of the query.
+		 *
+		 * @param {Transaction} txn A database transaction.
+		 * @param {Function} fnc Called when the count retrieved, gets (count)
+		 * argument.
+		 */
+		this.count = function (txn, fnc) {
+			var tbl = this.columns[0];
+
+			if (tbl instanceof botoweb.sql.Column)
+				tbl = tbl.table;
+
+			count_query = new botoweb.sql.Query(botoweb.sql.func('count', tbl.c.id));
+
+			$.each(this.filters, function () {
+				count_query.filter(this);
+			});
+
+			count_query.all(txn, function(results) {
+				for (i in results[0])
+					return fnc(results[0][i]);
+			});
+		};
+
+		/**
 		 * Returns function which will trigger the callback with a simple native
 		 * array representing the results as the first argument. Actual
 		 * SQLResultSet object is passed as second param in case it is needed.
 		 */
-		this.simplify_results = function (fnc) {
+		this.simplify_results = function (fnc, page) {
 			var tbl = this.columns[0];
+			var query = this;
 
 			return function(txn, results) {
+				if (results.rows.length == 0) {
+					return;
+				}
+
 				var rows = [];
 
 				// TODO support querying more than one object
@@ -209,7 +282,13 @@ botoweb.sql = {
 					rows.push(row);
 				}
 
-				fnc(rows, results, txn);
+				if (typeof page != 'undefined') {
+					if (fnc(rows, page, results, txn)) {
+						query.page(txn, fnc, page + 1);
+					}
+				}
+				else
+					fnc(rows, results, txn);
 			};
 		};
 
@@ -257,7 +336,11 @@ botoweb.sql = {
 				}
 				else {
 					columns.push(column);
-					add_table(column.table);
+					if (column.tables) {
+						$.each(column.tables, function () { add_table(this); });
+					}
+					else
+						add_table(column.table);
 				}
 			});
 
@@ -274,6 +357,9 @@ botoweb.sql = {
 
 			if (this.order.length)
 				sql += '\nORDER BY ' + $.map(this.order, function(o) { return o.join(' '); }).join(', ');
+
+			if (this.max_results)
+				sql += '\nLIMIT ' + this.start + ', ' + this.max_results;
 
 			return sql;
 		};
