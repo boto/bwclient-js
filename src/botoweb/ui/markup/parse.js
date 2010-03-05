@@ -58,9 +58,78 @@
 			if (!block.model && !block.obj)
 				return;
 
-			self.find(block.node, 'attribute', function() {
-				matches = true;
-			});
+			var still_matches;
+			var waiting = 0;
+
+			do {
+				still_matches = false;
+
+				self.find(block.node, 'attribute', function(val, prop) {
+					still_matches = matches = true;
+
+					this.removeAttr(prop);
+
+					// If the property is not supported, empty the container to
+					// prevent anything inside from being parsed according to
+					// the current object when it was intended for a referenced
+					// object
+					if (!(val in block.model.prop_map)) {
+						this.empty();
+						return;
+					}
+
+					if (block.model.prop_map[val].is_type('reference', 'query')) {
+						var parent = this;
+						var contents = this.contents().clone();
+						this.empty();
+
+						function descend (obj) {
+							var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj });
+
+							parent.append(b.node.contents());
+						}
+
+						if (block.obj) {
+							waiting++;
+
+							block.obj.follow(val, function (objs) {
+								$.each(objs, function () {
+									descend(this);
+								});
+
+								waiting--;
+
+								if (!waiting) {
+									block.node.ready = true;
+									block.node.trigger('ready');
+									botoweb.util.log('FIRE');
+								}
+							});
+						}
+						else {
+							descend();
+						}
+					}
+					else if (block.model.prop_map[val].is_type('dateTime')) {
+						new botoweb.ui.widget.DateTime(this, block.obj.data[val].toString());
+					}
+
+					else if (block.obj && val in block.obj.data) {
+						this.html(block.obj.data[val].toString());
+
+						if (block.obj.model.name == 'User')
+							botoweb.util.log(block.obj.data[val].toString());
+					}
+				}, {
+					suffix: ':first'
+				});
+			}
+			while (still_matches);
+
+			if (!waiting) {
+				block.node.ready = true;
+				block.node.trigger('ready');
+			}
 
 			return matches;
 		},
