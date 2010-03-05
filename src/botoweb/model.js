@@ -42,13 +42,21 @@ botoweb.Model = function (name, href, methods, props) {
 
 		function do_query (txn) {
 			var total_results = 0;
+			var page = 0;
+
+			function next_page() {
+				page++;
+
+				botoweb.ldb.dbh.transaction(function (txn) {
+					query.page(txn, function(results, page) {
+						return fnc($.map(results, function (row) { return row[0]; }), page, total_results, next_page);
+					}, page);
+				});
+			};
 
 			query.count(txn, function (count) {
 				total_results = count;
-			});
-
-			query.page(txn, function(results, page) {
-				return fnc($.map(results, function (row) { return row[0]; }), page, total_results);
+				next_page();
 			});
 		}
 
@@ -97,10 +105,8 @@ botoweb.Model = function (name, href, methods, props) {
 			return this.query_ldb({id: id}, fnc, opt);
 		}
 
-		botoweb.get_by_id(botoweb.env.base_url + this.href, id, function(obj){
-			if(obj) {
-				return fnc(obj);
-			}
+		botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, this.href), id, function(obj) {
+			return fnc(obj);
 		});
 	}
 
