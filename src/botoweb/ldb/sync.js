@@ -155,7 +155,7 @@ botoweb.ldb.sync = {
 			});
 		});
 
-		self.first_sync = true;
+		self.first_sync = false;
 
 		for (var key in localStorage) {
 			if (key.indexOf('last_update') == 0)
@@ -232,15 +232,12 @@ botoweb.ldb.sync = {
 
 						var v = prop.val();
 
-						if (!$.isArray(v))
-							v = [v];
-
 						$.each(v, function() {
-							var bp = [obj.id, (this.value || this)];
+							var bp = [obj.id, (this.val || this)];
 							var values = '(?,?)';
 
 							if (model_prop.is_type('complexType')) {
-								bp = [obj.id, this.name, this.value];
+								bp = [obj.id, this.key, this.val];
 								values = '(?,?,?)';
 							}
 
