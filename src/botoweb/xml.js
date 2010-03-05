@@ -37,6 +37,7 @@ botoweb.xml = {
 				min_value: 'min',
 				max_value: 'max',
 				ref_name: 'reference_name',
+				href: 'href'
 			};
 
 			$.each(map, function (a, b) {
@@ -112,37 +113,33 @@ botoweb.xml = {
 			var prop = new this.instance();
 
 			if (prop.is_type('reference', 'blob')) {
-				prop.data = {
+				prop.data.push({
 					// The value is null until the object is loaded
-					value: null,
+					val: null,
 
 					href: tags.attr("href"),
 					id: tags.attr("id")
-				};
+				});
 			}
 
 			else if (prop.is_type('list')) {
-				prop.data = [];
-
-				tags.each(function() {
-					prop.data.push(tags.text());
+				prop.data = tags.map(function() {
+					return { val: $(this).text() };
 				});
 			}
 
 			else if (prop.is_type('complexType')) {
-				prop.data = [];
-
-				tags.children().each(function() {
-					prop.data.push({
-						name: tags.attr('name'),
+				prop.data = tags.children().map(function() {
+					return {
+						key: tags.attr('name'),
 						type: tags.attr('type'),
-						value: tags.text()
-					});
+						val: tags.text()
+					};
 				});
 			}
 
 			else {
-				prop.data = tags.text();
+				prop.data.push({ val: tags.text() });
 			}
 
 			data[this.meta.name] = prop;

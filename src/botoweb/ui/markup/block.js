@@ -11,10 +11,13 @@ botoweb.ui.markup.Block = function (node, opt) {
 	var self = this;
 
 	this.node = node;
-	this.model = opt.model;
 	this.obj = opt.obj;
+	this.model = opt.model;
 	this.parent = opt.parent;
 	this.nested = [];
+
+	if (this.obj && !this.model)
+		this.model = this.obj.model;
 
 	this.skip_markup = opt.skip_markup || {};
 	this.nested_sel = opt.nested_sel;

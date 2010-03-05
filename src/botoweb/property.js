@@ -17,103 +17,150 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	var model_prop = this;
 
 	/**
-	 * Creates a new object
+	 * Creates a new object. Expects data to be in the right format.
 	 *
 	 * @constructor
 	 */
-	this.instance = function (data) {
+	this.instance = function (data, opt) {
+		opt = opt || {};
 		var self = this;
 
-		self.data = model_prop.format_data(data) || {};
+		this.data = data || [];
 
-		self.meta = model_prop.meta;
+		this.meta = model_prop.meta;
 
-		$.each(['equals','is_type','val','toString'], function () {
-			self[this] = model_prop[this];
+		$.each(['is_type','val','load','toString'], function () {
+			if (this in model_prop)
+				self[this] = model_prop[this];
 		});
+
+		if ('load' in this) {
+			this.meta.obj = undefined;
+
+			/**
+			 * Holds functions that are awaiting the data to be loaded. A simple
+			 * array avoids the overhead of jQuery events.
+			 */
+			this.onload = [];
+		}
 	};
 
+
+	/**
+	 * Actually returns an array which can either be used as a string with
+	 * its native toString, or it can be joined with whatever is desired (line
+	 * breaks, commas, etc).
+	 */
 	this.toString = function () {
-		return this.val();
+		var values = [];
+
+		$.each(this.data, function () {
+			values.push(this.val.toString());
+		});
+
+		return values;
 	};
 
 	switch (type) {
 		case 'list':
-			this.equals = function(other) {
-				if (!this.is_type(other.type))
-					return false;
-
-				for (var i in this.data) {
-					if (i >= other.data.length || this.data != other.data[i])
-						return false;
-				}
-
-				return true;
-			};
-
-			this.val = function() {
-				return this.data;
-			};
-
-			this.toString = function () {
-				return $.makeArray(this.val());
-			};
-			break;
-
 		case 'complexType':
-			this.equals = function(other) {
-				if (!this.is_type(other.type))
-					return false;
+			/**
+			 * Loads data from a complexType or list database table. It is not
+			 * necessary to load complexType or list data from botoweb because
+			 * the data is included in the XML.
+			 */
+			this.load = function (fnc) {
+				this.onload.push(fnc);
 
-				for (var i in this.data) {
-					if (i >= other.data.length
-						|| this.data[i].name != other.data[i].name
-						|| this.data[i].value != other.data[i].value
-					)
-						return false;
-				}
+				// We already started to load the data
+				if (this.onload.length > 1)
+					return;
 
-				return true;
+				var tbl = botoweb.ldb.tables[botoweb.ldb.prop_to_table(this)];
+
+				botoweb.ldb.dbh.transaction(function (txn) {
+					new botoweb.sql.Query((('key' in tbl.c) ? tbl.c.key : tbl.c.id), tbl.c.val)
+						.filter(tbl.c.id.cmp(self.meta.obj.id))
+						.all(txn, function (rows) {
+							self.data = $.map(rows, function () {
+								if ('key' in this)
+									return { key: this.key, val: this.val };
+
+								return { val: this.val };
+							});
+
+							// onload contains callbacks which are waiting on
+							// this data
+							if (self.onload.length)
+								$.each(self.onload, function() { this(self.data); });
+
+							// The onload functions are no longer needed
+							delete self.onload;
+						});
+				});
 			};
 			break;
 
 		case 'reference':
-			this.equals = function(other) {
-				if (!this.is_type(other.type))
-					return false;
-
-				return this.data.id == other.data.id
-					&& this.data.href == other.data.href;
-			};
-
-			this.format_data = function (data) {
-				return {id: data};
-			};
-
-			this.toString = function () {
-				return this.data.id;
-			};
-			break;
-
 		case 'query':
-			this.equals = function(other) {
-				return false;
+			/**
+			 * Loads a reference or query type, data may come from botoweb or
+			 * from the local database.
+			 */
+			this.load = function (fnc) {
+				this.onload.push(fnc);
+
+				// We already started to load the data
+				if (this.onload.length > 1)
+					return;
+
+				this.meta.obj.follow(this.meta.name, function (objs) {
+					self.data = [];
+
+					$.each(objs, function () {
+						self.data.push({ val: this });
+					});
+
+					// onload contains callbacks which are waiting on this data
+					if (self.onload.length)
+						$.each(self.onload, function() { this(self.data); });
+
+					// The onload functions are no longer needed
+					delete self.onload;
+				});
 			};
 			break;
 	}
 
-	this.equals = this.equals || function (other) {
-		return this.data.value == other.data.value;
+	/**
+	 * Provides the value of the property either to a callback function or as a
+	 * direct return value.
+	 */
+	this.val = function (fnc) {
+		if (fnc) {
+			// Either the data need not be loaded or it has already been loaded
+			// VERY IMPORTANT: If the object does not have a value for this
+			// property, the val property will be null. undefined is used ONLY
+			// when the value has not yet been loaded. If val is null or
+			// anything else, this statement will evaluate to true.
+			if (this.data.length == 0 || this.data[0].val !== undefined)
+				return fnc(this.data);
+
+			// Load the data as defined by its type
+			this.load(fnc);
+		}
+
+		// VERY IMPORTANT: This may be undefined which means that the value has
+		// not been loaded (not necessarily that there is no value). Use a
+		// callback whenever possible to ensure that the correct data is
+		// returned.
+		return this.data;
 	};
 
-	this.val = this.val || function () {
-		return this.data.value || this.data;
-	};
-
-	this.format_data = this.format_data || function (data) {
-		return data;
-	}
-
+	/**
+	 * Returns the property's type (usually just used as a true value) if the
+	 * type is found in its arguments.
+	 */
 	this.is_type = function () {
 		var type = this.meta.type;
 
