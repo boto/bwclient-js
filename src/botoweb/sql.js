@@ -12,11 +12,11 @@ botoweb.sql = {
 	 * can be converted to SQL at any time simply by using it as a string. Most
 	 * methods modify the Query in place and also return it to allow chaining.
 	 *
-	 * @param {[botoweb.sql.Table|botoweb.sql.Column]} columns May be a single
-	 * column or table or an array of columns and tables.
+	 * @param {[botoweb.sql.Table|botoweb.sql.Column]} arguments May be a single
+	 * column or table or multiple.
 	 * @constructor
 	 */
-	Query: function (columns) {
+	Query: function () {
 		var self = this;
 
 		/**
@@ -246,7 +246,7 @@ botoweb.sql = {
 
 			return function(txn, results) {
 				if (results.rows.length == 0) {
-					return;
+					return fnc([], results, txn);
 				}
 
 				var rows = [];
@@ -268,8 +268,16 @@ botoweb.sql = {
 						$.each(tbl.model.props, function (i, prop) {
 							var col = botoweb.ldb.prop_to_column(prop);
 
-							if (col in row)
-								data[prop.meta.name] = new prop.instance(row[col]);
+							if (col in row) {
+								var prop_data;
+
+								if (prop.is_type('reference'))
+									prop_data = { id: (row[col] || null), val: undefined };
+								else
+									prop_data = { val: (row[col] || null) };
+
+								data[prop.meta.name] = new prop.instance(prop_data);
+							}
 						});
 
 						row[0] = new botoweb.Object(
@@ -283,9 +291,14 @@ botoweb.sql = {
 				}
 
 				if (typeof page != 'undefined') {
-					if (fnc(rows, page, results, txn)) {
-						query.page(txn, fnc, page + 1);
+					function next_page() {
+						botoweb.ldb.dbh.transaction(function (txn) {
+							query.page(txn, fnc, page + 1);
+						});
 					}
+
+					if (fnc(rows, page, results, txn, next_page))
+						next_page()
 				}
 				else
 					fnc(rows, results, txn);
@@ -364,12 +377,8 @@ botoweb.sql = {
 			return sql;
 		};
 
-		if (!$.isArray(columns)) {
-			columns = [columns];
-		}
-
 		// Initialize columns passed to the constructor
-		$.each(columns, function () {
+		$.each(arguments, function () {
 			self.append_column(this);
 		});
 	},
