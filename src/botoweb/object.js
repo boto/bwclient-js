@@ -17,17 +17,22 @@ botoweb.Object = function(id, model, data) {
 	self.model = model;
 	self.data = data || {};
 
-	self.follow = function(prop, fnc, filters, opt) {
-		var data = self.data[prop];
+	if (typeof self.model == 'string')
+		self.model = botoweb.env.models[self.model];
 
-		if (typeof data == 'undefined')
-			return;
+	self.follow = function(prop, fnc, filters, opt) {
+		if (!opt) opt = {};
+
+		var data = self.data[prop] || self.model.prop_map[prop];
+
+		if (data === undefined)
+			return fnc(null, 0, 0);
 
 		if (!$.isArray(data))
 			data = [data];
 
 		$.each(data, function(i, prop) {
-			if (prop.meta.type == 'reference') {
+			if (prop.is_type('reference')) {
 				if (prop.meta.item_type && prop.toString()) {
 					botoweb.env.models[prop.meta.item_type].get(prop.toString(), function(obj) {
 						if (!$.isArray(obj))
@@ -41,7 +46,7 @@ botoweb.Object = function(id, model, data) {
 			else {
 				opt.item_type = prop.meta.item_type;
 
-				botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.href),
+				botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name),
 					filters, '*>*[id]', fnc, opt
 				);
 			}
