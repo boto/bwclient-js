@@ -193,13 +193,20 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 		var settings = this.data_table.fnSettings();
 
 		var data = [];
-		$(rows).each(function() {
-			var item = [];
-			$(this).find('td').each(function() {
-				item.push($(this).html().replace(/^\s*|\s*$/g, ''));
-			});
-			if (item.length == settings.aoColumns.length)
-				data.push(item);
+		$(rows).each(function(i, row) {
+			function process_row () {
+				var item = [];
+				$(row).find('td').each(function() {
+					item.push($(this).html().replace(/^\s*|\s*$/g, ''));
+				});
+				if (item.length == settings.aoColumns.length)
+					self.data_table.fnAddData([item], !self.opts.no_redraw);
+			}
+
+			if (row.ready)
+				process_row();
+			else
+				$(row).bind('ready', process_row);
 		});
 		/*
 		var raw_data = $.map(data, function(cols) {

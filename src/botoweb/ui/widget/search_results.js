@@ -38,8 +38,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			var o;
 
 			if (!self.guide_block) {
-				alert('start');
-				o = self.guide_block = new botoweb.ui.markup.Block(self.template.clone(), { model: botoweb.env.models[results[i].model], obj: results[i] });
+				o = self.guide_block = new botoweb.ui.markup.Block(self.template.clone(), { model: botoweb.env.models[results[i].model], obj: results[i], with_reduction: true });
 			}
 			else {
 				o = self.guide_block.clone(self.template.clone(), { model: botoweb.env.models[results[i].model], obj: results[i] });
@@ -91,7 +90,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 	}
 
 	if (self.def == 'all') {
-		self.model.all(function(results, page, count) { self.update(results, page, count); return true; });
+		self.model.all(function(results, page, count) { self.update(results, page, count); return page < 20; });
 	}
 	else if (self.def) {
 		// Evaluate JSON search filters
