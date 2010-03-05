@@ -66,7 +66,7 @@ botoweb.ui.markup = new function () {
 
 		// Only properties which refer to a different object may be nested, the
 		// parser must provide the names of any such properties.
-		this.sel.attribute.replace(']', '={{ name }}]')
+		//this.sel.attribute.replace(']', '={{ name }}]')
 	];
 
 	/**
@@ -163,17 +163,18 @@ botoweb.ui.markup = new function () {
 	 * corresponding to the selector is passed as the argument. Called in
 	 * context of jQuery enhanced matched node.
 	 */
-	this.find = function (node, sel, fnc) {
+	this.find = function (node, sel, fnc, opt) {
+		if (!opt) opt = {};
 		var prop = this.prop[sel];
 
-		node.find(this.sel[sel]).each(function () {
+		node.find(this.sel[sel] + (opt.suffix || '')).each(function () {
 			var val = '';
 			var node = $(this);
 
 			if (prop)
 				val = node.attr(prop);
 
-			fnc.call(node, [val, prop]);
+			fnc.call(node, val, prop);
 		});
 	};
 
