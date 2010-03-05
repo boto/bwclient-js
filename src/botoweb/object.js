@@ -20,33 +20,40 @@ botoweb.Object = function(id, model, data) {
 	if (typeof self.model == 'string')
 		self.model = botoweb.env.models[self.model];
 
-	self.follow = function(prop, fnc, filters, opt) {
+	$.each(self.model.props, function () {
+		if (!(this.meta.name in self.data))
+			self.data[this.meta.name] = new this.instance();
+	});
+
+	$.each(self.data, function (i, prop) {
+		if ('obj' in prop)
+			prop.obj = self;
+	});
+
+	self.follow = function(prop_name, fnc, filters, opt) {
 		if (!opt) opt = {};
 
-		var data = self.data[prop] || self.model.prop_map[prop];
+		var prop = self.data[prop_name];
 
-		if (data === undefined)
-			return fnc(null, 0, 0);
+		$.each(prop.val(), function(i, val) {
+			// If the val is not undefined we have already loaded it.
+			if (val.val !== undefined)
+				return fnc(val.val || [], 0, 0);
 
-		if (!$.isArray(data))
-			data = [data];
-
-		$.each(data, function(i, prop) {
 			if (prop.is_type('reference')) {
-				if (prop.meta.item_type && prop.toString()) {
-					botoweb.env.models[prop.meta.item_type].get(prop.toString(), function(obj) {
-						if (!$.isArray(obj))
-							obj = [obj];
-
-						return fnc(obj, 0, 1);
+				if (val.id) {
+					botoweb.env.models[prop.meta.item_type].get(val.id, function(objs) {
+						return fnc(objs || [], 0, 1);
 					}, opt);
 				}
+				else
+					fnc([], 0, 0);
 				return;
 			}
 			else {
 				opt.item_type = prop.meta.item_type;
 
-				botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name),
+				botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, val.href),
 					filters, '*>*[id]', fnc, opt
 				);
 			}
