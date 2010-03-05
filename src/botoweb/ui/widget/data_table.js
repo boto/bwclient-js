@@ -25,6 +25,7 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 	table.data('data_table', self);
 
 	this.opts = opts || {};
+	this.pending = [];
 
 	var settings = this.data_table.fnSettings();
 	if (!settings) return;
@@ -144,6 +145,9 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 		}
 
 		this.button_stop = null;
+
+		this.data_table.fnAddData(self.pending, true);
+		self.pending = [];
 	}
 
 	this.add_events = function() {
@@ -190,41 +194,22 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 			return;
 
 		var self = this;
-		var settings = this.data_table.fnSettings();
 
-		var data = [];
 		$(rows).each(function(i, row) {
-			function process_row () {
-				var item = [];
-				$(row).find('td').each(function() {
-					item.push($(this).html().replace(/^\s*|\s*$/g, ''));
-				});
-				if (item.length == settings.aoColumns.length)
-					self.data_table.fnAddData([item], !self.opts.no_redraw);
-			}
-
-			if (row.ready)
-				process_row();
-			else
-				$(row).bind('ready', process_row);
+			var item = [];
+			$(row).find('td').each(function() {
+				item.push($(this).html());
+			});
+			if (item.length == settings.aoColumns.length)
+				self.pending.push(item);
 		});
-		/*
-		var raw_data = $.map(data, function(cols) {
-			return [$.map(cols, function(col) {
 
-				return $(col).html().replace(/<[^>]*>/g, '');
-			})]
-		});*/
-
-		if (data.length == 0)
+		if (self.pending.length < 20)
 			return;
 
-		var indices = this.data_table.fnAddData(data, !this.opts.no_redraw);
+		this.data_table.fnAddData(self.pending, false);
 
-		//if (redraw)
-		//	this.add_events();
-
-		return indices;
+		self.pending = [];
 	}
 
 	this.update = function(row, values) {
