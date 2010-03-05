@@ -46,9 +46,14 @@ var botoweb = {
 			if (xhr && typeof xhr.getResponseHeader == 'function')
 				count = xhr.getResponseHeader('X-Result-Count');
 
+			function next_page() {
+				if (url)
+					botoweb.ajax.get(url, process);
+			}
+
 			// Get the next page if the callback returns true
-			if (fnc && fnc(data, page++, count) && url)
-				botoweb.ajax.get(url, process);
+			if (fnc && fnc(data, page++, count, next_page))
+				next_page();
 		}
 
 		return botoweb.ajax.get(url, process);
@@ -97,9 +102,14 @@ var botoweb = {
 			if (xhr && typeof xhr.getResponseHeader == 'function')
 				count = xhr.getResponseHeader('X-Result-Count');
 
+			function next_page() {
+				if (url)
+					botoweb.ajax.get(url, process);
+			}
+
 			// Get the next page
-			if (fnc(data, page++, count) && url)
-				botoweb.ajax.get(url, process);
+			if (fnc(data, page++, count, next_page))
+				next_page()
 		}
 
 		return botoweb.ajax.get(url, process);
@@ -114,7 +124,10 @@ var botoweb = {
 			return fnc();
 
 		botoweb.ajax.get(url + "/" + id, function(data){
-			fnc(botoweb.xml.to_obj($(data).children().first()));
+			if ($(data).children())
+				fnc(botoweb.xml.to_obj($(data).children().first()));
+			else
+				fnc();
 		});
 	},
 
