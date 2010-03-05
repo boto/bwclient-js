@@ -14,7 +14,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.obj = opt.obj;
 	this.model = opt.model;
 	this.parent = opt.parent;
+	this.onready = opt.onready;
 	this.nested = [];
+	this.waiting = 0;
 
 	if (this.obj && !this.model)
 		this.model = this.obj.model;
@@ -76,4 +78,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 	$.each(['relation','search'], function () {
 		parse(this, markup.parse[this]);
 	});
+
+	if (!this.waiting && this.onready) {
+		this.onready(this);
+	}
 };

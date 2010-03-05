@@ -59,7 +59,6 @@
 				return;
 
 			var still_matches;
-			var waiting = 0;
 
 			do {
 				still_matches = false;
@@ -78,31 +77,31 @@
 						return;
 					}
 
+					var node = this;
+
 					if (block.model.prop_map[val].is_type('reference', 'query')) {
-						var parent = this;
 						var contents = this.contents().clone();
 						this.empty();
 
 						function descend (obj) {
 							var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj });
 
-							parent.append(b.node.contents());
+							node.append(b.node.contents());
 						}
 
 						if (block.obj) {
-							waiting++;
+							block.waiting++;
 
-							block.obj.follow(val, function (objs) {
-								$.each(objs, function () {
-									descend(this);
+							block.obj.data[val].val(function (data) {
+								$.each(data, function () {
+									if (this && this.val)
+										descend(this.val);
 								});
 
-								waiting--;
+								block.waiting--;
 
-								if (!waiting) {
-									block.node.ready = true;
-									block.node.trigger('ready');
-									botoweb.util.log('FIRE');
+								if (!block.waiting && block.onready) {
+									block.onready(block);
 								}
 							});
 						}
@@ -110,26 +109,50 @@
 							descend();
 						}
 					}
+
+					else if (block.model.prop_map[val].is_type('list')) {
+						if (block.obj && block.obj.data[val]) {
+							block.waiting++;
+
+							block.obj.data[val].val(function (data) {
+								if (node.is('li')) {
+									var items = block.obj.data[val].toString(true);
+									$.each(items, function () {
+										node.after(node.clone().html('' + this));
+									});
+
+									node.remove();
+								}
+								else {
+									var str = block.obj.data[val].toString();
+
+									if (str)
+										node.html(str);
+								}
+
+								block.waiting--;
+
+								if (!block.waiting && block.onready) {
+									block.onready(block);
+								}
+							});
+						}
+						else {
+							this.remove();
+						}
+					}
 					else if (block.model.prop_map[val].is_type('dateTime')) {
 						new botoweb.ui.widget.DateTime(this, block.obj.data[val].toString());
 					}
 
 					else if (block.obj && val in block.obj.data) {
-						this.html(block.obj.data[val].toString());
-
-						if (block.obj.model.name == 'User')
-							botoweb.util.log(block.obj.data[val].toString());
+						this.html(block.obj.data[val].toString() || '');
 					}
 				}, {
 					suffix: ':first'
 				});
 			}
 			while (still_matches);
-
-			if (!waiting) {
-				block.node.ready = true;
-				block.node.trigger('ready');
-			}
 
 			return matches;
 		},
