@@ -87,9 +87,8 @@ var botoweb = {
 			var data = [];
 			$(xml).find(obj_name).each(function(){
 				var obj = botoweb.xml.to_obj(this, opt);
-				if(obj.length > 0){
-					data.push(obj);
-				}
+
+				data.push(obj);
 			});
 			url = $(xml).find('link[rel=next]').attr('href');
 
@@ -111,13 +110,11 @@ var botoweb = {
 	// Find a specific object by ID
 	//
 	get_by_id: function(url, id, fnc){
+		if (!id)
+			return fnc();
+
 		botoweb.ajax.get(url + "/" + id, function(data){
-			$(data).children().each(function(){
-				var obj = botoweb.xml.to_obj(this);
-				if(obj.id){
-					fnc(obj);
-				}
-			});
+			fnc(botoweb.xml.to_obj($(data).children().first()));
 		});
 	},
 
