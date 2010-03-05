@@ -25,7 +25,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		opt = opt || {};
 		var self = this;
 
-		this.data = data || [];
+		this.data = data || [{val: undefined}];
+
+		if (!$.isArray(this.data))
+			this.data = [this.data];
 
 		this.meta = model_prop.meta;
 
@@ -35,7 +38,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		});
 
 		if ('load' in this) {
-			this.meta.obj = undefined;
+			this.obj = undefined;
 
 			/**
 			 * Holds functions that are awaiting the data to be loaded. A simple
@@ -51,14 +54,18 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	 * its native toString, or it can be joined with whatever is desired (line
 	 * breaks, commas, etc).
 	 */
-	this.toString = function () {
+	this.toString = function (wantarray) {
 		var values = [];
 
 		$.each(this.data, function () {
-			values.push(this.val.toString());
+			if ('val' in this && this.val)
+				values.push(this.val.toString());
 		});
 
-		return values;
+		if (wantarray)
+			return values;
+
+		return values.join(', ');
 	};
 
 	switch (type) {
@@ -76,17 +83,19 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				if (this.onload.length > 1)
 					return;
 
+				var self = this;
+
 				var tbl = botoweb.ldb.tables[botoweb.ldb.prop_to_table(this)];
 
 				botoweb.ldb.dbh.transaction(function (txn) {
 					new botoweb.sql.Query((('key' in tbl.c) ? tbl.c.key : tbl.c.id), tbl.c.val)
-						.filter(tbl.c.id.cmp(self.meta.obj.id))
+						.filter(tbl.c.id.cmp(self.obj.id))
 						.all(txn, function (rows) {
-							self.data = $.map(rows, function () {
-								if ('key' in this)
-									return { key: this.key, val: this.val };
+							self.data = $.map(rows, function (row) {
+								if ('key' in row)
+									return { key: row.key, val: row.val };
 
-								return { val: this.val };
+								return { val: row.val };
 							});
 
 							// onload contains callbacks which are waiting on
@@ -114,19 +123,28 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				if (this.onload.length > 1)
 					return;
 
-				this.meta.obj.follow(this.meta.name, function (objs) {
+				var self = this;
+
+				this.obj.follow(this.meta.name, function (objs) {
 					self.data = [];
 
-					$.each(objs, function () {
-						self.data.push({ val: this });
-					});
+					if (objs.length) {
+						$.each(objs, function () {
+							self.data.push({ val: this });
+						});
+					}
+					// null signifies that we tried to load the value and it
+					// does not exist
+					else
+						self.data.push({ val: null });
 
 					// onload contains callbacks which are waiting on this data
-					if (self.onload.length)
+					if (self.onload && self.onload.length) {
 						$.each(self.onload, function() { this(self.data); });
 
-					// The onload functions are no longer needed
-					delete self.onload;
+						// The onload functions are no longer needed
+						delete self.onload;
+					}
 				});
 			};
 			break;
@@ -147,7 +165,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				return fnc(this.data);
 
 			// Load the data as defined by its type
-			this.load(fnc);
+			if ('load' in this)
+				this.load(fnc);
+			else
+				return fnc(this.data);
 		}
 
 		// VERY IMPORTANT: This may be undefined which means that the value has
