@@ -24,28 +24,11 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 	self.stopped = false;
 	self.guide_block = null;
 
-	self.update = function(results, append, count) {
+	self.update = function(results, append, count, next_page) {
 		if (!results || results.length == 0)
 			return;
 		if(!self.model)
 			return;
-
-		var nodes = [];
-
-		for (var i in results) {
-			self.num_results++;
-
-			var o;
-
-			if (!self.guide_block) {
-				o = self.guide_block = new botoweb.ui.markup.Block(self.template.clone(), { model: botoweb.env.models[results[i].model], obj: results[i], with_reduction: true });
-			}
-			else {
-				o = self.guide_block.clone(self.template.clone(), { model: botoweb.env.models[results[i].model], obj: results[i] });
-			}
-
-			nodes.push(o.node);
-		}
 
 		if (self.data_table) {
 			if (count) {
@@ -53,15 +36,47 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 					self.opts.min_memory = true;
 				else
 					self.opts.min_memory = false;
-				self.data_table.update_progress(Math.round(10000 * self.num_results / count) / 100, 'Total ' + count + ' results');
 			}
 
 			self.data_table.opts.no_redraw = self.opts.min_memory;
-
-			var indices = self.data_table.append(nodes);
 		}
-		else
-			$(nodes).each(function() { self.node.append(this); });
+
+		var c = 0;
+
+		function add_row(block) {
+			self.num_results++;
+			c++;
+
+			if (self.data_table) {
+				self.data_table.append([block.node]);
+
+				// Update the progress bar no more than 100 times
+				// to avoid unnecessary overhead
+				if (self.num_results % Math.ceil(count / 100) == 0 && self.num_results - 1 % Math.ceil(count / 100) != 0)
+					self.data_table.update_progress(Math.round(10000 * self.num_results / count) / 100, 'Total ' + count + ' results');
+			}
+			else
+				self.node.append(block.node);
+
+			if (c >= results.length) {
+				next_page();
+			}
+		}
+
+		$.each(results, function () {
+			if (!self.guide_block) {
+				self.guide_block = new botoweb.ui.markup.Block(self.template.clone(), {
+					obj: this,
+					onready: add_row
+				});
+			}
+			else {
+				self.guide_block.clone(self.template.clone(), {
+					obj: this,
+					onready: add_row
+				});
+			}
+		});
 
 		if (self.stopped) {
 			if (self.data_table)
@@ -90,7 +105,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 	}
 
 	if (self.def == 'all') {
-		self.model.all(function(results, page, count) { self.update(results, page, count); return page < 20; });
+		self.model.all(function(results, page, count, next_page) { self.update(results, page, count, next_page); return false; });
 	}
 	else if (self.def) {
 		// Evaluate JSON search filters
