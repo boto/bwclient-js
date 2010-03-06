@@ -20,6 +20,8 @@ botoweb.Object = function(id, model, data) {
 	if (typeof self.model == 'string')
 		self.model = botoweb.env.models[self.model];
 
+	self.model.objs[self.id] = self;
+
 	$.each(self.model.props, function () {
 		if (!(this.meta.name in self.data))
 			self.data[this.meta.name] = new this.instance();
@@ -42,9 +44,15 @@ botoweb.Object = function(id, model, data) {
 
 			if (prop.is_type('reference')) {
 				if (val.id) {
-					botoweb.env.models[prop.meta.item_type].get(val.id, function(objs) {
-						return fnc(objs || [], 0, 1);
-					}, opt);
+					var model = botoweb.env.models[prop.meta.item_type];
+
+					if (model.objs[val.id])
+						return fnc([model.objs[val.id]], 0, 1);
+					else {
+						model.get(val.id, function(objs) {
+							return fnc(objs || [], 0, 1, true);
+						}, opt);
+					}
 				}
 				else
 					fnc([], 0, 0);

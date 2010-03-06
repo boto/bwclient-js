@@ -104,6 +104,10 @@ botoweb.xml = {
 		xml = $(xml);
 
 		var model = botoweb.env.models[opt.item_type || xml.get(0).tagName];
+
+		if (model.objs[xml.attr('id')])
+			return model.objs[xml.attr('id')];
+
 		var data = {};
 
 		$.each(model.props, function() {
