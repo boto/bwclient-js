@@ -28,12 +28,16 @@ var botoweb = {
 			url += filter + "=" + filters[filter] + "&";
 		}
 
+		if ($.isArray(model_names))
+			model_names = model_names.join(', ');
+
 		var page = 0;
 		var process = function(xml, xhr){
 			xml = $(xml);
 			var data = [];
 
-			xml.find(model_names.join(', ')).each(function () {
+
+			xml.find(model_names).each(function () {
 				var obj = botoweb.xml.to_obj(this);
 				if(obj.id){
 					data.push(obj);
@@ -231,31 +235,5 @@ var botoweb = {
 				setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);
 			}, botoweb.util.error);
 		}, opt);
-	},
-
-	sample_init: function (opt) {
-		if (!opt) opt = {};
-
-		// TODO re-integrate actual API loading code.
-		botoweb.env = {
-			version: '0.1',
-
-			models: {Names:{name:'Names',properties:[{name:'name', _type: 'string'}]}}
-		};
-
-		botoweb.ldb.name = opt.db.name;
-		botoweb.ldb.title = opt.db.title;
-		botoweb.ldb.size_mb = opt.db.size_mb;
-		botoweb.ldb.version = botoweb.env.version;
-
-		botoweb.ldb.prepare(function (db) {
-			var table = botoweb.ldb.tables.Names;
-			var query = new botoweb.sql.Query(table)
-				.filter(botoweb.sql.or(table.c.name.cmp('John'), table.c.name.cmp('J', 'starts-with')))
-
-			alert('SQL:\n' + query + '\n\nBound parameters:\n' + query.bind_params);
-		}, function (e) {
-			alert('error ' + e.message);
-		});
 	}
 };

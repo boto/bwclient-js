@@ -141,7 +141,7 @@
 							this.remove();
 						}
 					}
-					else if (block.model.prop_map[val].is_type('dateTime')) {
+					else if (block.obj && block.model.prop_map[val].is_type('dateTime')) {
 						new botoweb.ui.widget.DateTime(this, block.obj.data[val].toString());
 					}
 
@@ -188,7 +188,7 @@
 			self.find(block.node, 'attribute_list', function() {
 				matches = true;
 
-				new botoweb.ui.widget.AttributeList(this);
+				//new botoweb.ui.widget.AttributeList(this);
 			});
 
 			return matches;

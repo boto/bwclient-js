@@ -140,16 +140,17 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 	}
 
 	this.stop = function() {
-		this.button_stop = null;
-
-		this.status.empty();
-
 		if (self.pending.length) {
 			this.data_table.fnAddData(self.pending, false);
 			self.pending = [];
 		}
 
-		this.data_table.fnDraw()
+		if (this.button_stop) {
+			this.button_stop = null;
+			this.status.empty();
+
+			this.data_table.fnDraw(false);
+		}
 	}
 
 	this.add_events = function() {
@@ -235,14 +236,14 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 
 
 (function() {
-	var sort_regex = new RegExp('[^\\w\\s\\d]|\\b(the|a|an)\\s+', 'gi');
+	var sort_regex = new RegExp('[^\\w\\s\\d]+|\\b(the|a|an)\\s+', 'gi');
 	var sort_regex2 = new RegExp('^\\s*');
 /**
  * Sorts strings while ignoring case, special characters, and HTML
  */
 jQuery.fn.dataTableExt.oSort['string-asc']  = function(x,y) {
-	x = x.replace(sort_regex, '').replace(sort_regex2, '').toLowerCase();
-	y = y.replace(sort_regex, '').replace(sort_regex2, '').toLowerCase();
+	x = x.replace(sort_regex, '').toLowerCase();
+	y = y.replace(sort_regex, '').toLowerCase();
 	return ((x < y) ? -1 : ((x > y) ?  1 : 0));
 };
 
@@ -250,8 +251,8 @@ jQuery.fn.dataTableExt.oSort['string-asc']  = function(x,y) {
  * Sorts strings while ignoring case, special characters, and HTML
  */
 jQuery.fn.dataTableExt.oSort['string-desc'] = function(x,y) {
-	x = x.replace(sort_regex, '').replace(sort_regex2, '').toLowerCase();
-	y = y.replace(sort_regex, '').replace(sort_regex2, '').toLowerCase();
+	x = x.replace(sort_regex, '').toLowerCase();
+	y = y.replace(sort_regex, '').toLowerCase();
 	return ((x < y) ?  1 : ((x > y) ? -1 : 0));
 };
 })();

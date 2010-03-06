@@ -73,6 +73,9 @@ botoweb.sql = {
 		 * @return The Query for chaining.
 		 */
 		this.filter = function (expr) {
+			if (!expr)
+				return this;
+
 			this.filters.push(expr);
 
 			$.each(expr.tables, function(i, t) {
@@ -503,6 +506,9 @@ botoweb.sql = {
 					break;
 
 				default:
+					if (/\w/.test(op))
+						return null;
+
 					sql_op = op;
 			}
 
