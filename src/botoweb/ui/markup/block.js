@@ -24,6 +24,10 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.skip_markup = opt.skip_markup || {};
 	this.nested_sel = opt.nested_sel;
 
+	try {
+		this.node.hide();
+	} catch (e) {}
+
 	/**
 	 * Passes parsing optimization data along to a new block created from node.
 	 * The node should of course be the same as the node that was used to create
@@ -48,40 +52,56 @@ botoweb.ui.markup.Block = function (node, opt) {
 		this.model = botoweb.env.models[node.attr(markup.prop.model)];
 	}
 
-	/**
-	 * If the parsing routine has not been marked to skip, runs the parsing
-	 * function. If the parsing function returns
-	 *
-	 * @private
-	 */
-	function parse (str, fnc) {
-		if (self.skip_markup[str])
-			return;
+	this.init = function () {
+		/**
+		 * If the parsing routine has not been marked to skip, runs the parsing
+		 * function. If the parsing function returns
+		 *
+		 * @private
+		 */
+		function parse (str, fnc) {
+			if (self.skip_markup[str])
+				return;
 
-		// If the parser returns false, skip it next time
-		if (fnc(self) === false)
-			self.skip_markup[str] = 1;
+			// If the parser returns false, skip it next time
+			if (fnc(self) === false)
+				self.skip_markup[str] = 1;
+		}
+
+		// Do not allow nested blocks to interfere
+		parse('nested', markup.remove_nested);
+
+		// Parse stuff in the order specified
+		$.each(['condition', 'trigger', 'attribute_list', 'attribute', 'editing_tools', 'link'], function () {
+			if (!self.skip_markup[this])
+				parse(this, markup.parse[this]);
+		});
+
+		// Add nested blocks again
+		markup.restore_nested(this);
+
+		// Parse stuff in the order specified
+		$.each(['relation','search'], function () {
+			if (!self.skip_markup[this])
+				parse(this, markup.parse[this]);
+		});
+
+		try {
+			this.node.show();
+		} catch (e) {}
+
+		if (!this.waiting && this.onready) {
+			this.onready(this);
+		}
+	};
+
+	if (this.model && !this.obj && opt.id) {
+		this.model.get(opt.id, function (obj) {
+			self.obj = obj;
+
+			self.init();
+		});
 	}
-
-	// Do not allow nested blocks to interfere
-	parse('nested', markup.remove_nested);
-
-	// Parse stuff in the order specified
-	$.each(['condition', 'trigger', 'attribute_list', 'attribute', 'editing_tools', 'link'], function () {
-		if (!self.skip_markup[this])
-			parse(this, markup.parse[this]);
-	});
-
-	// Add nested blocks again
-	markup.restore_nested(this);
-
-	// Parse stuff in the order specified
-	$.each(['relation','search'], function () {
-		if (!self.skip_markup[this])
-			parse(this, markup.parse[this]);
-	});
-
-	if (!this.waiting && this.onready) {
-		this.onready(this);
-	}
+	else
+		this.init();
 };
