@@ -203,7 +203,7 @@ botoweb.sql = {
 			if (!page)
 				page = 0;
 
-			this.limit(50, 50 * page);
+			this.limit(100, 100 * page);
 
 			txn.executeSql(this, this.bind_params, this.simplify_results(fnc, page), function (txn, e) {
 				botoweb.util.error(e);
@@ -263,28 +263,35 @@ botoweb.sql = {
 
 					// Construct an Object for the row.
 					if (make_obj) {
-						var data = {};
+						if (row.id in tbl.model.objs) {
+							row[0] = tbl.model.objs[row.id];
+						}
+						else {
+							var data = {};
 
-						$.each(tbl.model.props, function (i, prop) {
-							var col = botoweb.ldb.prop_to_column(prop);
+							$.each(tbl.model.props, function (i, prop) {
+								var col = botoweb.ldb.prop_to_column(prop);
 
-							if (col in row) {
-								var prop_data;
+								if (col in row) {
+									var prop_data;
 
-								if (prop.is_type('reference'))
-									prop_data = { id: (row[col] || null), val: undefined };
-								else
-									prop_data = { val: (row[col] || null) };
+									if (prop.is_type('reference'))
+										prop_data = { id: (row[col] || null), val: undefined };
+									else if (prop.is_type('list', 'complexType'))
+										prop_data = { count: (row[col] || null), val: undefined };
+									else
+										prop_data = { val: (row[col] || null) };
 
-								data[prop.meta.name] = new prop.instance(prop_data);
-							}
-						});
+									data[prop.meta.name] = new prop.instance(prop_data);
+								}
+							});
 
-						row[0] = new botoweb.Object(
-							row.id,
-							tbl.model.name,
-							data
-						);
+							row[0] = new botoweb.Object(
+								row.id,
+								tbl.model.name,
+								data
+							);
+						}
 					}
 
 					rows.push(row);
@@ -330,11 +337,13 @@ botoweb.sql = {
 					var tbl = column; // less confusing
 					add_table(tbl);
 
+					columns.push(tbl.c.id);
+
 					$.each(tbl.c, function (prop_name, c) {
-						if (!c)
+						if (!c || !(prop_name in tbl.model.prop_map))
 							return;
 
-						if (prop_name != 'id' && tbl.model.prop_map[prop_name].is_type('query', 'list', 'complexType')) {
+						if (prop_name != 'id' && tbl.model.prop_map[prop_name].is_type('query','blob')) {
 							if (!self.follow_refs)
 								return;
 

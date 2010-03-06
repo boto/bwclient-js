@@ -109,11 +109,13 @@ botoweb.ldb = {
 						).set_parent(table);
 
 						botoweb.ldb.tables[table_name] = list_table;
-						table.c[this.meta.name].values = list_table.c.val;
+
+						table.c[this.meta.name + '_ref'] = list_table.c.id;
+						table.c[this.meta.name + '_ref'].values = list_table.c.val;
 
 						// The column for this property in the original table is actually a
 						// reference to the new list_table.
-						table.c[this.meta.name] = list_table.c.id;
+						table.c[this.meta.name + '_ref'] = list_table.c.id;
 					}
 					// complexType mappings are added in a separate table which maps keys to values.
 					else if (this.is_type('complexType')) {
@@ -136,9 +138,9 @@ botoweb.ldb = {
 
 						// The column for this property in the original table is actually a
 						// reference to the new list_table.
-						table.c[this.meta.name] = map_table.c.id;
-						table.c[this.meta.name].keys = map_table.c.key;
-						table.c[this.meta.name].values = map_table.c.val;
+						table.c[this.meta.name + '_ref'] = map_table.c.id;
+						table.c[this.meta.name + '_ref'].keys = map_table.c.key;
+						table.c[this.meta.name + '_ref'].values = map_table.c.val;
 					}
 				});
 			});
@@ -150,7 +152,7 @@ botoweb.ldb = {
 					if (this.is_type('query') && this.meta.item_type in botoweb.ldb.tables) {
 						// Map the query column to the _ref_name column in
 						// the table corresponding to _item_type.
-						botoweb.ldb.tables[name].c[this.meta.name] = botoweb.ldb.tables[this.meta.item_type].c[this.meta.ref_name];
+						botoweb.ldb.tables[name].c[this.meta.name + '_ref'] = botoweb.ldb.tables[this.meta.item_type].c[this.meta.ref_name];
 					}
 				});
 			});
@@ -215,6 +217,9 @@ botoweb.ldb = {
 		switch (prop.meta.type) {
 			case 'integer':
 			case 'boolean':
+			// These two are represented by the # of entries in the map/list table
+			case 'complexType':
+			case 'list':
 				col += ' INTEGER';
 				return col;
 
@@ -226,9 +231,7 @@ botoweb.ldb = {
 			case 'blob':
 
 			// Cannot be represented in a single column
-			case 'complexType':
 			case 'query':
-			case 'list':
 				return null;
 
 			case 'string':

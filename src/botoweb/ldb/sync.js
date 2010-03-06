@@ -232,6 +232,8 @@ botoweb.ldb.sync = {
 
 						var v = prop.val();
 
+						bind_params.push(v.length);
+
 						$.each(v, function() {
 							var bp = [obj.id, (this.val || this)];
 							var values = '(?,?)';
