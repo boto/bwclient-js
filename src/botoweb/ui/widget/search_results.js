@@ -42,24 +42,29 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 		}
 
 		var c = 0;
+		var sent_next_query = false;
 
 		function add_row(block) {
 			self.num_results++;
 			c++;
 
 			if (self.data_table) {
-				self.data_table.append([block.node]);
+				self.data_table.append(block.node);
 
 				// Update the progress bar no more than 100 times
 				// to avoid unnecessary overhead
-				if (self.num_results % Math.ceil(count / 100) == 0 && self.num_results - 1 % Math.ceil(count / 100) != 0)
+				if (self.num_results == 1 || self.num_results % Math.ceil(count / 100) == 0 && self.num_results - 1 % Math.ceil(count / 100) != 0)
 					self.data_table.update_progress(Math.round(10000 * self.num_results / count) / 100, 'Total ' + count + ' results');
 			}
 			else
 				self.node.append(block.node);
 
-			if (c >= results.length) {
-				next_page();
+			if (self.num_results >= count) {
+				self.data_table.stop();
+			}
+			else if (c >= results.length / 2 && !sent_next_query) {
+				sent_next_query = true;
+				setTimeout(next_page, 50);
 			}
 		}
 
@@ -112,9 +117,9 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 		eval('self.def = ' + self.def);
 
 		if ($.isArray(self.def))
-			self.model.query(self.def, function(results, page, count) { self.update(results, page, count); return ((self.limit_pages == "none") || (page < eval(self.limit_pages))); });
+			self.model.query(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page); return false; });
 		else
-			self.model.find(self.def, function(results, page, count) { self.update(results, page, count); return ((self.limit_pages == "none") || (page < eval(self.limit_pages))); });
+			self.model.find(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page); return false; });
 	}
 
 	var dt_opts = {

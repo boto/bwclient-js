@@ -92,7 +92,7 @@
 						if (block.obj) {
 							block.waiting++;
 
-							block.obj.data[val].val(function (data) {
+							block.obj.data[val].val(function (data, async) {
 								$.each(data, function () {
 									if (this && this.val)
 										descend(this.val);
@@ -100,7 +100,7 @@
 
 								block.waiting--;
 
-								if (!block.waiting && block.onready) {
+								if (async && !block.waiting && block.onready) {
 									block.onready(block);
 								}
 							});
@@ -111,10 +111,10 @@
 					}
 
 					else if (block.model.prop_map[val].is_type('list')) {
-						if (block.obj && block.obj.data[val]) {
+						if (block.obj) {
 							block.waiting++;
 
-							block.obj.data[val].val(function (data) {
+							block.obj.data[val].val(function (data, async) {
 								if (node.is('li')) {
 									var items = block.obj.data[val].toString(true);
 									$.each(items, function () {
@@ -132,7 +132,7 @@
 
 								block.waiting--;
 
-								if (!block.waiting && block.onready) {
+								if (async && !block.waiting && block.onready) {
 									block.onready(block);
 								}
 							});

@@ -68,7 +68,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 	// Parse stuff in the order specified
 	$.each(['condition', 'trigger', 'attribute_list', 'attribute', 'editing_tools', 'link'], function () {
-		parse(this, markup.parse[this]);
+		if (!self.skip_markup[this])
+			parse(this, markup.parse[this]);
 	});
 
 	// Add nested blocks again
@@ -76,7 +77,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 	// Parse stuff in the order specified
 	$.each(['relation','search'], function () {
-		parse(this, markup.parse[this]);
+		if (!self.skip_markup[this])
+			parse(this, markup.parse[this]);
 	});
 
 	if (!this.waiting && this.onready) {
