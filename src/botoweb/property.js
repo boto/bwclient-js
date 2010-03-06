@@ -77,6 +77,13 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			 * the data is included in the XML.
 			 */
 			this.load = function (fnc) {
+				// The count of list or complexType items is cached. If it is
+				// zero (null) we don't need to load anything.
+				if (!this.data[0].count) {
+					this.data[0].val = null;
+					return fnc([], false);
+				}
+
 				this.onload.push(fnc);
 
 				// We already started to load the data
@@ -101,7 +108,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 							// onload contains callbacks which are waiting on
 							// this data
 							if (self.onload.length)
-								$.each(self.onload, function() { this(self.data); });
+								$.each(self.onload, function() { this(self.data, true); });
 
 							// The onload functions are no longer needed
 							delete self.onload;
@@ -111,6 +118,15 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			break;
 
 		case 'reference':
+			this.toString = function (wantarray) {
+				var ids = $.map(this.data, function (item) { return item.id })
+
+				if (wantarray)
+					return ids;
+
+				return ids.join(', ');
+			}
+
 		case 'query':
 			/**
 			 * Loads a reference or query type, data may come from botoweb or
@@ -125,7 +141,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 				var self = this;
 
-				this.obj.follow(this.meta.name, function (objs) {
+				this.obj.follow(this.meta.name, function (objs, a, b, async) {
 					self.data = [];
 
 					if (objs.length) {
@@ -140,7 +156,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 					// onload contains callbacks which are waiting on this data
 					if (self.onload && self.onload.length) {
-						$.each(self.onload, function() { this(self.data); });
+						$.each(self.onload, function() { this(self.data, async); });
 
 						// The onload functions are no longer needed
 						delete self.onload;
