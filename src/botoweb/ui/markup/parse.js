@@ -84,9 +84,11 @@
 						this.empty();
 
 						function descend (obj) {
-							var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj });
+							if (obj.id) {
+								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj });
 
-							node.append(b.node.contents());
+								node.append(b.node.contents());
+							}
 						}
 
 						if (block.obj) {
@@ -170,7 +172,11 @@
 				matches = true;
 
 				this.removeAttr(prop);
-				this.attr('href', '#');
+
+				switch (val) {
+					case 'view':
+						this.attr('href', '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?id=' + block.obj.id);
+				}
 			});
 
 			return matches;
@@ -185,10 +191,15 @@
 			if (!block.model && !block.obj)
 				return;
 
-			self.find(block.node, 'attribute_list', function() {
+			self.find(block.node, 'attribute_list', function(val, prop) {
 				matches = true;
 
-				//new botoweb.ui.widget.AttributeList(this);
+				this.removeAttr(prop);
+
+				new botoweb.ui.widget.AttributeList(this, block.model, block.obj);
+			}, {
+				// AttributeLists nested in attributes will be processed later
+				suffix: ':not(' + self.sel.attribute + ' ' + self.sel.attribute_list + ')'
 			});
 
 			return matches;

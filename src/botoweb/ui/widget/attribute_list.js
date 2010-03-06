@@ -1,6 +1,6 @@
 /**
  * @author    Ian Paterson
- * @namespace botoweb.ui.widget.editing_tools
+ * @namespace botoweb.ui.widget.attribute_list
  */
 
 /**
@@ -23,72 +23,39 @@ botoweb.ui.widget.AttributeList = function(node, model, obj) {
 	if (self.sequence && self.sequence != 'all')
 		self.sequence = self.sequence.split(',')
 	else
-		self.sequence = $.map(self.model.properties, function(prop) { return prop.name });
+		self.sequence = $.map(self.model.props, function(prop) { return prop.meta.name });
 
 	self.properties = $.map(self.sequence, function(name, num) {
 		if (!name) {
-			return {_label: '&nbsp;'};
+			return {meta:{label: '&nbsp;'}};
 		}
 		var n = name.replace(/\..*/, '');
 		if (!(n in self.model.prop_map))
 			return;
 
-		var props = {};
+		var prop = self.model.prop_map[n];
 
-		for (i in self.model.prop_map[n])
-			props[i] = self.model.prop_map[n][i];
-
-		if (props._perm && $.inArray('read', props._perm) == -1)
+		if (!prop.meta.read)
 			return;
 
-		if (n != name) {
-			props.name = name;
-		}
-
-		//if (!obj.properties[props.name])
-		//	return;
-
-		return props;
+		return prop;
 	});
 
-	/*if (self.properties.length > 20) {
-		self.per_column = Math.ceil(self.properties.length / 3);
-		self.columns = [
-			$('<div/>')
-				.addClass('al p33')
-				.appendTo(self.node),
-			$('<div/>')
-				.addClass('al p33')
-				.appendTo(self.node),
-			$('<div/>')
-				.addClass('al p33')
-				.appendTo(self.node)
-		]
-	}
-	else if (self.properties.length > 5) {*/
-		self.per_column = Math.ceil(self.properties.length / 2);
-		self.columns = [
-			$('<div/>')
-				.addClass('al p50')
-				.appendTo(self.node),
-			$('<div/>')
-				.addClass('al p50')
-				.appendTo(self.node)
-		]
-	/*}
-	else {
-		self.per_column = 1e99;
-		self.columns = [
-			$('<div/>')
-				.appendTo(self.node)
-		]
-	}*/
+	self.per_column = Math.ceil(self.properties.length / 2);
+	self.columns = [
+		$('<div/>')
+			.addClass('al p50')
+			.appendTo(self.node),
+		$('<div/>')
+			.addClass('al p50')
+			.appendTo(self.node)
+	];
 
 	$(self.properties).each(function(num, props) {
 		var c = self.columns[Math.floor(num / self.per_column)];
 
-		var template = self.template.find(botoweb.ui.markup.sel.attribute.replace(']', '=' + props.name + ']'));
-		var label = self.template.find('label[for=' + props.name + ']:first');
+		var template = self.template.find(botoweb.ui.markup.sel.attribute.replace(']', '=' + props.meta.name + ']'));
+		var label = self.template.find('label[for=' + props.meta.name + ']:first');
 
 		if (template.length) {
 			// Ignore nested attributes, these may belong to different objects via references
@@ -109,7 +76,7 @@ botoweb.ui.widget.AttributeList = function(node, model, obj) {
 		if (template.length)
 			container.append(template.clone());
 		else if (props._type in {list:1,query:1,reference:1}) {
-			var field = $('<div/>').attr(botoweb.ui.markup.prop.attribute, props.name);
+			var field = $('<div/>').attr(botoweb.ui.markup.prop.attribute, props.meta.name);
 
 			if ($.inArray(props.name, self.existing_only) >= 0)
 				field.attr(botoweb.ui.markup.prop.existing_only, 'true');
@@ -117,7 +84,7 @@ botoweb.ui.widget.AttributeList = function(node, model, obj) {
 			container.append(field);
 		}
 		else
-			container.attr(botoweb.ui.markup.prop.attribute, props.name);
+			container.attr(botoweb.ui.markup.prop.attribute, props.meta.name);
 
 		c.append(
 			$('<div/>')
@@ -125,7 +92,7 @@ botoweb.ui.widget.AttributeList = function(node, model, obj) {
 				.append(
 					(label || $('<label/>')
 						.addClass('property_label')
-						.html(props._label + ' &nbsp; ')),
+						.html(props.meta.label + ' &nbsp; ')),
 					container,
 					$('<br class="clear"/>')
 				)
