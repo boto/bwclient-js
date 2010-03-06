@@ -50,7 +50,7 @@ botoweb.Object = function(id, model, data) {
 						return fnc([model.objs[val.id]], 0, 1);
 					else {
 						model.get(val.id, function(objs) {
-							return fnc(objs || [], 0, 1, true);
+							return fnc([objs], 0, 1, true);
 						}, opt);
 					}
 				}
@@ -61,7 +61,7 @@ botoweb.Object = function(id, model, data) {
 			else {
 				opt.item_type = prop.meta.item_type;
 
-				botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, val.href),
+				botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name),
 					filters, '*>*[id]', fnc, opt
 				);
 			}
@@ -79,7 +79,7 @@ botoweb.Object = function(id, model, data) {
 
 		$(props).each(function() {
 			if (this.type == 'blob') {
-				botoweb.ajax.get(botoweb.env.base_url + self.href + '/' + self.id + '/' + this.href, fnc);
+				botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.href, self.id, this.href), fnc);
 			}
 		});
 	};
