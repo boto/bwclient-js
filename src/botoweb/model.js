@@ -36,6 +36,8 @@ botoweb.Model = function (name, href, methods, props) {
 	}
 
 	this.query_ldb = function(filters, fnc, opt) {
+		opt = opt || {};
+
 		var tbl = botoweb.ldb.tables[this.name];
 		var query = new botoweb.sql.Query(tbl);
 
@@ -45,27 +47,38 @@ botoweb.Model = function (name, href, methods, props) {
 			var total_results = 0;
 			var page = 0;
 
-			function next_page() {
-				botoweb.ldb.dbh.transaction(function (txn) {
+			function next_page(txn) {
+				function get_page(txn) {
 					query.page(txn, function(results, page) {
-						return fnc($.map(results, function (row) { return row[0]; }), page, total_results, next_page);
+						var data = $.map(results, function (row) { return row[0]; });
+
+						if (opt.one) {
+							if (data.length)
+								data = data[0];
+							else
+								data = null;
+						}
+
+						return fnc(data, page, total_results, next_page);
 					}, page++);
-				});
+				}
+
+				if (txn)
+					get_page(txn);
+				else
+					botoweb.ldb.dbh.readTransaction(get_page);
 			};
 
 			query.count(txn, function (count) {
 				total_results = count;
-				next_page();
+				next_page(txn);
 			});
 		}
 
 		if (opt.txn)
 			do_query(opt.txn);
-		else {
-			botoweb.ldb.dbh.transaction(function (txn) {
-				do_query(txn);
-			});
-		}
+		else
+			botoweb.ldb.dbh.readTransaction(do_query);
 	};
 
 	this.find = function(filters, fnc, opt){
@@ -98,12 +111,13 @@ botoweb.Model = function (name, href, methods, props) {
 
 
 	this.get = function(id, fnc, opt){
-		if (!opt) opt = {};
+		opt = opt || {};
 
 		if (this.objs[id])
-			return this.objs[id];
+			return fnc(this.objs[id]);
 
 		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
+			opt.one = true;
 			return this.query_ldb({id: id}, fnc, opt);
 		}
 
