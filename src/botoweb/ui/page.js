@@ -24,14 +24,12 @@ botoweb.ui.page = new function() {
 	 * @param {Function} fnc A callback function to run when the page is loaded.
 	 */
 	this.load = function (loc, fnc) {
-		$(botoweb.ui.page).triggerHandler('unload');
-
 		var html;
 
 		if (typeof loc == 'string') {
 			html = retrieve(loc);
 
-			var l = this.location();
+			var l = this.location;
 			l.hash_href = loc;
 			loc = l;
 		}
@@ -58,7 +56,7 @@ botoweb.ui.page = new function() {
 	 *
 	 * @return An object with keys href, hash, hash_href and query
 	 */
-	this.location = function () {
+	this.get_location = function () {
 		var url = '' + document.location.href;
 
 		var loc = {
@@ -73,6 +71,14 @@ botoweb.ui.page = new function() {
 			loc.hash = url.replace(/.*#/, '');
 			loc.hash_href = loc.hash.replace(/\?.*/g, '');
 			loc.query = loc.hash.replace(/.*\?/, '');
+			loc.data = {};
+
+			if (loc.query) {
+				var query = loc.query.split(/[&=]/);
+
+				for (var i = 0; i < query.length; i += 2)
+					loc.data[query[i]] = query[i + 1];
+			}
 		}
 
 		return loc;
@@ -107,13 +113,27 @@ botoweb.ui.page = new function() {
 	 *
 	 * @private
 	 */
-	function destroy (old_url) {
-		botoweb.ajax.stop_all();
-
+	function destroy () {
 		$('#botoweb.page').empty();
+
+		// TODO do this in a smarter way
+		$.each(botoweb.env.models, function () {
+			this.objs = {};
+		});
+	};
+
+	/**
+	 * Prepares the page to be torn down.
+	 *
+	 * @private
+	 */
+	function detach_events () {
+		botoweb.ajax.stop_all();
 
 		if (!$(botoweb.ui.page).data('events'))
 			return;
+
+		$(botoweb.ui.page).triggerHandler('unload');
 
 		// Some low-level stuff here... the bound events are stored in a data
 		// store called events.
@@ -181,6 +201,7 @@ botoweb.ui.page = new function() {
 	 * @param {String} html The HTML markup string.
 	 */
 	function show_page (html) {
+		detach_events();
 		botoweb.ui.markup.page_show(html, function (node) {
 			destroy();
 			$(botoweb.ui.page).triggerHandler('load');
@@ -197,17 +218,19 @@ botoweb.ui.page = new function() {
 	 */
 	function check () {
 		var self = botoweb.ui.page;
-		var loc = self.location();
+		var loc = self.get_location();
 
-		if (!self.history.length || loc.hash != self.history[0].hash) {
+		if (!self.history.length || loc.hash != self.location.hash) {
 			var new_page = false;
 
 			// If the base page has changed, load it, otherwise rely on page
 			// change listeners. This allows pages to maintain state when the
 			// URL changes, otherwise the page will just be reloaded by the
 			// default listener.
-			if (!self.history.length || loc.hash_href != self.history[0].hash_href)
+			if (!self.history.length || loc.hash_href != self.location.hash_href)
 				new_page = true;
+
+			self.location = loc;
 
 			// If a new page was loaded there probably will not be anything
 			// bound to the change event, but we trigger it anyway to support a
@@ -223,4 +246,6 @@ botoweb.ui.page = new function() {
 				self.load(loc);
 		}
 	}
+
+	this.location = this.get_location();
 }();
