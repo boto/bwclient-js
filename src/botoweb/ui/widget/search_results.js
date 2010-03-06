@@ -45,6 +45,9 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 		var sent_next_query = false;
 
 		function add_row(block) {
+			if (self.stopped)
+				return;
+
 			self.num_results++;
 			c++;
 
@@ -82,16 +85,6 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 				});
 			}
 		});
-
-		if (self.stopped) {
-			if (self.data_table)
-				self.data_table.stop();
-
-			self.stopped = false;
-			return false;
-		}
-		else
-			return true;
 	}
 
 	self.stop = function() {
@@ -122,11 +115,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			self.model.find(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page); return false; });
 	}
 
-	var dt_opts = {
-		stop: function() {
-			self.stop();
-		}
-	};
+	var dt_opts = {stop: true};
 
 	if (self.node.is('tr, tbody')) {
 		setTimeout(function() {
@@ -138,4 +127,6 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			self.data_table = new botoweb.ui.widget.DataTable(self.node, dt_opts);
 		}, 10);
 	}
+
+	$(botoweb.ui.page).bind('unload', function () { self.stop() });
 };
