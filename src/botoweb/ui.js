@@ -23,7 +23,7 @@ botoweb.ui = {
 		$('header nav').show();
 
 
-		var loc = botoweb.ui.page.location();
+		var loc = botoweb.ui.page.location;
 
 		if (!loc.hash_href)
 			document.location.href += '#' + botoweb.env.cfg.templates.home;

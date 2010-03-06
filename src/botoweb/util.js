@@ -49,7 +49,7 @@ botoweb.util = {
 	 */
 	interpolate: function (str, data) {
 		if (!str) return str;
-		if (!data) return data = {};
+		if (!data) data = {};
 
 		return str.replace(/\{\{\s*(\w+)\s*\}\}/g, function (m, key) {
 			return data[key] || '';

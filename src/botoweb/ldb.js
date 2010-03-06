@@ -323,7 +323,7 @@ botoweb.ldb = {
 	get: function (model, id, opt) {
 		if (!opt) opt = {};
 
-		botoweb.ldb.dbh.transaction(function (txn) {
+		botoweb.ldb.dbh.readTransaction(function (txn) {
 			var table = botoweb.ldb.model_to_table(model);
 
 			var query = new botoweb.sql.Query(table)
@@ -364,7 +364,7 @@ botoweb.ldb = {
 			// TODO follow reverse references
 		}
 
-		botoweb.ldb.dbh.transaction(function (txn) {
+		botoweb.ldb.dbh.readTransaction(function (txn) {
 			var model = botoweb.env.models[obj.model];
 			var table = botoweb.ldb.tables[botoweb.ldb.prop_to_table(model, prop)];
 

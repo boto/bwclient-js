@@ -94,7 +94,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 				var tbl = botoweb.ldb.tables[botoweb.ldb.prop_to_table(this)];
 
-				botoweb.ldb.dbh.transaction(function (txn) {
+				botoweb.ldb.dbh.readTransaction(function (txn) {
 					new botoweb.sql.Query((('key' in tbl.c) ? tbl.c.key : tbl.c.id), tbl.c.val)
 						.filter(tbl.c.id.cmp(self.obj.id))
 						.all(txn, function (rows) {
