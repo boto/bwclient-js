@@ -66,7 +66,7 @@ botoweb.Model = function (name, href, methods, props) {
 				if (txn)
 					get_page(txn);
 				else
-					botoweb.ldb.dbh.readTransaction(get_page);
+					botoweb.ldb.dbh.transaction(get_page);
 			};
 
 			query.count(txn, function (count) {
@@ -78,7 +78,7 @@ botoweb.Model = function (name, href, methods, props) {
 		if (opt.txn)
 			do_query(opt.txn);
 		else
-			botoweb.ldb.dbh.readTransaction(do_query);
+			botoweb.ldb.dbh.transaction(do_query);
 	};
 
 	this.find = function(filters, fnc, opt){
