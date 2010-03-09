@@ -65,9 +65,14 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			if (self.num_results >= count) {
 				self.data_table.stop();
 			}
-			else if (c >= results.length / 2 && !sent_next_query) {
-				sent_next_query = true;
-				setTimeout(next_page, 50);
+			else {
+				if (self.num_results == 50)
+					self.data_table.data_table.fnDraw();
+
+				if (c >= results.length / 2 && !sent_next_query) {
+					sent_next_query = true;
+					setTimeout(next_page, 50);
+				}
 			}
 		}
 
