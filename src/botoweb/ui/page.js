@@ -130,23 +130,15 @@ botoweb.ui.page = new function() {
 	function detach_events () {
 		botoweb.ajax.stop_all();
 
-		if (!$(botoweb.ui.page).data('events'))
+		var self = $(botoweb.ui.page);
+
+		if (!self.data('events'))
 			return;
 
-		$(botoweb.ui.page).triggerHandler('unload');
+		self.triggerHandler('unload');
 
-		// Some low-level stuff here... the bound events are stored in a data
-		// store called events.
-		$.each($(botoweb.ui.page).data('events'), function (i, event) {
-			// event is an object over which we can iterate to get the actual
-			// handlers functions.
-			$.each(event, function (i, handler) {
-				// The type attribute on a handler function is its namespace
-				// i.e. $('a').bind('click.global', ...) -> type == 'global'
-				if (this.type != 'global')
-					delete event[i];
-			});
-		});
+		// Unbind anything not in a namespace
+		self.unbind('.');
 	};
 
 	/**
@@ -202,9 +194,13 @@ botoweb.ui.page = new function() {
 	 */
 	function show_page (html) {
 		detach_events();
+		var self = $(botoweb.ui.page);
+
 		botoweb.ui.markup.page_show(html, function (node) {
 			destroy();
-			$(botoweb.ui.page).triggerHandler('load');
+
+			self.triggerHandler('load');
+
 			$('#botoweb.page').append(node);
 		});
 	}
@@ -235,7 +231,7 @@ botoweb.ui.page = new function() {
 			// If a new page was loaded there probably will not be anything
 			// bound to the change event, but we trigger it anyway to support a
 			// generic action which occurs every time the page changes.
-			$(botoweb.ui.page).triggerHandler('change', [loc, new_page]);
+			$(self).triggerHandler('change', [loc, new_page]);
 
 			self.history.unshift(loc);
 
