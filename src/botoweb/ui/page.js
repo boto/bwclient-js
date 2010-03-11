@@ -62,6 +62,7 @@ botoweb.ui.page = new function() {
 		var loc = {
 			href: url.replace(/#.*/, ''),
 			base_href: url.replace(/([^\/])\/[^\/].*/, '$1'),
+			full: url,
 			hash: '',
 			hash_href: '',
 			query: ''
@@ -130,15 +131,12 @@ botoweb.ui.page = new function() {
 	function detach_events () {
 		botoweb.ajax.stop_all();
 
-		var self = $(botoweb.ui.page);
+		var self = botoweb.ui.page;
 
-		if (!self.data('events'))
-			return;
-
-		self.triggerHandler('unload');
+		$(self).triggerHandler('unload');
 
 		// Unbind anything not in a namespace
-		self.unbind('.');
+		//$(self).unbind('.');
 	};
 
 	/**
@@ -194,12 +192,12 @@ botoweb.ui.page = new function() {
 	 */
 	function show_page (html) {
 		detach_events();
-		var self = $(botoweb.ui.page);
+		var self = botoweb.ui.page;
 
 		botoweb.ui.markup.page_show(html, function (node) {
 			destroy();
 
-			self.triggerHandler('load');
+			$(self).triggerHandler('load');
 
 			$('#botoweb.page').append(node);
 		});

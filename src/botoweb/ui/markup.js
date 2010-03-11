@@ -42,7 +42,7 @@ botoweb.ui.markup = new function () {
 		'link':           'a[bwLink]',
 		'model':          '*[bwModel]',
 		'object':         'article, .bwObject',
-		'relation':       '*[bwWidget=relation]',
+		'relation':       '*[bwWidget=relations]',
 		'report':         '*[bwWidget=report]',
 		'search':         '*[bwWidget=search]',
 		'search_results': '*[bwWidget=searchResults]',

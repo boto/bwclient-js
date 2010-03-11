@@ -88,7 +88,7 @@ botoweb.Model = function (name, href, methods, props) {
 			return this.query_ldb(filters, fnc, opt);
 		}
 
-		botoweb[(opt.query) ? 'query' : 'find'](botoweb.env.base_url + this.href, filters, botoweb.env.model_names.join(','), fnc);
+		botoweb[(opt.query) ? 'query' : 'find'](botoweb.util.url_join(botoweb.env.base_url, this.href), filters, botoweb.env.model_names.join(','), fnc);
 	}
 
 	this.query = function(query, fnc, opt) {

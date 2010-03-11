@@ -37,6 +37,9 @@ botoweb.Object = function(id, model, data) {
 
 		var prop = self.data[prop_name];
 
+		if (!prop)
+			return;
+
 		$.each(prop.val(), function(i, val) {
 			// If the val is not undefined we have already loaded it.
 			if (val.val !== undefined)
@@ -62,11 +65,18 @@ botoweb.Object = function(id, model, data) {
 				opt.item_type = prop.meta.item_type;
 
 				botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name),
-					filters, '*>*[id]', fnc, opt
+					filters, prop.meta.name + ' > *[id]', fnc, opt
 				);
 			}
 		});
 	}
+
+	this.update = function (data, fnc) {
+		botoweb.save(
+			botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id),
+			self.model.name, data, 'PUT', fnc
+		);
+	};
 
 	this.load = function(property, fnc) {
 		var props = self.data[property];
