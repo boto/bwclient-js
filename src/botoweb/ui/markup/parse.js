@@ -160,7 +160,11 @@
 		},
 
 		/**
-		 * Parse links.
+		 * Parse nodes which are marked for hyperlinking. Links may transfer the
+		 * user to a different page, open an external address, or just add a
+		 * click event to the linked node. Links will be generated regardless of
+		 * permissions, so the handler of the link should provide an alert when
+		 * the user does not have appropriate permissions.
 		 */
 		link: function (block) {
 			var matches = false;
@@ -173,9 +177,99 @@
 
 				this.removeAttr(prop);
 
+				// Additional data may be included in parens after the link type
+				val = val.replace(/\((.*?)\)/, '');
+				var data = RegExp.$1;
+
+				// Default href is just for show - will either be replaced or
+				// overridden with a bound event.
+				this.attr('href', '#' + val);
+
+				var view_href = '';
+
+				if (block.obj)
+					view_href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?id=' + escape(block.obj.id);
+
 				switch (val) {
-					case 'view':
-						this.attr('href', '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?id=' + block.obj.id);
+					case 'update':
+					case 'edit':
+						if (data) {
+							this.bind('click', function () {
+								// TODO save editing info
+
+								return false;
+							});
+						}
+						else
+							this.attr('href', view_href + '&action=edit');
+						break;
+
+					case 'clone':
+						this.attr('href', view_href + '&action=clone');
+						break;
+
+					case 'create':
+						if (block.model.name in botoweb.env.cfg.templates.editor)
+							this.attr('href', '#' + botoweb.env.cfg.templates.editor[block.model.name] + '&action=create');
+						else
+							this.attr('href', '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '&action=create');
+						break;
+
+					case 'delete':
+						this.bind('click', function () {
+							// TODO deletion interface
+							//new botoweb.ui.widgets.DeleteObject();
+
+							return false;
+						});
+						break;
+
+					case 'attr':
+						if (data in block.model.prop_map) {
+							var href = block.obj.data[data].val();
+							var num_choices = 0;
+
+							if (href && href.length) {
+								num_choices = href.length;
+								href = href[0].val;
+							}
+
+							var text = this.text();
+
+							// Convert emails to mailto: links
+							if (href && href.indexOf('@') >= 0) {
+								if (num_choices > 1 && text && text.indexOf('@') >= 0)
+									href = botoweb.env.cfg.format.email_href.call(this, text, val, block.obj);
+								else
+									href = botoweb.env.cfg.format.email_href.call(this, href, val, block.obj);
+
+								this.attr('href', href);
+							}
+
+							// If the property is itself a link, ensure that it
+							// includes a protocol and use it as the href
+							else if (href && /(:\/\/|www\.|\.com)/.test(href)) {
+								if (RegExp.$1 != '://')
+									href = 'http://' + href;
+
+								if (num_choices > 1 && text && text.indexOf('://') >= 0)
+									href = botoweb.env.cfg.format.external_href.call(this, text, val, block.obj);
+								else
+									href = botoweb.env.cfg.format.external_href.call(this, href, val, block.obj);
+
+								this.attr('href', href);
+							}
+
+							// Otherwise, link to the botoweb page which will
+							// display the content of the attribute
+							else
+								this.attr('href', botoweb.util.url_join(botoweb.env.cfg.base_url, block.model.href, block.obj.id, data));
+						}
+						break;
+
+					default:
+						this.attr('href', view_href);
+						break;
 				}
 			});
 
@@ -214,8 +308,18 @@
 			if (!block.model && !block.obj)
 				return;
 
-			self.find(block.node, 'relation', function() {
+			self.find(block.node, 'relation', function(val, prop) {
 				matches = true;
+
+				this.removeAttr(prop);
+
+				val = this.attr(self.prop.attributes);
+
+				var results = new botoweb.ui.widget.SearchResults(this, block.model);
+
+				block.obj.follow(val, function (data, page, count) {
+					results.update(data, page, count);
+				});
 			});
 
 			return matches;
