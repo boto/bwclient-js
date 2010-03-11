@@ -3,6 +3,8 @@
  *
  * @author Ian Paterson
  */
+(function () {
+
 botoweb.xml = {
 	/**
 	 * Parses API XML that defines a model's properties.
@@ -150,5 +152,55 @@ botoweb.xml = {
 		});
 
 		return new botoweb.Object(xml.attr('id'), model, data);
+	},
+
+	from_obj: function (model_name, data) {
+		var doc = document.implementation.createDocument("", model_name, null);
+		var obj = doc.documentElement;
+		var model = botoweb.env.models[model_name];
+
+		$.each(data, function (name, val) {
+			if (val == undefined)
+				return;
+
+			if (!(name in model.prop_map))
+				return;
+
+			var model_prop = model.prop_map[name];
+			var node = $(doc.createElement(pname));
+			node.attr("type", type);
+
+			(to_xml[model_prop.meta.type] || to_xml.def)(val, node, obj, model_prop);
+		});
+
+		return doc;
+	},
+
+	to_xml: {
+		def: function (val, node, parent) {
+			$.each(val, function () {
+				node.clone().text(this.id || this.val).appendTo(parent);
+			});
+		},
+		list: function (val, node, parent, model_prop) {
+			list = $('<items/>').appendTo(node);
+
+			$.each(val, function () {
+				$xml.to_xml.def(this, $("<item/>").appendTo(list));
+			});
+		},
+		complexType: function (val, node, parent) {
+			$.each(val, function () {
+				$('<mapping/>').attr({
+					name: this.key,
+					type: 'string'
+				}).text(this.val).appendTo(node);
+			});
+			node.appendTo(parent);
+		}
 	}
 };
+
+var $xml = botoweb.xml;
+var $env = botoweb.env;
+})();
