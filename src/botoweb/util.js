@@ -36,7 +36,7 @@ botoweb.util = {
 			if (i < arguments.length - 1)
 				part = part.replace(/\/+$/, '');
 
-			return part
+			return escape(part).replace('%3A//', '://');
 		}).join('/');
 	},
 
@@ -54,6 +54,21 @@ botoweb.util = {
 		return str.replace(/\{\{\s*(\w+)\s*\}\}/g, function (m, key) {
 			return data[key] || '';
 		});
+	},
+
+	/**
+	 * Returns the string with all HTML entities replaced with their
+	 * corresponding characters. This will convert entities such as &lt; as
+	 * well as &#39;
+	 *
+	 * @param {String} str The string to unescape.
+	 * @return The unescaped string.
+	 */
+	html_unescape: function (str) {
+		if (str)
+			return $('<div/>').html(str || '').text();
+
+		return '';
 	},
 
 	log: function (msg, err_type) {
