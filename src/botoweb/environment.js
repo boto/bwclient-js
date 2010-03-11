@@ -61,7 +61,17 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 		conditions: {},
 
 		// Allows generic modification of the DOM
-		triggers: {}
+		triggers: {},
+
+		format: {
+			email_href: function (email, prop, obj) {
+				return 'mailto:' + email;
+			},
+			external_href: function (href, prop, obj) {
+				this.attr('target', '_blank');
+				return href;
+			}
+		}
 	}, cfg);
 
 	var self = this;
