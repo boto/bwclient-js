@@ -50,7 +50,7 @@ botoweb.xml = {
 			// Pull text content of children of the property node
 			map = {
 				label: 'description',
-				default_value: 'default'
+				def: 'default'
 			};
 
 			$.each(map, function (a, b) {

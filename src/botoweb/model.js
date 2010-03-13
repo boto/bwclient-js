@@ -121,9 +121,7 @@ botoweb.Model = function (name, href, methods, props) {
 			return this.query_ldb({id: id}, fnc, opt);
 		}
 
-		botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, this.href), id, function(obj) {
-			return fnc(obj);
-		});
+		botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, this.href), id, fnc, opt.alert);
 	}
 
 	this.save = function(data, fnc){
