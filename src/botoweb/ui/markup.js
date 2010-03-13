@@ -151,7 +151,7 @@ botoweb.ui.markup = new function () {
 		var node = $(html);
 
 		// Create a new block and wait for any synchronous parsing to finish.
-		var block = new botoweb.ui.markup.Block(node, botoweb.ui.page.location.data);
+		var block = new botoweb.ui.markup.Block(node, $.extend(true, {root: true}, botoweb.ui.page.location.data));
 
 		fnc(block.node);
 

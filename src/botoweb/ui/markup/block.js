@@ -32,22 +32,22 @@ botoweb.ui.markup.Block = function (node, opt) {
 		this.node.hide();
 	} catch (e) {}
 
-	$(botoweb.ui.page).bind('change', function (loc, new_page) {
-		// Don't mess with other pages
-		if (new_page)
-			return;
+	if (this.opt.root) {
+		$(botoweb.ui.page).bind('change', function (e, loc, new_page) {
+			// Don't mess with other pages
+			if (new_page)
+				return;
 
-		alert('changed to ' + $.dump(loc.data));
+			if (loc.data.id == self.obj.id) {
+				self.opt = loc.data;
 
-		if (loc.data.data.id == self.obj.id) {
-			self.opt = loc.data;
+				if (!self.waiting)
+					self.done();
 
-			if (!self.waiting)
-				self.done();
-
-			return false;
-		}
-	});
+				return false;
+			}
+		});
+	}
 
 	/**
 	 * Passes parsing optimization data along to a new block created from node.
