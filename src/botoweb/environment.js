@@ -59,6 +59,15 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 			page_show: []
 		},
 
+		styles: {
+			button: 'ui-button ui-state-default ui-corner-all',
+			active: 'ui-state-active',
+			hover: 'ui-state-hover',
+			focus: 'ui-state-focus',
+			primary: 'ui-priority-primary',
+			secondary: 'ui-priority-secondary'
+		},
+
 		// Allows parts of DOM to be removed
 		conditions: {},
 
