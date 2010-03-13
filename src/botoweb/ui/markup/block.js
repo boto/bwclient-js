@@ -14,9 +14,13 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.obj = opt.obj;
 	this.model = opt.model;
 	this.parent = opt.parent;
-	this.onready = opt.onready;
+	this.onready = [];
 	this.nested = [];
 	this.waiting = 0;
+	this.opt = opt;
+
+	if (opt.onready)
+		this.onready.push(opt.onready);
 
 	if (this.obj && !this.model)
 		this.model = this.obj.model;
@@ -27,6 +31,23 @@ botoweb.ui.markup.Block = function (node, opt) {
 	try {
 		this.node.hide();
 	} catch (e) {}
+
+	$(botoweb.ui.page).bind('change', function (loc, new_page) {
+		// Don't mess with other pages
+		if (new_page)
+			return;
+
+		alert('changed to ' + $.dump(loc.data));
+
+		if (loc.data.data.id == self.obj.id) {
+			self.opt = loc.data;
+
+			if (!self.waiting)
+				self.done();
+
+			return false;
+		}
+	});
 
 	/**
 	 * Passes parsing optimization data along to a new block created from node.
@@ -50,6 +71,16 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 	if (node.attr(markup.prop.model)) {
 		this.model = botoweb.env.models[node.attr(markup.prop.model)];
+	}
+
+
+
+	this.done = function () {
+		$.each(this.onready, function () { this(self) });
+
+		if (this.obj && this.opt.action == 'edit') {
+			$(this.obj).triggerHandler('edit');
+		}
 	}
 
 	this.init = function () {
@@ -90,9 +121,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 			this.node.show();
 		} catch (e) {}
 
-		if (!this.waiting && this.onready) {
-			this.onready(this);
-		}
+		if (!this.waiting)
+			this.done();
 	};
 
 	if (this.model && !this.obj && opt.id) {
