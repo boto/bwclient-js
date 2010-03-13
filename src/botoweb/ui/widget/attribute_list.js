@@ -92,7 +92,7 @@ botoweb.ui.widget.AttributeList = function(node, model, obj) {
 				.append(
 					(label || $('<label/>')
 						.addClass('property_label')
-						.html(props.meta.label + ' &nbsp; ')),
+						.html(props.meta.label)),
 					container,
 					$('<br class="clear"/>')
 				)

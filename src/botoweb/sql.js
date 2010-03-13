@@ -514,6 +514,9 @@ botoweb.sql = {
 					sql_op = {is: '=', 'is not': '!='}[op];
 					break;
 
+				case 'like':
+					break;
+
 				default:
 					if (/\w/.test(op))
 						return null;

@@ -46,8 +46,9 @@ $forms.Field = function (prop, opt) {
 
 	var self = this;
 
-	this.node = $('<div class="prop_editor" />').hide();
 	this.prop = prop;
+	this.node = $('<div class="prop_editor" />').hide();
+
 	this.obj = prop.obj;
 	this.model = prop.meta.model;
 	this.opt = $.extend(true, {
@@ -107,12 +108,22 @@ $forms.Field = function (prop, opt) {
 	this.add_field = function (value) {
 		var field = this.build_field(value);
 
-		if (this.fields.length)
-			this.fields[this.fields.length - 1].after(field);
-		else
-			this.node.append(field);
+		if (this.prop.is_type('list')) {
+			var node = $('<li class="sortable_item clear"/>').append(field);
 
-		field.before($('<br class="clear"/>'));
+			this.node.find('ul').append(node);
+
+			field.before($('<span class="ui-icon"/>'));
+			$ui.sort_icons(this.node.find('ul'));
+		}
+		else {
+			if (this.fields.length)
+				this.fields[this.fields.length - 1].after(field);
+			else
+				this.node.append(field);
+
+			field.before($('<br class="clear"/>'));
+		}
 
 		this.fields.push(field);
 	};
@@ -126,6 +137,9 @@ $forms.Field = function (prop, opt) {
 	this.edit = function (atomic) {
 		this.atomic = atomic;
 		this.node.empty();
+
+		if (this.prop.is_type('list'))
+			this.node.append($ui.sortable($('<ul class="clear"/>')));
 
 		var val = this.prop.val();
 
@@ -190,7 +204,8 @@ $forms.Field = function (prop, opt) {
 
 	this.set_default = function () {
 		$.each(this.fields, function () {
-			$(this).val(self.prop.meta.def);
+			if (!$(this).val())
+				$(this).val(self.prop.meta.def);
 		});
 	}
 
