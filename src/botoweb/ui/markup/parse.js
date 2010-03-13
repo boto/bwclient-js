@@ -84,7 +84,7 @@
 						this.empty();
 
 						function descend (obj) {
-							if (obj.id) {
+							if (obj && obj.id) {
 								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj });
 
 								node.append(b.node.contents());

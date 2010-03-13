@@ -21,7 +21,7 @@ var botoweb = {
 	// @param filters: The Filters to apply (or null for none), this should be of the form {name: value, name2: value2}
 	// @param fnc: The function to call back to
 	//
-	find: function(url, filters, model_names, fnc){
+	find: function(url, filters, model_names, fnc, opt){
 		// Apply the filters
 		url += "?";
 		for (var filter in filters){
@@ -36,9 +36,8 @@ var botoweb = {
 			xml = $(xml);
 			var data = [];
 
-
 			xml.find(model_names).each(function () {
-				var obj = botoweb.xml.to_obj(this);
+				var obj = botoweb.xml.to_obj(this, opt);
 				if(obj.id){
 					data.push(obj);
 				}
@@ -218,7 +217,6 @@ var botoweb = {
 
 		new botoweb.Environment(href, function(env) {
 			botoweb.util.log('API initialization complete');
-			botoweb.env = env;
 
 			botoweb.ldb.name = env.cfg.db.name;
 			botoweb.ldb.title = env.cfg.db.title;

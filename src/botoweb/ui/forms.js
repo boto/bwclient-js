@@ -104,7 +104,9 @@ botoweb.ui.forms = {
 		 */
 		this.commit = function () {
 			if (this.atomic) {
-				this.obj.update({ this.prop.name: this.val() });
+				var data = {};
+				data[this.prop.name] = this.val();
+				this.obj.update(data);
 			}
 
 			// Reset the property to view mode
