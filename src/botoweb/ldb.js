@@ -65,12 +65,29 @@ botoweb.ldb = {
 		if (botoweb.ldb.dbh) {
 			// Initialize the database schema
 			$.each(botoweb.env.models, function(name, model) {
+
 				// The columns here exclude query types, which are
 				// backlinks found in other tables.
 				db.transaction(function (txn) {
+					// Fix duplicate column names in case the API designer made
+					// a duplicate property.
+					var set = {};
+
 					txn.executeSql(
 						'CREATE TABLE IF NOT EXISTS ' + botoweb.ldb.model_to_table(model) +
-						' (id TEXT UNIQUE, ' + $.map(model.props, botoweb.ldb.prop_to_column_defn).join(', ') + ')'
+						' (id TEXT UNIQUE, ' + $.map(model.props, function (prop) {
+							if (prop.meta.name in set)
+								return;
+
+							set[prop.meta.name] = 1;
+
+							var defn = botoweb.ldb.prop_to_column_defn(prop);
+
+							if (prop.is_type('reference') && !prop.is_type('list'))
+								return [defn, botoweb.ldb.prop_to_column(prop) + '__type TEXT'];
+
+							return defn;
+						}).join(', ') + ')'
 					);
 				}, error);
 
@@ -79,11 +96,23 @@ botoweb.ldb = {
 				var table = new botoweb.sql.Table(
 					// These names refer to the actual DB schema
 					botoweb.ldb.model_to_table(model),
-					$.map(model.props, botoweb.ldb.prop_to_column),
+					$.map(model.props, function (prop) {
+						var name = botoweb.ldb.prop_to_column(prop);
+
+						if (prop.is_type('reference') && !prop.is_type('list'))
+							return [name, name + '__type'];
+
+						return name;
+					}),
 					model,
 					// These friendlier names will be used in the abstraction
 					model.name,
-					$.map(model.props, function (prop) { return prop.meta.name; })
+					$.map(model.props, function (prop) {
+						if (prop.is_type('reference') && !prop.is_type('list'))
+							return [prop.meta.name, prop.meta.name + '__type'];
+
+						return prop.meta.name;
+					})
 				);
 
 				botoweb.ldb.tables[model.name] = table;
@@ -95,16 +124,21 @@ botoweb.ldb = {
 					if (this.is_type('list')) {
 						var table_name = botoweb.ldb.prop_to_table(this);
 
+						var cols = ['val'];
+
+						if (this.is_type('reference'))
+							cols.push('val__type')
+
 						db.transaction(function (txn) {
 							txn.executeSql(
 								'CREATE TABLE IF NOT EXISTS ' + table_name +
-								' (id TEXT, val TEXT)'
+								' (id TEXT, ' + cols.join(' TEXT, ') + ' TEXT)'
 							);
 						}, error);
 
 						var list_table = new botoweb.sql.Table(
 							table_name,
-							['val'],
+							cols,
 							model
 						).set_parent(table);
 
@@ -181,16 +215,12 @@ botoweb.ldb = {
 	prop_to_table: function (prop) {
 		var base_table = botoweb.ldb.model_to_table(prop.meta.model);
 
-		switch (prop.meta.type) {
-			case 'list':
-				return base_table + '_list_' + botoweb.ldb.prop_to_column(prop);
-			case 'complexType':
-				return base_table + '_map_' + botoweb.ldb.prop_to_column(prop);
-			case 'query':
-				return botoweb.ldb.model_to_table(botoweb.env.models[prop.meta.item_type]);
-			default:
-				return base_table;
-		}
+		if (prop.is_type('list', 'complexType'))
+			return base_table + '_list_' + botoweb.ldb.prop_to_column(prop);
+		else if (prop.is_type('query'))
+			return botoweb.ldb.model_to_table(botoweb.env.models[prop.meta.item_type]);
+
+		return base_table;
 	},
 
 	/**

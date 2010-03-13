@@ -132,9 +132,9 @@ botoweb.ldb.sync = {
 		var timestamp = botoweb.util.timestamp();
 
 		if (!refresh && localStorage['last_update_' + model.name])
-			model.query([['modified_at', '>', localStorage['last_update_' + model.name]]], self.process, { no_ldb: true });
+			model.query([['modified_at', '>', localStorage['last_update_' + model.name]]], self.process, { no_ldb: true, no_cache: true });
 		else
-			model.all(self.process, { no_ldb: true });
+			model.all(self.process, { no_ldb: true, no_cache: true });
 
 		// Although we may fetch multiple pages of results, these results are a
 		// snapshot of the current state, so the update time is now, not when
@@ -223,7 +223,9 @@ botoweb.ldb.sync = {
 							txn.executeSql(
 								'DELETE FROM ' + botoweb.ldb.prop_to_table(model_prop) +
 								' WHERE id = ?',
-								[obj.id]
+								[obj.id],
+								null,
+								botoweb.util.error
 							);
 						}
 
@@ -242,13 +244,33 @@ botoweb.ldb.sync = {
 								bp = [obj.id, this.key, this.val];
 								values = '(?,?,?)';
 							}
+							else if (model_prop.is_type('reference')) {
+								bp = [obj.id, this.id, this.type];
+								values = '(?,?,?)';
+							}
 
 							txn.executeSql(
 								'INSERT INTO ' + botoweb.ldb.prop_to_table(model_prop) +
 								' VALUES ' + values,
-								bp
+								bp,
+								null,
+								botoweb.util.error
 							);
 						});
+					}
+					else if (this.is_type('reference')) {
+						column_names.push(botoweb.ldb.prop_to_column(this));
+						column_names.push(botoweb.ldb.prop_to_column(this) + '__type');
+
+						if (prop) {
+							var v = prop.val()[0];
+							bind_params.push(v.id);
+							bind_params.push(v.type);
+						}
+						else {
+							bind_params.push(null);
+							bind_params.push(null);
+						}
 					}
 					else {
 						column_names.push(botoweb.ldb.prop_to_column(this));
@@ -274,7 +296,8 @@ botoweb.ldb.sync = {
 								percent_downloaded: (self.task_total) ? Math.round(10000 * self.task_processed / self.task_total) / 100 : 100
 							}]);
 						}
-					}
+					},
+					botoweb.util.error
 				);
 			});
 		});

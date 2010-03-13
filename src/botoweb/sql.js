@@ -279,7 +279,7 @@ botoweb.sql = {
 									var prop_data;
 
 									if (prop.is_type('reference'))
-										prop_data = { id: (row[col] || null), val: undefined };
+										prop_data = { count: 1, id: (row[col] || null), type: row[col + '__type'], val: undefined };
 									else if (prop.is_type('list', 'complexType'))
 										prop_data = { count: (row[col] || null), val: undefined };
 									else
@@ -357,10 +357,17 @@ botoweb.sql = {
 						}
 
 						columns.push(c);
+
+						if ((prop_name + '__type') in tbl.c)
+							columns.push(tbl.c[prop_name + '__type']);
 					});
 				}
 				else {
 					columns.push(column);
+
+					if (column.table && (column.name + '__type') in column.table.c)
+						columns.push(column.table.c[column.name + '__type']);
+
 					if (column.tables) {
 						$.each(column.tables, function () { add_table(this); });
 					}
@@ -390,8 +397,9 @@ botoweb.sql = {
 		};
 
 		// Initialize columns passed to the constructor
-		$.each(arguments, function () {
-			self.append_column(this);
+		$.each(arguments, function (i, col) {
+			if (col)
+				self.append_column(col);
 		});
 	},
 
@@ -422,7 +430,7 @@ botoweb.sql = {
 		this.c['id'] = new botoweb.sql.Column('id', this);
 
 		for (var c in tbl_columns) {
-			this.c[columns[c] || tbl_columns[c]] = new botoweb.sql.Column(tbl_columns[c], this);
+			this.c[columns[c] || tbl_columns[c]] = new botoweb.sql.Column(tbl_columns[c], this, c);
 		}
 
 		this.set_parent = function (tbl) {
@@ -469,9 +477,10 @@ botoweb.sql = {
 	 * @param {botoweb.sql.Table} table The table containing the column.
 	 * @constructor
 	 */
-	Column: function (name, table) {
-		this.name = name;
+	Column: function (name, table, prop_name) {
+		this.col_name = name;
 		this.table = table;
+		this.name = prop_name;
 
 		/**
 		 * Compares the column to another column, expression, or literal.
@@ -521,7 +530,7 @@ botoweb.sql = {
 		 * @return a non-conflicting table.column name.
 		 */
 		this.toString = function() {
-			return this.table + '.' + this.name;
+			return this.table + '.' + this.col_name;
 		}
 	},
 

@@ -15,6 +15,19 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	opt = opt || {};
 
 	var model_prop = this;
+	var is_list = false;
+
+	// Lists are not treated as their own type since this adds an extra
+	// unnecessary level of complexity. Instead the meta.list property will be
+	// true if the property was defined as a list.
+	if (type == 'list') {
+		is_list = true;
+
+		if (opt.item_type && opt.item_type in botoweb.env.models)
+			type = 'reference';
+		else
+			type = opt.item_type;
+	}
 
 	/**
 	 * Creates a new object. Expects data to be in the right format.
@@ -69,7 +82,6 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	};
 
 	switch (type) {
-		case 'list':
 		case 'complexType':
 			/**
 			 * Loads data from a complexType or list database table. It is not
@@ -77,32 +89,35 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			 * the data is included in the XML.
 			 */
 			this.load = function (fnc) {
-				// The count of list or complexType items is cached. If it is
-				// zero (null) we don't need to load anything.
-				if (!this.data[0].count) {
-					this.data[0].val = null;
-					return fnc([], false);
+				if (fnc) {
+					this.onload.push(fnc);
+
+					// We already started to load the data
+					if (this.onload.length > 1)
+						return;
 				}
-
-				this.onload.push(fnc);
-
-				// We already started to load the data
-				if (this.onload.length > 1)
-					return;
 
 				var self = this;
 
 				var tbl = botoweb.ldb.tables[botoweb.ldb.prop_to_table(this)];
 
 				botoweb.ldb.dbh.transaction(function (txn) {
-					new botoweb.sql.Query((('key' in tbl.c) ? tbl.c.key : tbl.c.id), tbl.c.val)
+					new botoweb.sql.Query(
+							tbl.c.val,
+							(('key' in tbl.c) ? tbl.c.key : tbl.c.id),
+							(('type' in tbl.c) ? tbl.c.type : tbl.c.id)
+						)
 						.filter(tbl.c.id.cmp(self.obj.id))
 						.all(txn, function (rows) {
 							self.data = $.map(rows, function (row) {
-								if ('key' in row)
-									return { key: row.key, val: row.val };
+								var data = { val: row.val };
 
-								return { val: row.val };
+								if ('type' in row)
+									data.type = row.type;
+								if ('key' in row)
+									data.key = row.key;
+
+								return data;
 							});
 
 							// onload contains callbacks which are waiting on
@@ -133,11 +148,13 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			 * from the local database.
 			 */
 			this.load = function (fnc) {
-				this.onload.push(fnc);
+				if (fnc) {
+					this.onload.push(fnc);
 
-				// We already started to load the data
-				if (this.onload.length > 1)
-					return;
+					// We already started to load the data
+					if (this.onload.length > 1)
+						return;
+				}
 
 				var self = this;
 
@@ -164,6 +181,61 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				});
 			};
 			break;
+	}
+
+	if (is_list) {
+		var load = this.load;
+
+		this.load = function (fnc) {
+			// The count of list or complexType items is cached. If it is
+			// zero (null) we don't need to load anything.
+			if (!this.data[0].count) {
+				this.data[0].val = null;
+				return fnc([], false);
+			}
+
+			this.onload.push(fnc);
+
+			// We already started to load the data
+			if (this.onload.length > 1)
+				return;
+
+			var self = this;
+
+			var tbl = botoweb.ldb.tables[botoweb.ldb.prop_to_table(this)];
+
+			botoweb.ldb.dbh.transaction(function (txn) {
+				new botoweb.sql.Query(
+						tbl.c.val,
+						tbl.c.key,       // may not exist
+						tbl.c.val__type  // may not exist
+					)
+					.filter(tbl.c.id.cmp(self.obj.id))
+					.all(txn, function (rows) {
+						self.data = $.map(rows, function (row) {
+							var data = { val: undefined };
+
+							if (self.is_type('reference'))
+								data.id = row.val;
+							else
+								data.val = row.val;
+
+							if ('val__type' in row)
+								data.type = row.val__type;
+							if ('key' in row)
+								data.key = row.key;
+
+							return data;
+						});
+
+						// Call the original load fnc
+						if (load)
+							load.call(self);
+						else
+							$.each(self.onload, function() { this(self.data, true); });
+					});
+			});
+		}
 	}
 
 	/**
@@ -202,7 +274,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		var type = this.meta.type;
 
 		for (var i = 0; i < arguments.length; i++) {
-			if (type == arguments[i])
+			if (type == arguments[i] || (arguments[i] == 'list' && this.meta.list))
 				return type;
 		}
 
@@ -214,6 +286,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		name: name || '',
 		type: type || '',
 		perm: perm || [],
+		list: is_list,
 		model: model,
 		read: false,
 		write: false

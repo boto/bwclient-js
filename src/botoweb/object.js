@@ -40,35 +40,56 @@ botoweb.Object = function(id, model, data) {
 		if (!prop)
 			return;
 
-		$.each(prop.val(), function(i, val) {
-			// If the val is not undefined we have already loaded it.
-			if (val.val !== undefined)
-				return fnc(val.val || [], 0, 0);
+		var values = prop.val();
 
-			if (prop.is_type('reference')) {
+		if (!values || !values.length)
+			return;
+
+		// If the val is not undefined we have already loaded it.
+		if (values[0].val !== undefined)
+			return fnc(values || [], 0, 0);
+
+		var objs = [];
+		var remaining = values.length;
+
+		if (prop.is_type('reference')) {
+			$.each(values, function(i, val) {
 				if (val.id) {
-					var model = botoweb.env.models[prop.meta.item_type];
+					if (!val.type)
+						alert('NO TYPE: ' + prop_name + ' with id ' + val.id);
+					var model = botoweb.env.models[val.type];
 
-					if (model.objs[val.id])
-						return fnc([model.objs[val.id]], 0, 1);
+					if (model.objs[val.id]) {
+						objs.push(model.objs[val.id]);
+						remaining--;
+					}
 					else {
-						model.get(val.id, function(objs) {
-							return fnc([objs], 0, 1, true);
+						model.get(val.id, function(o) {
+							objs.push(o);
+
+							remaining--;
+							if (remaining <= 0)
+								fnc(objs, 0, objs.length, true);
 						}, opt);
 					}
 				}
 				else
-					fnc([], 0, 0);
-				return;
-			}
-			else {
-				opt.item_type = prop.meta.item_type;
+					remaining--;
 
-				botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name),
-					filters, prop.meta.name + ' > *[id]', fnc, opt
-				);
-			}
-		});
+				return;
+			});
+
+			if (remaining <= 0)
+				fnc(objs, 0, objs.length, true);
+		}
+		else {
+			opt.item_type = prop.meta.item_type;
+
+			botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, values[0].href),
+				filters, prop.meta.name + ' > *[id]', fnc, opt
+			);
+		}
+
 	}
 
 	this.update = function (data, fnc) {

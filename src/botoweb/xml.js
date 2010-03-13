@@ -107,7 +107,9 @@ botoweb.xml = {
 
 		var model = botoweb.env.models[opt.item_type || xml.get(0).tagName];
 
-		if (model.objs[xml.attr('id')])
+		// If the object is cached, return it unless we have are reloading the
+		// object.
+		if (!opt.no_cache && model.objs[xml.attr('id')])
 			return model.objs[xml.attr('id')];
 
 		var data = {};
@@ -118,34 +120,35 @@ botoweb.xml = {
 
 			var prop = new this.instance();
 
-			if (prop.is_type('reference', 'blob')) {
-				prop.data.push({
-					// The value is null until the object is loaded
-					val: null,
+			if (prop.is_type('reference', 'blob', 'query')) {
+				prop.data = tags.map(function (i, tag) {
+					tag = $(tag);
+					return {
+						// The value is null until the object is loaded
+						val: null,
 
-					href: tags.attr("href"),
-					id: tags.attr("id")
-				});
-			}
-
-			else if (prop.is_type('list')) {
-				prop.data = tags.map(function() {
-					return { val: $(this).text() };
+						href: tag.attr('href'),
+						type: tag.attr('item_type'),
+						id: tag.attr('id')
+					};
 				});
 			}
 
 			else if (prop.is_type('complexType')) {
-				prop.data = tags.children().map(function() {
+				prop.data = tags.children().map(function(i, tag) {
+					tag = $(tag);
 					return {
-						key: tags.attr('name'),
-						type: tags.attr('type'),
-						val: tags.text()
+						key: tag.attr('name'),
+						type: tag.attr('type'),
+						val: tag.text()
 					};
 				});
 			}
 
 			else {
-				prop.data.push({ val: tags.text() });
+				prop.data = tags.map(function(i, tag) {
+					return { val: $(tag).text() };
+				});
 			}
 
 			data[this.meta.name] = prop;
@@ -155,7 +158,7 @@ botoweb.xml = {
 	},
 
 	from_obj: function (model_name, data) {
-		var doc = document.implementation.createDocument("", model_name, null);
+		var doc = document.implementation.createDocument('', model_name, null);
 		var obj = doc.documentElement;
 		var model = botoweb.env.models[model_name];
 
@@ -168,7 +171,7 @@ botoweb.xml = {
 
 			var model_prop = model.prop_map[name];
 			var node = $(doc.createElement(pname));
-			node.attr("type", type);
+			node.attr('type', type);
 
 			(to_xml[model_prop.meta.type] || to_xml.def)(val, node, obj, model_prop);
 		});
@@ -180,13 +183,6 @@ botoweb.xml = {
 		def: function (val, node, parent) {
 			$.each(val, function () {
 				node.clone().text(this.id || this.val).appendTo(parent);
-			});
-		},
-		list: function (val, node, parent, model_prop) {
-			list = $('<items/>').appendTo(node);
-
-			$.each(val, function () {
-				$xml.to_xml.def(this, $("<item/>").appendTo(list));
 			});
 		},
 		complexType: function (val, node, parent) {
