@@ -107,9 +107,14 @@ $forms.Field = function (prop, opt) {
 	this.add_field = function (value) {
 		var field = this.build_field(value);
 
-		this.fields.push(field);
+		if (this.fields.length)
+			this.fields[this.fields.length - 1].after(field);
+		else
+			this.node.append(field);
 
-		this.node.append(field);
+		field.before($('<br class="clear"/>'));
+
+		this.fields.push(field);
 	};
 
 	/**
@@ -122,9 +127,28 @@ $forms.Field = function (prop, opt) {
 		this.atomic = atomic;
 		this.node.empty();
 
-		$.each(this.prop.val(), function () {
-			self.add_field(this);
-		});
+		var val = this.prop.val();
+
+		if (val.length) {
+			$.each(val, function () {
+				self.add_field(this);
+			});
+		}
+		else
+			self.add_field();
+
+		if (this.prop.is_type('list')) {
+			this.node.prepend(
+				$('<p/>').append(
+					$ui.button('Add another value', '', true)
+						.addClass('small')
+						.click(function () {
+							self.add_field();
+							return false;
+						})
+				)
+			);
+		}
 
 		if (this.atomic) {
 			var $styles = botoweb.env.cfg.styles;
@@ -218,7 +242,10 @@ $forms.Field = function (prop, opt) {
 	 * interfaces.
 	 */
 	this.build_field = function (value) {
-		value = $util.html_unescape(value.val);
+		if (value)
+			value = $util.html_unescape(value.val);
+		else
+			value = '';
 
 		var field = $('<' + this.opt.html.tagName + '/>')
 			.attr(this.opt.html.attr);
@@ -296,9 +323,36 @@ $forms.Dropdown = function () {
 $forms.Bool = function () {
 	$forms.Field.apply(this, arguments);
 
-	//this.build_field = function () {
+	this.build_field = function (value) {
+		value = value.val;
 
-	//};
+		var field = $('<div><input type="radio" value="1"/> Yes &nbsp; <input type="radio" value="0"/> No</div>');
+
+
+
+		field.append(
+			$('<br class="clear"/>'),
+			$ui.button('Clear')
+				.addClass('small')
+				.click(function () {
+					field.find('input').attr('checked', false);
+				})
+		);
+
+		// If the field supports choices this will add them
+		this.reset_choices(field);
+
+		field.find('input').attr({
+			checked: false,
+			// Random name just to make sure these function as radio buttons
+			name: 'field_' + Math.round(Math.random() * 10000)
+		});
+
+		if (value !== null)
+			field.find('input[value=' + value + ']').attr('checked', true);
+
+		return field;
+	};
 };
 
 $forms.File = function () {
