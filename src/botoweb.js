@@ -7,6 +7,7 @@
  */
 var botoweb = {
 	env: {},
+	util: {},
 
 	//
 	// Get all items at this url
@@ -115,7 +116,9 @@ var botoweb = {
 				next_page()
 		}
 
-		return botoweb.ajax.get(url, process);
+		return botoweb.ajax.get(url, process, function () {
+			fnc([], 0, 0);
+		});
 	},
 
 	//
@@ -131,7 +134,7 @@ var botoweb = {
 				fnc(botoweb.xml.to_obj($(data).children().first()));
 			else
 				fnc();
-		});
+		}, fnc);
 	},
 
 	//

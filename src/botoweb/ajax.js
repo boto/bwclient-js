@@ -20,7 +20,7 @@ botoweb.ajax = {
 		botoweb.ajax.cachedRequests = {};
 		botoweb.ajax.manager.abort(null, ajaxID);
 	},
-	get: function(url, callback){
+	get: function(url, callback, error){
 		var ajaxID = 'GET_'+ url.replace(/\./g, '_');
 		var cachedRequests = botoweb.ajax.cachedRequests;
 		if(cachedRequests[ajaxID]){
@@ -42,7 +42,10 @@ botoweb.ajax = {
 							// TODO investigate whether this results in a memory leak
 							botoweb.ajax.manager.add(cfg);
 						}, 250);
-						return;
+					}
+					else if (error) {
+						delete cachedRequests[ajaxID];
+						error();
 					}
 				},
 				url: url
