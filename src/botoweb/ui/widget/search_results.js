@@ -80,13 +80,15 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			if (!self.guide_block) {
 				self.guide_block = new botoweb.ui.markup.Block(self.template.clone(), {
 					obj: this,
-					onready: add_row
+					onready: add_row,
+					editable: false
 				});
 			}
 			else {
 				self.guide_block.clone(self.template.clone(), {
 					obj: this,
-					onready: add_row
+					onready: add_row,
+					editable: false
 				});
 			}
 		});

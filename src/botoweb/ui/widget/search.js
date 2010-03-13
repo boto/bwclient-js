@@ -26,38 +26,27 @@ botoweb.ui.widget.Search = function(node) {
 	// Find any properties matching the search parameters
 	$.each((self.node.attr(botoweb.ui.markup.prop.attributes) || 'all').split(','), function() {
 		if (this == 'all') {
-			self.props.push(self.model.props);
+			self.props = self.model.props;
 			return;
 		}
 
-		var name = this;
-		var prop = $.grep(self.model.props, function(p) {
-			return p.meta.name == name;
-		});
+		if (this in self.model.prop_map) {
+			var prop = self.model.prop_map[this];
 
-		if (prop)
-			self.props.push(prop[0]);
+			self.props.push(prop);
+
+			var field = botoweb.ui.forms.prop_field(prop);
+
+			field.add_field();
+
+			field.node
+				.appendTo(self.header)
+				.show();
+
+			self.fields.push(field);
+		}
 	});
 
-	botoweb.ui.markup.parse.editing_tools(self.node);
-
-	for (var i in self.props) {
-		if (!(i in self.props)) {
-			$(i).log(self.model.name + ' does not support this property');
-			continue;
-		}
-
-		var prop = self.props[i];
-
-		prop.value = '';
-		var field = 0//botoweb.ui.forms.property_field(prop);
-
-		if (!field)
-			continue;
-
-		$(field.node).appendTo(self.header);
-		self.fields.push(field);
-	}
 
 	$(self.header).find('input').keyup(function(e) {
 		if (e.keyCode == 13)
@@ -70,35 +59,25 @@ botoweb.ui.widget.Search = function(node) {
 		if (self.def)
 			query = self.def.slice();
 
-		$(self.fields).each(function() {
-			var val;
+		$.each(self.fields, function(i, field) {
+			$.each(field.fields, function () {
+				var val = $(this).val();
 
-			if (this.fields.length > 1) {
-				val = [];
-				$(this.fields).each(function() {
-					if (this.val())
-						val.push(this.val());
-				});
-			}
-			else
-				val = this.field.val();
-
-			if ($.isArray(val))
-				query.push([this.field.attr('name'), 'like', $.map(val, function(v) { return '%' + v + '%'; })]);
-			else if (val)
-				query.push([this.field.attr('name'), 'like', '%' + val + '%']);
+				if ($.isArray(val))
+					query.push([field.prop.meta.name, 'like', $.map(val, function(v) { return '%' + v + '%'; })]);
+				else if (val)
+					query.push([field.prop.meta.name, 'like', '%' + val + '%']);
+			});
 		});
 
 		self.results.reset();
 
-		self.model.query(query, function(results, page, count) {
+		self.model.query(query, function(results, page, count, next_page) {
 			if (results.length) {
-				return self.results.update(results, page, count) && page < 10;
+				self.results.update(results, page, count, next_page);
 			}
-			else if (page == 0){
-				botoweb.ui.alert('The search did not return any results.');
-			}
-			// TODO data save callback
+
+			return false;
 		});
 	};
 
