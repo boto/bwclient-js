@@ -75,6 +75,13 @@
 						return;
 					}
 
+					var editable = this.parents($markup.sel.editable + ':first').attr($markup.prop.editable);
+
+					if (editable === undefined)
+						editable = block.opt.editable
+					else
+						editable = (editable == 'false') ? false : true;
+
 					var node = this;
 
 					if (block.model.prop_map[val].is_type('reference', 'query')) {
@@ -83,7 +90,7 @@
 
 						function descend (obj) {
 							if (obj && obj.id) {
-								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj });
+								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj, editable: editable });
 
 								node.append(b.node.contents());
 							}
@@ -149,9 +156,11 @@
 						this.html(block.obj.data[val].toString() || '');
 					}
 
-					$forms.prop_field(block.obj.data[val], {
-						node: this
-					});
+					if (editable) {
+						$forms.prop_field(block.obj.data[val], {
+							node: this
+						});
+					}
 				}, {
 					suffix: ':first'
 				});
