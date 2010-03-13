@@ -48,6 +48,27 @@ botoweb.ui = {
 		}
 
 		return button;
+	},
+
+	sortable: function (node) {
+		return node.sortable({
+			placeholder: 'ui-state-highlight ui-clearfix',
+			forcePlaceholderSize: true,
+			stop: function() {
+				botoweb.ui.sort_icons(node);
+			}
+		}).disableSelection();
+	},
+
+	sort_icons: function(node) {
+		if (node.find('li').length > 1) {
+			node.find('li span:first-child').attr('className', 'ui-icon ui-sorter ui-icon-arrowthick-2-n-s');
+			node.find('li:first > span:first').attr('className', 'ui-icon ui-sorter ui-icon-arrowthick-1-s');
+			node.find('li:last > span:first').attr('className', 'ui-icon ui-sorter ui-icon-arrowthick-1-n');
+		}
+		else {
+			node.find('li > span:first').attr('className', 'ui-icon ui-sorter ui-icon-bullet');
+		}
 	}
 };
 
