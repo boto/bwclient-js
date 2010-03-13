@@ -20,6 +20,8 @@
  * @param {Object} cfg The environment configuration.
  */
 botoweb.Environment = function(base_url, fnc, cfg) {
+	botoweb.env = this;
+
 	this.base_url = base_url;
 	this.user = null;
 	this.model_names = [];
@@ -87,8 +89,14 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 		self.version = xml.find("Index").attr("version");
 		$("#apiversion").text(self.version);
 
+		// Initialize the model names so that references to other models can be
+		// verified while building the Model instances.
+		xml.find('api').each(function () {
+			self.models[$(this).attr('name')] = null;
+		});
+
 		// Set our routes and model APIs
-		xml.find('api').map(function(){
+		xml.find('api').each(function(){
 			var m = botoweb.xml.to_model(this);
 			self.models[m.name] = m;
 			self.model_names.push(m.name);
