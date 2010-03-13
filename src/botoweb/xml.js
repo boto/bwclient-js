@@ -145,6 +145,12 @@ botoweb.xml = {
 				});
 			}
 
+			else if (prop.is_type('boolean')) {
+				prop.data = tags.map(function(i, tag) {
+					return { val: ($(tag).text() == 'True') ? 1 : 0 };
+				});
+			}
+
 			else {
 				prop.data = tags.map(function(i, tag) {
 					return { val: $(tag).text() };
@@ -193,7 +199,12 @@ botoweb.xml = {
 				}).text(this.val).appendTo(node);
 			});
 			node.appendTo(parent);
-		}
+		},
+		boolean: function (val, node, parent) {
+			$.each(val, function () {
+				node.clone().text((this.val) ? 'True' : 'False').appendTo(parent);
+			});
+		},
 	}
 };
 
