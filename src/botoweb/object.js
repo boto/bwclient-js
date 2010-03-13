@@ -28,8 +28,7 @@ botoweb.Object = function(id, model, data) {
 	});
 
 	$.each(self.data, function (i, prop) {
-		if ('obj' in prop)
-			prop.obj = self;
+		prop.obj = self;
 	});
 
 	self.follow = function(prop_name, fnc, filters, opt) {
@@ -43,7 +42,7 @@ botoweb.Object = function(id, model, data) {
 		var values = prop.val();
 
 		if (!values || !values.length)
-			return;
+			return fnc([], 0, 0);
 
 		// If the val is not undefined we have already loaded it.
 		if (values[0].val !== undefined)
@@ -59,7 +58,10 @@ botoweb.Object = function(id, model, data) {
 						alert('NO TYPE: ' + prop_name + ' with id ' + val.id);
 					var model = botoweb.env.models[val.type];
 
-					if (model.objs[val.id]) {
+					if (val.id == 'None') {
+						remaining--;
+					}
+					else if (model.objs[val.id]) {
 						objs.push(model.objs[val.id]);
 						remaining--;
 					}
