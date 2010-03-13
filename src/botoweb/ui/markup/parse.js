@@ -4,9 +4,7 @@
  * @author Ian Paterson
  */
 
-(function () {
-	var self = botoweb.ui.markup;
-
+(function ($) {
 	botoweb.ui.markup.parse = {
 		/**
 		 * Parse conditional tags and remove them from the block.node if the
@@ -15,7 +13,7 @@
 		condition: function (block) {
 			var matches = false;
 
-			self.find(block.node, 'condition', function (val, prop) {
+			$markup.find(block.node, 'condition', function (val, prop) {
 				matches = true;
 
 				if (val in botoweb.env.cfg.conditions){
@@ -37,7 +35,7 @@
 		trigger: function (block) {
 			var matches = false;
 
-			self.find(block.node, 'trigger', function (val, prop) {
+			$markup.find(block.node, 'trigger', function (val, prop) {
 				matches = true;
 
 				if (val in botoweb.env.cfg.triggers)
@@ -63,7 +61,7 @@
 			do {
 				still_matches = false;
 
-				self.find(block.node, 'attribute', function(val, prop) {
+				$markup.find(block.node, 'attribute', function(val, prop) {
 					still_matches = matches = true;
 
 					this.removeAttr(prop);
@@ -102,8 +100,8 @@
 
 								block.waiting--;
 
-								if (async && !block.waiting && block.onready) {
-									block.onready(block);
+								if (async && !block.waiting) {
+									block.done();
 								}
 							});
 						}
@@ -134,8 +132,8 @@
 
 								block.waiting--;
 
-								if (async && !block.waiting && block.onready) {
-									block.onready(block);
+								if (async && !block.waiting) {
+									block.done();
 								}
 							});
 						}
@@ -150,6 +148,10 @@
 					else if (block.obj && val in block.obj.data) {
 						this.html(block.obj.data[val].toString() || '');
 					}
+
+					$forms.prop_field(block.obj.data[val], {
+						node: this
+					});
 				}, {
 					suffix: ':first'
 				});
@@ -172,12 +174,13 @@
 			if (!block.model && !block.obj)
 				return;
 
-			self.find(block.node, 'link', function(val, prop) {
+			$markup.find(block.node, 'link', function(val, prop) {
 				matches = true;
 
 				this.removeAttr(prop);
 
 				// Additional data may be included in parens after the link type
+				/()/.test(''); // reset RegExp backrefs
 				val = val.replace(/\((.*?)\)/, '');
 				var data = RegExp.$1;
 
@@ -285,7 +288,7 @@
 			if (!block.model && !block.obj)
 				return;
 
-			self.find(block.node, 'attribute_list', function(val, prop) {
+			$markup.find(block.node, 'attribute_list', function(val, prop) {
 				matches = true;
 
 				this.removeAttr(prop);
@@ -293,7 +296,7 @@
 				new botoweb.ui.widget.AttributeList(this, block.model, block.obj);
 			}, {
 				// AttributeLists nested in attributes will be processed later
-				suffix: ':not(' + self.sel.attribute + ' ' + self.sel.attribute_list + ')'
+				suffix: ':not(' + $markup.sel.attribute + ' ' + $markup.sel.attribute_list + ')'
 			});
 
 			return matches;
@@ -308,12 +311,12 @@
 			if (!block.model && !block.obj)
 				return;
 
-			self.find(block.node, 'relation', function(val, prop) {
+			$markup.find(block.node, 'relation', function(val, prop) {
 				matches = true;
 
 				this.removeAttr(prop);
 
-				val = this.attr(self.prop.attributes);
+				val = this.attr($markup.prop.attributes);
 
 				var results = new botoweb.ui.widget.SearchResults(this, block.model);
 
@@ -331,7 +334,7 @@
 		date_time: function (block) {
 			var matches = false;
 
-			self.find(block.node, 'date_time', function() {
+			$markup.find(block.node, 'date_time', function() {
 				matches = true;
 
 				new botoweb.ui.widget.DateTime(this);
@@ -349,9 +352,9 @@
 			if (!block.model && !block.obj)
 				return;
 
-			self.find(block.node, 'editing_tools', function() {
+			$markup.find(block.node, 'editing_tools', function() {
 				matches = true;
-				new botoweb.ui.widget.EditingTools(this, block.model, (this.attr(self.prop.attributes) || ''));
+				new botoweb.ui.widget.EditingTools(this, block.model, (this.attr($markup.prop.attributes) || ''));
 			});
 
 			return matches;
@@ -363,7 +366,7 @@
 		search: function (block) {
 			var matches = false;
 
-			self.find(block.node, 'search', function() {
+			$markup.find(block.node, 'search', function() {
 				matches = true;
 
 				new botoweb.ui.widget.Search(this);
@@ -378,7 +381,7 @@
 		search_results: function (block) {
 			var matches = false;
 
-			self.find(block.node, 'search_results', function() {
+			$markup.find(block.node, 'search_results', function() {
 				matches = true;
 				new botoweb.ui.widget.SearchResults(this, block.model);
 			});
@@ -386,4 +389,7 @@
 			return matches;
 		}
 	};
-})();
+
+	var $markup = botoweb.ui.markup;
+	var $forms = botoweb.ui.forms;
+})(jQuery);
