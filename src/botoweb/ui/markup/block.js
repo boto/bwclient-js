@@ -81,6 +81,13 @@ botoweb.ui.markup.Block = function (node, opt) {
 		if (this.obj && this.opt.action == 'edit') {
 			$(this.obj).triggerHandler('edit');
 		}
+
+		if (this.parent) {
+			this.parent.waiting--;
+
+			if (this.parent.waiting == 0)
+				this.parent.done();
+		}
 	}
 
 	this.init = function () {

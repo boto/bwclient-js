@@ -16,14 +16,14 @@
 			$markup.find(block.node, 'condition', function (val, prop) {
 				matches = true;
 
+				this.removeAttr(prop);
+
 				if (val in botoweb.env.cfg.conditions){
 					if(botoweb.env.cfg.conditions[val](block.obj, this) === false)
 						this.remove();
 				}
-				else {
+				else
 					botoweb.util.error('UI condition does not exist: ' + val);
-					this.removeAttr(prop);
-				}
 			});
 
 			return matches;
@@ -64,6 +64,11 @@
 				$markup.find(block.node, 'attribute', function(val, prop) {
 					still_matches = matches = true;
 
+					val = /^([^.]*)\.?(.*)$/.exec(val);
+
+					var follow_props = val[2];
+					val = val[1];
+
 					this.removeAttr(prop);
 
 					// If the property is not supported, empty the container to
@@ -88,24 +93,36 @@
 						var contents = this.contents().clone();
 						this.empty();
 
+						if (follow_props) {
+							contents = $('<span/>')
+								.attr(prop, follow_props)
+								.append(contents);
+						}
+
 						function descend (obj) {
+							if (follow_props)
+								alert(contents.html());
 							if (obj && obj.id) {
-								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj, editable: editable });
+								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj, editable: editable, parent: block });
 
 								node.append(b.node.contents());
 							}
+							else
+								block.waiting--;
 						}
 
 						if (block.obj) {
 							block.waiting++;
 
 							block.obj.data[val].val(function (data, async) {
-								$.each(data, function () {
-									if (this && this.val)
-										descend(this.val);
-								});
-
 								block.waiting--;
+
+								$.each(data, function () {
+									if (this && this.val) {
+										block.waiting++;
+										descend(this.val);
+									}
+								});
 
 								if (async && !block.waiting) {
 									block.done();
