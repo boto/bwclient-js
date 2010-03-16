@@ -39,7 +39,7 @@ botoweb.ui.markup = new function () {
 		'editing_tools':  '*[bwWidget=editingTools]',
 		'existing_only':  '*[bwExistingOnly]',
 		'header':         'header',
-		'link':           'a[bwLink]',
+		'link':           'a[bwLink],button[bwLink]',
 		'model':          '*[bwModel]',
 		'object':         'article, .bwObject',
 		'relation':       '*[bwWidget=relations]',

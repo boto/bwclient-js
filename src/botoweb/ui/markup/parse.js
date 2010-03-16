@@ -210,9 +210,29 @@
 				val = val.replace(/\((.*?)\)/, '');
 				var data = RegExp.$1;
 
-				// Default href is just for show - will either be replaced or
-				// overridden with a bound event.
-				this.attr('href', '#' + val);
+				var set_href;
+				var node = this;
+
+				// Use a click event on a button to simulate an anchor href
+				if (this.is('button')) {
+					set_href = function (href) {
+						node.click(function () {
+							if (href.charAt(0) == '#')
+								document.location.href = botoweb.ui.page.location.href + href;
+							else
+								document.location.href = href;
+						});
+					};
+				}
+				else {
+					set_href = function (href) {
+						node.attr('href', href);
+					};
+
+					// Default href is just for show - will either be replaced or
+					// overridden with a bound event.
+					this.attr('href', '#' + val);
+				}
 
 				var view_href = '';
 
@@ -230,18 +250,18 @@
 							});
 						}
 						else
-							this.attr('href', view_href + '&action=edit');
+							set_href(view_href + '&action=edit');
 						break;
 
 					case 'clone':
-						this.attr('href', view_href + '&action=clone');
+						set_href(view_href + '&action=clone');
 						break;
 
 					case 'create':
 						if (block.model.name in botoweb.env.cfg.templates.editor)
-							this.attr('href', '#' + botoweb.env.cfg.templates.editor[block.model.name] + '&action=create');
+							set_href('#' + botoweb.env.cfg.templates.editor[block.model.name] + '&action=create');
 						else
-							this.attr('href', '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '&action=create');
+							set_href('#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '&action=create');
 						break;
 
 					case 'delete':
@@ -272,7 +292,7 @@
 								else
 									href = botoweb.env.cfg.format.email_href.call(this, href, val, block.obj);
 
-								this.attr('href', href);
+								set_href(href);
 							}
 
 							// If the property is itself a link, ensure that it
@@ -286,18 +306,18 @@
 								else
 									href = botoweb.env.cfg.format.external_href.call(this, href, val, block.obj);
 
-								this.attr('href', href);
+								set_href(href);
 							}
 
 							// Otherwise, link to the botoweb page which will
 							// display the content of the attribute
 							else
-								this.attr('href', botoweb.util.url_join(botoweb.env.cfg.base_url, block.model.href, block.obj.id, data));
+								set_href(botoweb.util.url_join(botoweb.env.cfg.base_url, block.model.href, block.obj.id, data));
 						}
 						break;
 
 					default:
-						this.attr('href', view_href);
+						set_href(view_href);
 						break;
 				}
 			});

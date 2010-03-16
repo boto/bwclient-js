@@ -46,6 +46,9 @@ botoweb.ui = {
 		if (opt.href)
 			button.click(function () { document.location = opt.href });
 
+		if (opt.attr)
+			button.attr(opt.attr);
+
 		if (opt.primary !== undefined) {
 			if (opt.primary)
 				button.addClass($styles.primary);
