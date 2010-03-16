@@ -137,6 +137,32 @@ var botoweb = {
 		}, fnc);
 	},
 
+	count: function(url, query, fnc){
+		parts = [];
+		for (query_num in query){
+			query_part = query[query_num];
+			name = query_part[0];
+			op = query_part[1];
+			value = query_part[2];
+
+			if(value.constructor.toString().indexOf("Array") != -1){
+				parts.push('["' + name + '","' + op + '",["' + value.join('","') + '"]]');
+			} else {
+				parts.push('["' + name + '","' + op + '","' + value + '"]');
+			}
+		}
+
+		url += "?query=[" + escape(parts.join(",") + "]");
+
+		$.ajax({
+			type: "HEAD",
+			url: url,
+			complete: function(data) {
+				fnc(data.getResponseHeader('X-Result-Count') || 0);
+			}
+		});
+	},
+
 	//
 	// Functon: save
 	// Save this ticket, or create a new one

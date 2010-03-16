@@ -99,11 +99,24 @@ botoweb.Model = function (name, href, methods, props) {
 		return this.find([], fnc, opt);
 	}
 
-	this.count = function(query, fnc){
-		botoweb.count(botoweb.env.base_url + this.href, query, function(count) {
-			fnc(count);
-		});
-	}
+	this.count = function(filters, fnc, opt){
+		if (!opt) opt = {};
+
+		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
+			var tbl = botoweb.ldb.tables[this.name];
+			var query = new botoweb.sql.Query(tbl.c.id);
+
+			query.apply_bw_filters(filters, tbl);
+
+			botoweb.ldb.dbh.transaction(function (txn) {
+				query.count(txn, fnc);
+			});
+
+			return;
+		}
+
+		botoweb.count(botoweb.env.base_url + this.href, filters, fnc);
+	};
 
 	this.cache = function(obj) {
 		return obj;
@@ -143,9 +156,6 @@ botoweb.Model = function (name, href, methods, props) {
 	this.del = function(id, fnc){
 		ref = this.href;
 		return botoweb.del(botoweb.env.base_url + ref + "/" + id, function(x) {
-			/*$(self.data_tables[id]).each(function() {
-				this.table.del(this.row);
-			});*/
 			delete self.data_tables[id];
 			delete self._cache[id];
 			return fnc(x);
