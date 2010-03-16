@@ -30,18 +30,24 @@ botoweb.ui = {
 			document.location.href += '#' + botoweb.env.cfg.templates.home;
 	},
 
-	button: function (text, href, primary) {
+	button: function (text, opt) {
+		opt = opt || {};
+
 		var $styles = botoweb.env.cfg.styles;
 
 		var button = $('<button/>')
 			.addClass($styles.button + ' bw_button')
 			.html(text);
 
-		if (href)
-			button.click(function () { document.location = href });
+		if (opt.icon) {
+			button.prepend($('<span class="ui-icon ' + opt.icon + '"/>'));
+		}
 
-		if (primary !== undefined) {
-			if (primary)
+		if (opt.href)
+			button.click(function () { document.location = opt.href });
+
+		if (opt.primary !== undefined) {
+			if (opt.primary)
 				button.addClass($styles.primary);
 			else
 				button.addClass($styles.secondary);
@@ -72,9 +78,10 @@ botoweb.ui = {
 	}
 };
 
-$('.bw_button')
+$('.bw_button,.fg-button')
 	.live('mouseover', function () {
-		$(this).addClass(botoweb.env.cfg.styles.hover);
+		if (!$(this).is('.ui-state-disabled'))
+			$(this).addClass(botoweb.env.cfg.styles.hover);
 	})
 	.live('mouseout', function () {
 		$(this).removeClass(botoweb.env.cfg.styles.hover)

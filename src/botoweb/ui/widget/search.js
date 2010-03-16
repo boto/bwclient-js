@@ -39,6 +39,10 @@ botoweb.ui.widget.Search = function(node) {
 
 			field.add_field();
 
+			self.header.append($('<label/>')
+				.text(prop.meta.label)
+			);
+
 			field.node
 				.appendTo(self.header)
 				.show();
@@ -82,15 +86,12 @@ botoweb.ui.widget.Search = function(node) {
 	};
 
 
-	$('<a/>')
-		.attr('href', '#')
-		.addClass('ui-button ui-state-default ui-corner-all')
-		.html('<span class="ui-icon ui-icon-search"></span>Search')
+	botoweb.ui.button('Search', {icon: 'ui-icon-search'})
 		.click(function(e) {
-			e.preventDefault();
 			self.submit();
+			return false;
 		})
-		.appendTo($('<div><label>&nbsp;</label></div>').appendTo(self.header));
+		.appendTo(self.header);
 
 	$('<br/>')
 		.addClass('clear')

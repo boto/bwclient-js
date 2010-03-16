@@ -117,12 +117,12 @@ $forms.Field = function (prop, opt) {
 			$ui.sort_icons(this.node.find('ul'));
 		}
 		else {
-			if (this.fields.length)
+			if (this.fields.length) {
 				this.fields[this.fields.length - 1].after(field);
+				field.before($('<br class="clear"/>'));
+			}
 			else
 				this.node.append(field);
-
-			field.before($('<br class="clear"/>'));
 		}
 
 		this.fields.push(field);
