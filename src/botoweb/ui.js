@@ -7,6 +7,7 @@
 botoweb.ui = {
 	widget: {},
 	forms: {},
+	nodes: {},
 
 	/**
 	 * Initializes the interface.
@@ -23,6 +24,7 @@ botoweb.ui = {
 		$('header nav li').addClass('ui-state-default ui-corner-top');
 		$('header nav').show();
 
+		botoweb.ui.nodes.search_results = $('<div class="search_results_container ui-widget-overlay"><div class="search_results"></div></div>').appendTo($('body')).hide();
 
 		var loc = botoweb.ui.page.location;
 
@@ -36,18 +38,28 @@ botoweb.ui = {
 		var $styles = botoweb.env.cfg.styles;
 
 		var button = $('<button/>')
-			.addClass($styles.button + ' bw_button')
+			.addClass($styles.button + ' bw_button' + ((opt.mini) ? ' mini' : ''))
 			.html(text);
 
 		if (opt.icon) {
-			button.prepend($('<span class="ui-icon ' + opt.icon + '"/>'));
+			button.prepend($('<span class="ui-icon ' + opt.icon + ((opt.no_text) ? ' no-text' : '') + '"/>'));
+		}
+
+		if (opt.corners) {
+			button.removeClass('ui-corner-all');
+
+			if (opt.corners[0])
+				button.addClass('ui-corner-tl');
+			if (opt.corners[1])
+				button.addClass('ui-corner-tr');
+			if (opt.corners[2])
+				button.addClass('ui-corner-br');
+			if (opt.corners[3])
+				button.addClass('ui-corner-bl');
 		}
 
 		if (opt.href)
 			button.click(function () { document.location = opt.href });
-
-		if (opt.attr)
-			button.attr(opt.attr);
 
 		if (opt.primary !== undefined) {
 			if (opt.primary)
@@ -71,7 +83,7 @@ botoweb.ui = {
 
 	sort_icons: function(node) {
 		if (node.find('li').length > 1) {
-			node.find('li span:first-child').attr('className', 'ui-icon ui-sorter ui-icon-arrowthick-2-n-s');
+			node.find('li > span:first-child').attr('className', 'ui-icon ui-sorter ui-icon-arrowthick-2-n-s');
 			node.find('li:first > span:first').attr('className', 'ui-icon ui-sorter ui-icon-arrowthick-1-s');
 			node.find('li:last > span:first').attr('className', 'ui-icon ui-sorter ui-icon-arrowthick-1-n');
 		}
