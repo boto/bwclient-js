@@ -21,23 +21,32 @@ botoweb.ui.widget.EditingTools = function(node, model, actions) {
 	actions = actions.split(/[, ]+/);
 
 	for (i in actions.reverse()) {
+		var button;
+
 		switch (actions[i]) {
 			case 'create':
 				if ('post' in self.model.methods)
-					botoweb.ui.button('Create ' + self.model.name, { icon: 'ui-icon-plus', attr: { bwLink: 'create' } }).appendTo($('<li/>').prependTo(self.node));
+					button = botoweb.ui.button('Create ' + self.model.name, { icon: 'ui-icon-plus' });
 				break;
 			case 'clone':
 				if ('post' in self.model.methods)
-					botoweb.ui.button('Clone ' + self.model.name, { icon: 'ui-icon-copy', attr: { bwLink: 'clone' } }).appendTo($('<li/>').prependTo(self.node));
+					button = botoweb.ui.button('Clone ' + self.model.name, { icon: 'ui-icon-copy' });
 				break;
 			case 'delete':
 				if ('delete' in self.model.methods)
-					botoweb.ui.button('Delete', { icon: 'ui-icon-trash', attr: { bwLink: 'delete' } }).appendTo($('<li/>').prependTo(self.node));
+					button = botoweb.ui.button('Delete', { icon: 'ui-icon-trash' });
 				break;
 			case 'edit':
 				if ('put' in self.model.methods)
-					botoweb.ui.button('Edit', { icon: 'ui-icon-pencil', attr: { bwLink: 'edit' } }).appendTo($('<li/>').prependTo(self.node));
+					button = botoweb.ui.button('Edit', { icon: 'ui-icon-pencil' });
 				break;
+		}
+
+		if (button) {
+			button.attr(botoweb.ui.markup.prop.link, actions[i])
+				.appendTo(
+					$('<li/>').prependTo(self.node)
+				);
 		}
 	}
 
