@@ -612,10 +612,10 @@ $forms.Picklist = function () {
 				.click(do_search)
 		);
 
-		this.prop.val(function (refs) {
-			$.each(refs, function () {
-				if (this)
-					add_selection(this.id);
+		this.prop.val(function (objs) {
+			$.each(objs, function () {
+				if (this && this.val)
+					add_selection(this.val.id);
 			});
 		})
 
