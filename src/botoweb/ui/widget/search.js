@@ -39,8 +39,9 @@ botoweb.ui.widget.Search = function(node) {
 
 			field.add_field();
 
-			self.header.append($('<label/>')
-				.text(prop.meta.label)
+			self.header.append(
+				$('<label class="clear"/>')
+					.text(prop.meta.label)
 			);
 
 			field.node
@@ -76,24 +77,24 @@ botoweb.ui.widget.Search = function(node) {
 
 		self.results.reset();
 
+		var search_id = self.results.search_id;
+
 		self.model.query(query, function(results, page, count, next_page) {
 			if (results.length) {
-				self.results.update(results, page, count, next_page);
+				self.results.update(results, page, count, next_page, search_id);
 			}
 
 			return false;
 		});
 	};
 
-
-	botoweb.ui.button('Search', {icon: 'ui-icon-search'})
-		.click(function(e) {
-			self.submit();
-			return false;
-		})
-		.appendTo(self.header);
-
-	$('<br/>')
-		.addClass('clear')
-		.appendTo(self.header);
+	self.header.append(
+		$('<br class="clear"/>'),
+		botoweb.ui.button('Search', {icon: 'ui-icon-search'})
+			.click(function(e) {
+				self.submit();
+				return false;
+			}),
+		$('<br class="clear"/>')
+	);
 };

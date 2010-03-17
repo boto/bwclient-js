@@ -21,13 +21,17 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 	self.limit_pages = self.node.attr("bwLimit");
 	self.opts = opts || { };
 	self.num_results = 0;
+	self.search_id = 0;
 	self.stopped = false;
 	self.guide_block = null;
 
-	self.update = function(results, append, count, next_page) {
+	self.update = function(results, page, count, next_page, search_id) {
 		if (!results || results.length == 0)
 			return;
 		if(!self.model)
+			return;
+
+		if (search_id != self.search_id)
 			return;
 
 		if (self.data_table) {
@@ -46,6 +50,9 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 
 		function add_row(block) {
 			if (self.stopped)
+				return;
+
+			if (search_id != self.search_id)
 				return;
 
 			self.num_results++;
@@ -70,6 +77,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 					self.data_table.data_table.fnDraw();
 
 				if (c >= results.length / 2 && !sent_next_query) {
+					self.want_page = page + 1;
 					sent_next_query = true;
 					setTimeout(next_page, 50);
 				}
@@ -101,25 +109,27 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 	self.reset = function() {
 		self.stopped = false;
 
+		self.num_results = 0;
+		self.search_id++;
+
 		if (self.data_table)
 			self.data_table.reset();
-		self.num_results = 0;
 
 		// Stop any existing searches
-		botoweb.ajax.stop_by_url(self.model.href);
+		//botoweb.ajax.stop_by_url(self.model.href);
 	}
 
 	if (self.def == 'all') {
-		self.model.all(function(results, page, count, next_page) { self.update(results, page, count, next_page); return false; });
+		self.model.all(function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; });
 	}
 	else if (self.def) {
 		// Evaluate JSON search filters
 		eval('self.def = ' + self.def);
 
 		if ($.isArray(self.def))
-			self.model.query(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page); return false; });
+			self.model.query(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; });
 		else
-			self.model.find(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page); return false; });
+			self.model.find(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; });
 	}
 
 	var dt_opts = {stop: true};

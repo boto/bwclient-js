@@ -233,6 +233,7 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 		if (this.progressbar) {
 			this.status.empty()
 			this.progressbar = null;
+			this.pending = [];
 		}
 		this.data_table.fnClearTable();
 	}
