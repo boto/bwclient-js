@@ -110,7 +110,9 @@
 						if (block.obj) {
 							block.waiting++;
 
-							block.obj.data[val].val(function (data, async) {
+							var async = false;
+
+							block.obj.data[val].val(function (data) {
 								$.each(data, function () {
 									if (this && this.val)
 										descend(this.val);
@@ -121,6 +123,8 @@
 								if (async && !block.waiting)
 									block.done();
 							});
+
+							async = true;
 						}
 						else {
 							descend();
@@ -130,8 +134,9 @@
 					else if (block.model.prop_map[val].is_type('list')) {
 						if (block.obj) {
 							block.waiting++;
+							var async = false;
 
-							block.obj.data[val].val(function (data, async) {
+							block.obj.data[val].val(function (data) {
 								if (node.is('li')) {
 									var items = block.obj.data[val].toString(true);
 									$.each(items, function () {
@@ -149,10 +154,11 @@
 
 								block.waiting--;
 
-								if (async && !block.waiting) {
+								if (async && !block.waiting)
 									block.done();
-								}
 							});
+
+							async = true;
 						}
 						else {
 							this.remove();

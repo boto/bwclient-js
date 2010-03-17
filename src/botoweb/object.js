@@ -77,7 +77,7 @@ botoweb.Object = function(id, model, data) {
 
 							remaining--;
 							if (remaining <= 0)
-								fnc(objs, 0, objs.length, true);
+								fnc(objs, 0, objs.length);
 						}, opt);
 					}
 				}

@@ -77,6 +77,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 	this.done = function () {
 		$.each(this.onready, function () { this(self) });
+		this.onready = [];
 
 		if (this.obj && this.opt.action == 'edit') {
 			$(this.obj).triggerHandler('edit');

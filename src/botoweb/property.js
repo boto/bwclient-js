@@ -157,8 +157,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				}
 
 				var self = this;
+				var async = false;
 
-				this.obj.follow(this.meta.name, function (objs, a, b, async) {
+				this.obj.follow(this.meta.name, function (objs, a, b) {
 					self.data = [];
 
 					if (objs.length) {
@@ -173,12 +174,14 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 					// onload contains callbacks which are waiting on this data
 					if (self.onload && self.onload.length) {
-						$.each(self.onload, function() { this(self.data, async); });
+						$.each(self.onload, function() { this(self.data); });
 
 						// The onload functions are no longer needed
 						delete self.onload;
 					}
 				});
+
+				async = true;
 			};
 			break;
 	}

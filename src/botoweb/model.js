@@ -127,7 +127,7 @@ botoweb.Model = function (name, href, methods, props) {
 		opt = opt || {};
 
 		if (this.objs[id])
-			return fnc(this.objs[id]);
+			return fnc(this.objs[id], false);
 
 		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
 			opt.one = true;
