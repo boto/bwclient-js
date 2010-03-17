@@ -237,7 +237,7 @@ botoweb.ldb.sync = {
 						bind_params.push(v.length);
 
 						$.each(v, function() {
-							var bp = [obj.id, (this.val || this)];
+							var bp = [obj.id, this.val];
 							var values = '(?,?)';
 
 							if (model_prop.is_type('complexType')) {

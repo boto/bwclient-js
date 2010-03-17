@@ -38,7 +38,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		opt = opt || {};
 		var self = this;
 
-		this.data = data || [{val: undefined}];
+		this.data = data || [{val: null}];
 
 		if (!$.isArray(this.data))
 			this.data = [this.data];

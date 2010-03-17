@@ -56,7 +56,13 @@ botoweb.Object = function(id, model, data) {
 				if (val.id) {
 					if (!val.type)
 						alert('NO TYPE: ' + prop_name + ' with id ' + val.id);
+
 					var model = botoweb.env.models[val.type];
+
+					if (!model) {
+						remaining--;
+						return;
+					}
 
 					if (val.id == 'None') {
 						remaining--;

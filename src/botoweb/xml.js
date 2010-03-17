@@ -125,8 +125,8 @@ botoweb.xml = {
 				d = tags.map(function (i, tag) {
 					tag = $(tag);
 					return {
-						// The value is null until the object is loaded
-						val: null,
+						// The value is undefined until the object is loaded
+						val: undefined,
 
 						href: tag.attr('href'),
 						type: tag.attr('item_type'),
