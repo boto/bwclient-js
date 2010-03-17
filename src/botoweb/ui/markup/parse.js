@@ -100,33 +100,26 @@
 						}
 
 						function descend (obj) {
-							if (follow_props)
-								alert(contents.html());
 							if (obj && obj.id) {
-								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj, editable: editable, parent: block });
+								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj, editable: ((editable) ? 'true' : 'false'), parent: block });
 
 								node.append(b.node.contents());
 							}
-							else
-								block.waiting--;
 						}
 
 						if (block.obj) {
 							block.waiting++;
 
 							block.obj.data[val].val(function (data, async) {
-								block.waiting--;
-
 								$.each(data, function () {
-									if (this && this.val) {
-										block.waiting++;
+									if (this && this.val)
 										descend(this.val);
-									}
 								});
 
-								if (async && !block.waiting) {
+								block.waiting--;
+
+								if (async && !block.waiting)
 									block.done();
-								}
 							});
 						}
 						else {
@@ -173,7 +166,7 @@
 						this.html(block.obj.data[val].toString() || '');
 					}
 
-					if (editable) {
+					if (editable && block.model.prop_map[val].meta.write) {
 						$forms.prop_field(block.obj.data[val], {
 							node: this
 						});
