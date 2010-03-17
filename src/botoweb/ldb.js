@@ -38,6 +38,9 @@ botoweb.ldb = {
 		var db = botoweb.ldb.dbh;
 
 		if (!db) {
+			if (!window.openDatabase)
+				return;
+
 			botoweb.ldb.dbh = db = openDatabase(
 				botoweb.ldb.name,
 				botoweb.ldb.version,

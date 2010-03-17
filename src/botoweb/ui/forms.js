@@ -553,7 +553,7 @@ $forms.Picklist = function () {
 
 					$.each(items, function (i, obj) {
 						result_node.append(
-							$ui.button('<div class="ar small">' + obj.model + '</div>' + obj.text)
+							$ui.button('<div class="ar small">' + obj.model + '</div>' + obj.text, { corners: [0,0,0,0] })
 								.attr('id', obj.id)
 								.click(function () {
 									add_selection(obj.id);
@@ -572,7 +572,7 @@ $forms.Picklist = function () {
 					search_results.css({
 						left: offset.left + 1 + 'px',
 						top: offset.top + h + 1 + 'px',
-						width: w - 8 + 'px',
+						width: w - 4 + 'px',
 						height: ((new_h > 200) ? 200 : new_h) + 'px'
 					});
 

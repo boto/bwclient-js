@@ -24,7 +24,7 @@ botoweb.ui = {
 		$('header nav li').addClass('ui-state-default ui-corner-top');
 		$('header nav').show();
 
-		botoweb.ui.nodes.search_results = $('<div class="search_results_container ui-widget-overlay"><div class="search_results"></div></div>').appendTo($('body')).hide();
+		botoweb.ui.nodes.search_results = $('<div class="search_results_container"><div class="search_results"></div></div>').appendTo($('body')).hide();
 
 		var loc = botoweb.ui.page.location;
 
