@@ -241,7 +241,7 @@ var botoweb = {
 	 *
 	 * @param {String} href The location of the API root
 	 */
-	init: function(href, opt) {
+	init: function(href, opt, fnc) {
 		if (!opt) opt = {};
 
 		new botoweb.Environment(href, function(env) {
@@ -256,6 +256,8 @@ var botoweb = {
 			botoweb.ldb.prepare(function (db) {
 				botoweb.util.log('Data initialization complete, begin synchronizing');
 				botoweb.ui.init();
+				if (fnc)
+					fnc();
 				botoweb.ldb.sync.update();
 
 				// Update the local database every 2 minutes

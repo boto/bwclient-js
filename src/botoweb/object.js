@@ -54,9 +54,6 @@ botoweb.Object = function(id, model, data) {
 		if (prop.is_type('reference')) {
 			$.each(values, function(i, val) {
 				if (val.id) {
-					if (!val.type)
-						alert('NO TYPE: ' + prop_name + ' with id ' + val.id);
-
 					var model = botoweb.env.models[val.type];
 
 					if (!model) {

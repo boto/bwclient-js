@@ -25,6 +25,7 @@ botoweb.ui = {
 		$('header nav').show();
 
 		botoweb.ui.nodes.search_results = $('<div class="search_results_container"><div class="search_results"></div></div>').appendTo($('body')).hide();
+		$(botoweb.ui.page).bind('change.global', function () { botoweb.ui.nodes.search_results.hide() })
 
 		var loc = botoweb.ui.page.location;
 
