@@ -119,9 +119,10 @@ botoweb.xml = {
 			var tags = xml.find('> ' + this.meta.name);
 
 			var prop = new this.instance();
+			var data;
 
 			if (prop.is_type('reference', 'blob', 'query')) {
-				prop.data = tags.map(function (i, tag) {
+				data = tags.map(function (i, tag) {
 					tag = $(tag);
 					return {
 						// The value is null until the object is loaded
@@ -135,7 +136,7 @@ botoweb.xml = {
 			}
 
 			else if (prop.is_type('complexType')) {
-				prop.data = tags.children().map(function(i, tag) {
+				data = tags.children().map(function(i, tag) {
 					tag = $(tag);
 					return {
 						key: tag.attr('name'),
@@ -146,16 +147,20 @@ botoweb.xml = {
 			}
 
 			else if (prop.is_type('boolean')) {
-				prop.data = tags.map(function(i, tag) {
+				data = tags.map(function(i, tag) {
 					return { val: ($(tag).text() == 'True') ? 1 : 0 };
 				});
 			}
 
 			else {
-				prop.data = tags.map(function(i, tag) {
+				data = tags.map(function(i, tag) {
 					return { val: $(tag).text() };
 				});
 			}
+
+			// Do not replace the default data if nothing was provided in XML
+			if (data.length > 0)
+				prop.data;
 
 			data[this.meta.name] = prop;
 		});
