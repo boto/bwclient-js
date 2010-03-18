@@ -229,7 +229,10 @@ botoweb.ui.page = new function() {
 			// If a new page was loaded there probably will not be anything
 			// bound to the change event, but we trigger it anyway to support a
 			// generic action which occurs every time the page changes.
-			$(self).triggerHandler('change', [loc, new_page]);
+			// We support blockable global handlers by calling them only if the
+			// non-global do not return false.
+			if ($(self).triggerHandler('change.', [loc, new_page]) !== false)
+				$(self).triggerHandler('change.global', [loc, new_page]);
 
 			self.history.unshift(loc);
 

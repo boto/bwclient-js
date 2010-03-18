@@ -18,6 +18,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.nested = [];
 	this.waiting = 0;
 	this.opt = opt;
+	this.state = 'view';
 
 	if (opt.onready)
 		this.onready.push(opt.onready);
@@ -33,7 +34,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 	} catch (e) {}
 
 	if (this.opt.root) {
-		$(botoweb.ui.page).bind('change', function (e, loc, new_page) {
+		$(botoweb.ui.page)
+			.bind('change', function (e, loc, new_page) {
+
 			// Don't mess with other pages
 			if (new_page)
 				return;
@@ -43,6 +46,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 				if (!self.waiting)
 					self.done();
+
+				// Block other handlers
+				e.stopImmediatePropagation();
 
 				return false;
 			}
@@ -79,8 +85,14 @@ botoweb.ui.markup.Block = function (node, opt) {
 		$.each(this.onready, function () { this(self) });
 		this.onready = [];
 
-		if (this.obj && this.opt.action == 'edit') {
+		if (this.obj && this.opt.action == 'edit' && this.state != 'edit') {
+			this.state = 'edit';
 			$(this.obj).triggerHandler('edit');
+		}
+
+		if (this.obj && !this.opt.action && this.state != 'view') {
+			$(this.obj).triggerHandler('cancel_' + this.state);
+			this.state = 'view';
 		}
 /*
 		if (this.parent) {
