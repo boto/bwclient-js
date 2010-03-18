@@ -159,8 +159,6 @@ $forms.Field = function (prop, opt) {
 		if ('decorate_field' in this)
 			this.decorate_field(field);
 
-		field.focus();
-
 		this.fields.push(field);
 	};
 
@@ -311,6 +309,9 @@ $forms.Field = function (prop, opt) {
 		$(this.obj).bind('edit', function () {
 			self.edit();
 		});
+		$(this.obj).bind('cancel_edit', function () {
+			self.cancel();
+		});
 	}
 };
 
@@ -332,9 +333,31 @@ $forms.DateTime = function () {
 	this.opt.html.attr.type = 'text';
 
 	this.decorate_field = function (field) {
-		field.datepicker({
+		var dp = field.datepicker({
 			showAnim: 'drop',
-			showOptions: {direction: 'down', duration: 250}
+			showOptions: {direction: 'down'},
+			duration: 350,
+			dateFormat: 'yy-mm-dd',
+			showTime: true,
+			time24h: true,
+			altField: this.field,
+			changeMonth: true,
+			changeYear: true,
+			constrainInput: false,
+			onClose: function(dateText, inst) {
+				dateText = dateText.replace(' GMT', '') + ' GMT';
+				this.value = dateText;
+			},
+			// timePicker is quite unable to position itself. As soon as the
+			// datePicker starts to animate, we also position and start to
+			// animate the timePicker with the same effect.
+			beforeShow: function () {
+				setTimeout(function () {
+					$('#ui-timepicker-div').css('top', $('#ui-datepicker-div').parent().css('top'));
+					$('#ui-timepicker-div').css('left', $('#ui-datepicker-div').offset().left + $('#ui-datepicker-div').width() + 5 + 'px');
+					$('#ui-timepicker-div').show('drop', {direction: 'down'}, 340);
+				}, 1);
+			}
 		});
 	};
 };
