@@ -96,10 +96,11 @@ $util.log = function (msg, err_type) {
 			msg = '[BW  MESG] ' + msg;
 	}
 
-	if (console)
+	try {
 		console.log(msg);
-	else
+	} catch (e) {
 		alert(msg);
+	}
 };
 
 $util.error = function (msg) {

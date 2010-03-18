@@ -136,7 +136,7 @@ botoweb.ui.page = new function() {
 		$(self).triggerHandler('unload');
 
 		// Unbind anything not in a namespace
-		//$(self).unbind('.');
+		$(self).unbind('.');
 	};
 
 	/**
