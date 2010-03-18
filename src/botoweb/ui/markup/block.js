@@ -7,7 +7,7 @@
 botoweb.ui.markup.Block = function (node, opt) {
 	if (!opt) opt = {};
 
-	var markup = botoweb.ui.markup;
+	var $markup = botoweb.ui.markup;
 	var self = this;
 
 	this.node = node;
@@ -69,14 +69,14 @@ botoweb.ui.markup.Block = function (node, opt) {
 		opt.skip_markup = this.skip_markup;
 		opt.nested_sel = this.nested_sel;
 
-		return new botoweb.ui.markup.Block(node, opt);
+		return new $markup.Block(node, opt);
 	};
 
 	if (this.parent && !this.model)
 		this.model = this.parent.model;
 
-	if (node.attr(markup.prop.model)) {
-		this.model = botoweb.env.models[node.attr(markup.prop.model)];
+	if (node.attr($markup.prop.model)) {
+		this.model = botoweb.env.models[node.attr($markup.prop.model)];
 	}
 
 
@@ -121,21 +121,21 @@ botoweb.ui.markup.Block = function (node, opt) {
 		}
 
 		// Do not allow nested blocks to interfere
-		parse('nested', markup.remove_nested);
+		parse('nested', $markup.remove_nested);
 
 		// Parse stuff in the order specified
 		$.each(['condition', 'trigger', 'attribute_list', 'attribute', 'editing_tools', 'link'], function () {
 			if (!self.skip_markup[this])
-				parse(this, markup.parse[this]);
+				parse(this, $markup.parse[this]);
 		});
 
 		// Add nested blocks again
-		markup.restore_nested(this);
+		$markup.restore_nested(this);
 
 		// Parse stuff in the order specified
 		$.each(['relation','search'], function () {
 			if (!self.skip_markup[this])
-				parse(this, markup.parse[this]);
+				parse(this, $markup.parse[this]);
 		});
 
 		try {

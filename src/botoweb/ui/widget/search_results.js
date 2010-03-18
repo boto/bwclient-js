@@ -13,7 +13,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 
 	self.node = $(node);
 	self.model = model;
-	self.template = self.node.find(botoweb.ui.markup.sel.object + ':eq(0)')
+	self.template = self.node.find(botoweb.ui.markup.sel.object + ':first')
 		.addClass('object')
 		.clone();
 	self.node.empty();
@@ -30,6 +30,8 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			return;
 		if(!self.model)
 			return;
+
+		search_id = search_id || 0;
 
 		if (search_id != self.search_id)
 			return;
@@ -66,14 +68,16 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 				if (self.num_results == 1 || self.num_results % Math.ceil(count / 100) == 0 && self.num_results - 1 % Math.ceil(count / 100) != 0)
 					self.data_table.update_progress(Math.round(10000 * self.num_results / count) / 100, 'Total ' + count + ' results');
 			}
-			else
+			else {
 				self.node.append(block.node);
+			}
 
 			if (self.num_results >= count) {
-				self.data_table.stop();
+				if (self.data_table)
+					self.data_table.stop();
 			}
 			else {
-				if (self.num_results == 50)
+				if (self.num_results == 50 && self.data_table)
 					self.data_table.data_table.fnDraw();
 
 				if (c >= results.length / 2 && !sent_next_query) {

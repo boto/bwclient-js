@@ -90,7 +90,7 @@ botoweb.Object = function(id, model, data) {
 		else {
 			opt.item_type = prop.meta.item_type;
 
-			botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, values[0].href),
+			botoweb.query(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop_name),
 				filters, prop.meta.name + ' > *[id]', fnc, opt
 			);
 		}
