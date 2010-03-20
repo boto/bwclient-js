@@ -29,7 +29,8 @@ botoweb.ldb.sync = {
 	 * @param {Boolean} refresh If true, fetches all records regardless of
 	 * update timestamps.
 	 */
-	update: function(models, refresh) {
+	update: function(models, opt) {
+		opt = opt || {};
 		var self = botoweb.ldb.sync;
 
 		if (!models)
@@ -39,7 +40,7 @@ botoweb.ldb.sync = {
 			models = [models];
 
 		$.each(models, function() {
-			if (refresh)
+			if (opt.refresh)
 				self.refresh_queue.push(this);
 			else
 				self.update_queue.push(this);
@@ -207,6 +208,10 @@ botoweb.ldb.sync = {
 				var bind_params = [obj.id];
 				var model = obj.model;
 				var column_names = [];
+
+				// Update any cached versions of this object
+				if (obj.id in model.objs)
+					model.objs[obj.id] = obj;
 
 				result_id++;
 
