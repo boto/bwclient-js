@@ -9,6 +9,7 @@
 var $util = botoweb.util;
 var $ui = botoweb.ui;
 var $forms = $ui.forms;
+var $ldb = botoweb.ldb;
 
 $forms.prop_field = function (prop, opt) {
 	opt = opt || {};
@@ -57,12 +58,14 @@ $forms.Field = function (prop, opt) {
 			tagName: 'input',
 			attr: {}
 		},
-		choices: []
+		choices: [],
+		type: 'string'
 	}, opt);
 
 	this.template = this.opt.template;
 	this.fields = [];
 	this.editing = false;
+	this.id = Math.round(Math.random() * 9999999);
 
 	/**
 	 * If the field is included in a larger editing operation it is not
@@ -109,6 +112,11 @@ $forms.Field = function (prop, opt) {
 	 */
 	this.add_field = function (value) {
 		var field = this.build_field(value);
+
+		// Allows field's DOM node to be mapped to the field by ID so that we
+		// can preserve the order of lists.
+		field.attr('id', this.fields.length + '_' + this.id)
+			.addClass('edit_field');
 
 		if (this.prop && this.prop.is_type('list') && this.opt.allow_list) {
 			var node = $('<li class="sortable_item clear"/>').append(field);
@@ -175,6 +183,8 @@ $forms.Field = function (prop, opt) {
 		if (this.prop.is_type('list') && this.opt.allow_list)
 			this.node.append($ui.sortable($('<ul class="clear"/>')));
 
+		this.set_default();
+
 		var val = this.prop.val();
 
 		if (val.length) {
@@ -205,7 +215,24 @@ $forms.Field = function (prop, opt) {
 					$ui.button('Save', '', true)
 						.addClass('small')
 						.click(function () {
-							// TODO save atomic update
+							var data = {};
+							data[self.prop.meta.name] = self.val();
+
+							self.obj.update(data, function (obj) {
+								delete self.model.objs[self.obj.id];
+
+								function updated () {
+									$($ldb.sync).unbind('end', updated);
+									self.cancel();
+									$ui.page.refresh();
+								}
+
+								setTimeout(function () {
+									$($ldb.sync).bind('end', updated);
+
+									$ldb.sync.update();
+								}, 500);
+							});
 							return false;
 						}),
 					$ui.button('Cancel', '', false)
@@ -217,8 +244,6 @@ $forms.Field = function (prop, opt) {
 				)
 			);
 		}
-
-		this.set_default();
 
 		this.opt.node.hide();
 
@@ -280,6 +305,33 @@ $forms.Field = function (prop, opt) {
 	 * overridden.
 	 */
 	this.reset_choices = function () { };
+
+	/**
+	 * Reformats data from the text field.
+	 *
+	 * Implementation will vary based on the UI component, should be
+	 * overridden if needed.
+	 */
+	this.format = function (v) { return v; };
+
+	/**
+	 * Returns the value represented by the field selections for the purpose of
+	 * saving that value to botoweb.
+	 *
+	 * @return A single value, an Array of values, or null.
+	 */
+	this.val = function () {
+		var val = [];
+
+		// Preserve field order according to the DOM
+		this.node.find('.edit_field').each(function () {
+			var field = self.fields[$(this).attr('id').replace('_' + self.id, '') * 1];
+
+			val.push({val: self.format(field.val()), type: self.opt.type});
+		});
+
+		return val;
+	};
 
 	/**
 	 * Generates the initial state of the editing field.
