@@ -102,6 +102,7 @@
 						function descend (obj) {
 							if (obj && obj.id) {
 								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj, editable: ((editable) ? 'true' : 'false'), parent: block });
+								block.children.push(b);
 
 								node.append(b.node.contents());
 							}
@@ -173,9 +174,9 @@
 					}
 
 					if (editable && block.model.prop_map[val].meta.write) {
-						$forms.prop_field(block.obj.data[val], {
+						block.fields.push($forms.prop_field(block.obj.data[val], {
 							node: this
-						});
+						}));
 					}
 				}, {
 					suffix: ':first'

@@ -151,11 +151,14 @@ botoweb.ui.markup = new function () {
 		var node = $(html);
 
 		// Create a new block and wait for any synchronous parsing to finish.
-		var block = new botoweb.ui.markup.Block(node, $.extend(true, {root: true}, botoweb.ui.page.location.data));
+		var block = new botoweb.ui.markup.Block(node, $.extend(true, {
+			root: true,
+			oninit: function () {
+				fnc(this.node);
 
-		fnc(block.node);
-
-		$(botoweb.ui.page).bind('change', function (e, loc) { botoweb.ui.page.load(loc); });
+				$(botoweb.ui.page).bind('change', function (e, loc) { botoweb.ui.page.load(loc); });
+			}
+		}, botoweb.ui.page.location.data));
 	};
 
 	/**

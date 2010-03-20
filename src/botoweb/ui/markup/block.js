@@ -15,6 +15,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.model = opt.model;
 	this.parent = opt.parent;
 	this.onready = [];
+	this.children = [];
+	this.fields = [];
 	this.nested = [];
 	this.waiting = 0;
 	this.opt = opt;
@@ -53,6 +55,24 @@ botoweb.ui.markup.Block = function (node, opt) {
 				return false;
 			}
 		});
+	}
+
+	this.save = function () {
+		for (var i in this.children) {
+			var child = this.children[i];
+			if (child.val === undefined) {
+				child.save();
+				return;
+			}
+		}
+
+		for (var i in this.fields) {
+			var val = this.fields[i].val();
+			if (val === undefined) {
+				child.save();
+				return;
+			}
+		}
 	}
 
 	/**
@@ -141,6 +161,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 		try {
 			this.node.show();
 		} catch (e) {}
+
+		if (opt.oninit)
+			opt.oninit.call(this);
 
 		if (!this.waiting)
 			this.done();

@@ -7,6 +7,7 @@
 
 botoweb.ui.page = new function() {
 	this.history = [];
+	this.preserve_cache = false;
 
 	/**
 	 * Fetches the page from the cache if it is available, otherwise fetches
@@ -117,10 +118,14 @@ botoweb.ui.page = new function() {
 	function destroy () {
 		$('#botoweb.page').empty();
 
-		// TODO do this in a smarter way
-		$.each(botoweb.env.models, function () {
-			this.objs = {};
-		});
+		if (!self.preserve_cache) {
+			// TODO do this in a smarter way
+			$.each(botoweb.env.models, function () {
+				this.objs = {};
+			});
+		}
+
+		self.preserve_cache = false;
 	};
 
 	/**
@@ -242,6 +247,15 @@ botoweb.ui.page = new function() {
 			if (new_page)
 				self.load(loc);
 		}
+	}
+
+	/**
+	 * Does a soft refresh by reloading the current URL without refreshing the
+	 * browser.
+	 */
+	this.refresh = function () {
+		self.preserve_cache = true;
+		this.load(this.location, show_page);
 	}
 
 	this.location = this.get_location();
