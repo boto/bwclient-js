@@ -171,49 +171,11 @@ var botoweb = {
 	// to be sent to the server
 	//
 	save: function(url, obj_name, data, method, fnc){
-		var doc = document.implementation.createDocument("", obj_name, null);
-		var obj = doc.documentElement;
-		for(pname in data){
-			var pval = data[pname];
 
-			if (pval == undefined)
-				continue;
-
-			if (!(pname in botoweb.env.models[obj_name].prop_map)) {
-				continue;
-			}
-
-			var type = botoweb.env.models[obj_name].prop_map[pname]._type;
-
-			var list = true;
-
-			if(pval.constructor.toString().indexOf("Array") == -1){
-				pval = [pval];
-				list = false;
-			}
-
-			// Force entire complexType to be encoded at once
-			if (type == 'complexType')
-				pval = [pval];
-			else
-				type = botoweb.env.models[obj_name].prop_map[pname]._item_type || type;
-
-			$(pval).each(function() {
-				if (list && this == '')
-					return;
-
-				var prop = doc.createElement(pname);
-
-				// Modifies prop in place
-				botoweb.encode_prop(this, prop, type);
-
-				$(prop).attr("type", type);
-				obj.appendChild(prop);
-			});
-		}
+		var doc = botoweb.xml.from_obj(obj_name, data);
 
 		//DEBUG
-		//alert(url + "\n\n" + (new XMLSerializer()).serializeToString(doc));
+		alert(url + "\n\n" + (new XMLSerializer()).serializeToString(doc));
 		//fnc({status: 201, getResponseHeader: function() { return '123' ;}});
 		//return
 
@@ -229,7 +191,13 @@ var botoweb = {
 		}
 
 		if(fnc){
-			opts.complete = fnc;
+			opts.complete = function (data) {
+				// Not supported yet
+				//if ($(data).children())
+				//	fnc(botoweb.xml.to_obj($(data).children().first()));
+				//else
+					fnc();
+			};
 		}
 		$.ajax(opts);
 	},

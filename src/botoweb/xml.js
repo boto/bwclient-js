@@ -181,10 +181,10 @@ botoweb.xml = {
 				return;
 
 			var model_prop = model.prop_map[name];
-			var node = $(doc.createElement(pname));
-			node.attr('type', type);
+			var node = $(doc.createElement(name));
+			node.attr('type', val.type || 'string');
 
-			(to_xml[model_prop.meta.type] || to_xml.def)(val, node, obj, model_prop);
+			($xml.to_xml[model_prop.meta.type] || $xml.to_xml.def)(val, node, obj, model_prop);
 		});
 
 		return doc;
@@ -193,7 +193,7 @@ botoweb.xml = {
 	to_xml: {
 		def: function (val, node, parent) {
 			$.each(val, function () {
-				node.clone().text(this.id || this.val).appendTo(parent);
+				node.clone().text(this.id || this.val || '').appendTo(parent);
 			});
 		},
 		complexType: function (val, node, parent) {
