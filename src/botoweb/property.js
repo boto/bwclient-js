@@ -55,7 +55,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 		this.meta = model_prop.meta;
 
-		$.each(['is_type','val','load','toString'], function () {
+		$.each(['is_type','val','load','toString','format_val'], function () {
 			if (this in model_prop)
 				self[this] = model_prop[this];
 		});
@@ -71,6 +71,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		}
 	};
 
+	this.format_val = function (val) {
+		return val.toString();
+	};
+
 
 	/**
 	 * Actually returns an array which can either be used as a string with
@@ -79,10 +83,11 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	 */
 	this.toString = function (wantarray) {
 		var values = [];
+		var self = this;
 
 		$.each(this.data, function () {
 			if ('val' in this && this.val)
-				values.push(this.val.toString());
+				values.push(self.format_val(this.val));
 		});
 
 		if (wantarray)
@@ -195,19 +200,21 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			};
 			break;
 		case 'dateTime':
-			this.toString = function (wantarray) {
-				var values = [];
-
-				$.each(this.data, function () {
-					if ('val' in this && this.val)
-						values.push(botoweb.util.from_timestamp(this.val));
-				});
-
-				if (wantarray)
-					return values;
-
-				return values.join(', ');
+			this.format_val = function (val) {
+				return botoweb.util.from_timestamp(val);
 			};
+			break;
+		case 'boolean':
+			this.format_val = function (val) {
+				switch (val) {
+					case '1':
+						return 'Yes';
+					case '0':
+						return 'No';
+				}
+				return '';
+			};
+			break;
 	}
 
 	if (is_list) {

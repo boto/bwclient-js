@@ -148,7 +148,13 @@ botoweb.xml = {
 
 			else if (prop.is_type('boolean')) {
 				d = tags.map(function(i, tag) {
-					return { val: ($(tag).text() == 'True') ? 1 : 0 };
+					switch ($(tag).text()) {
+						case 'True':
+							return { val: '1' };
+						case 'False':
+							return { val: '0' };
+					}
+					return { val: null };
 				});
 			}
 
@@ -182,7 +188,7 @@ botoweb.xml = {
 
 			var model_prop = model.prop_map[name];
 			var node = $(doc.createElement(name));
-			node.attr('type', val.type || 'string');
+			node.attr('type', 'string');
 
 			($xml.to_xml[model_prop.meta.type] || $xml.to_xml.def)(val, node, obj, model_prop);
 		});
@@ -193,6 +199,9 @@ botoweb.xml = {
 	to_xml: {
 		def: function (val, node, parent) {
 			$.each(val, function () {
+				if (this.type)
+					node.attr('type', this.type);
+
 				node.clone().text(this.id || this.val || '').appendTo(parent);
 			});
 		},
@@ -206,15 +215,31 @@ botoweb.xml = {
 			node.appendTo(parent);
 		},
 		boolean: function (val, node, parent) {
+			node.attr('type', 'boolean');
+
 			$.each(val, function () {
-				node.clone().text((this.val) ? 'True' : 'False').appendTo(parent);
+				var v = '';
+
+				alert(this.val);
+
+				if (this.val == 1)
+					v = 'True';
+				else if (this.val == 0)
+					v = 'False';
+
+				node.clone().text(v).appendTo(parent);
 			});
 		},
 		dateTime: function (val, node, parent) {
 			node.attr('type', 'dateTime');
 
 			$.each(val, function () {
-				node.clone().text($util.timestamp(timestamp)).appendTo(parent);
+				var ts = '';
+
+				if (this.val)
+					ts = $util.timestamp(this.val);
+
+				node.clone().text(ts).appendTo(parent);
 			});
 		},
 	}
