@@ -39,7 +39,7 @@ botoweb.ldb = {
 
 		if (!db) {
 			if (!window.openDatabase)
-				return;
+				return ready();
 
 			botoweb.ldb.dbh = db = openDatabase(
 				botoweb.ldb.name,

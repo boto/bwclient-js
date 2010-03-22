@@ -30,6 +30,9 @@ botoweb.ldb.sync = {
 	 * update timestamps.
 	 */
 	update: function(models, opt) {
+		if (!botoweb.ldb.dbh)
+			return $(this).trigger('end');
+
 		opt = opt || {};
 		var self = botoweb.ldb.sync;
 
