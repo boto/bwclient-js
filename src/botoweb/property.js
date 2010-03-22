@@ -194,6 +194,20 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				async = true;
 			};
 			break;
+		case 'dateTime':
+			this.toString = function (wantarray) {
+				var values = [];
+
+				$.each(this.data, function () {
+					if ('val' in this && this.val)
+						values.push(botoweb.util.from_timestamp(this.val));
+				});
+
+				if (wantarray)
+					return values;
+
+				return values.join(', ');
+			};
 	}
 
 	if (is_list) {

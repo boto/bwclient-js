@@ -210,9 +210,17 @@ botoweb.xml = {
 				node.clone().text((this.val) ? 'True' : 'False').appendTo(parent);
 			});
 		},
+		dateTime: function (val, node, parent) {
+			node.attr('type', 'dateTime');
+
+			$.each(val, function () {
+				node.clone().text($util.timestamp(timestamp)).appendTo(parent);
+			});
+		},
 	}
 };
 
 var $xml = botoweb.xml;
 var $env = botoweb.env;
+var $util = botoweb.util;
 })();

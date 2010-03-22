@@ -11,18 +11,86 @@ var $util = botoweb.util;
 /**
  * Returns a properly formatted ISO 8601 timestamp string.
  *
- * @param {Date} d A JavaScript Date, defaults to current date.
+ * @param {Date|String} d A JavaScript Date or a string in mm/dd/yyyy hh:mm:ss am
+ * format, defaults to current date and time.
  */
 $util.timestamp = function (d) {
 	if (!d)
 		d = new Date();
+	else if (typeof d == 'string') {
+		//           mm     dd     yyyy     hh    mm       ss     am|pm
+		var data = /(\d+)\/(\d+)\/(\d+)(?: (\d+):(\d+)(?::(\d+))? (..))?/.exec(this.val);
 
-	// Prepend 0s to ensure correct 2-digit dates and times
-	var timestamp = [d.getUTCFullYear(),'0' + (d.getUTCMonth()+1),'0' + d.getUTCDate()].join('-') +
-		'T' + ['0' + d.getUTCHours(),'0' + d.getUTCMinutes(),'0' + d.getUTCSeconds()].join(':');
+		// String to number (except am|pm)
+		for (var i in data) {
+			if (i < 7)
+				data[i] = (data[i] || 0) * 1;
+		}
 
-	// Remove unnecessary leading 0s
-	return timestamp.replace(/([:T-])0(\d\d)/g, '$1$2');
+		// Adjust month to zero-based
+		data[1] -= 1;
+
+		// Adjust hours
+		if (data[4] == 12)
+			data[4] = 0;
+
+		if (data[7].toUpperCase() == 'PM')
+			data[4] += 12;
+
+		d = new Date(data[3], data[1], data[2], data[4], data[5], data[6]);
+	}
+
+	var timestamp = d.getUTCFullYear() + '-0' + (d.getUTCMonth() + 1) + '-0' + d.getUTCDate() + 'T0';
+
+	// Special case, if the time is exactly midnight, leave it as
+	// exactly midnight in GMT. This signifies that the time is not
+	// important.
+	if (!d.getHours() && !d.getMinutes() && !d.getSeconds())
+		timestamp += '00:00:00';
+	else
+		timestamp += d.getUTCHours() + ':0' + d.getUTCMinutes() + ':0' + d.getUTCSeconds();
+
+	// We added extra zeroes to ensure full two-digit dates, if there
+	// are three digits in any space, remove the leading zero.
+	return timestamp.replace(/([T:-])0(\d\d)/g, '$1$2');
+};
+
+/**
+ * Returns a nicely formatted date string in the user's current time zone. If
+ * the time component is 00:00:00, the date string will not include the time.
+ *
+ * @param {String} ts An ISO 8601 timestamp string.
+ */
+$util.from_timestamp = function (ts) {
+	var t = ts.match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/);
+
+	if (t.length < 7)
+		return
+
+	// String to number
+	for (var i in t)
+		t[i] = t[i] * 1;
+
+	// If the time is exactly midnight, assume that this is a date with unspecified time
+	var has_time = (t[4] || t[5] || t[6]);
+
+	if (has_time)
+		self.date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3],t[4],t[5],t[6]));
+
+	// We use NOON if there is no time because this prevents seeing a different
+	// date after TZ conversion, as would happen if we used MIDNIGHT.
+	else
+		self.date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3], 12, 0, 0));
+
+	var time_str = '0' + (self.date_time.getMonth() + 1) + '/0' +
+		self.date_time.getDate() + '/' + self.date_time.getFullYear();
+
+	if (has_time) {
+		time_str += ' 0' + (self.date_time.getHours() % 12 || 12) + ':0' + self.date_time.getMinutes() + ' ' +
+			((self.date_time.getHours() < 12 || self.date_time.getHours() == 0) ? 'AM' : 'PM');
+	}
+
+	return time_str.replace(/(^|[ \/:])0(\d\d)/g, '$1$2');
 };
 
 /**

@@ -77,9 +77,25 @@ $forms.Field = function (prop, opt) {
 	if (this.opt.node) {
 		this.node.insertAfter(this.opt.node);
 
-		this.opt.node.dblclick(function () {
+		function edit (e) {
+			if (self.editing) return;
+
 			self.edit(true);
-		});
+
+			e.stopPropagation();
+			e.preventDefault();
+
+			setTimeout(function () {
+				self.fields[0].focus();
+			}, 100);
+
+			return false;
+		}
+
+		if (this.node.parent().find('.property').length == 1)
+			this.node.parent().dblclick(edit)
+
+		this.opt.node.dblclick(edit);
 	}
 
 	/**
@@ -97,7 +113,7 @@ $forms.Field = function (prop, opt) {
 		else
 			$.merge(this.opt.choices, choices);
 
-		if (editing) {
+		if (self.editing) {
 			// Must be defined in subclass
 			this.reset_choices();
 		}
@@ -180,20 +196,17 @@ $forms.Field = function (prop, opt) {
 		this.atomic = atomic;
 		this.node.empty();
 
+		if (this.editing)
+			this.node.empty();
+
+		this.editing = true;
+
 		if (this.prop.is_type('list') && this.opt.allow_list)
 			this.node.append($ui.sortable($('<ul class="clear"/>')));
 
 		this.set_default();
 
-		var val = this.prop.val();
-
-		if (val.length) {
-			$.each(val, function () {
-				self.add_field(this);
-			});
-		}
-		else
-			self.add_field();
+		this.set_values();
 
 		if (this.prop.is_type('list') && this.opt.allow_list) {
 			this.node.prepend(
@@ -219,7 +232,11 @@ $forms.Field = function (prop, opt) {
 							data[self.prop.meta.name] = self.val();
 
 							self.obj.update(data, function (obj) {
-								delete self.model.objs[self.obj.id];
+								// We do not delete the ID key here because the
+								// sync updater will check if it exists and
+								// assign the updated object if it does.
+								// Otherwise the null value will be ignored.
+								self.model.objs[self.obj.id] = null;
 
 								function updated () {
 									$($ldb.sync).unbind('end', updated);
@@ -252,19 +269,24 @@ $forms.Field = function (prop, opt) {
 		return this;
 	};
 
-	this.cancel = function () {
-		this.fields = [];
-		this.node.empty();
-		this.node.hide();
-		this.opt.node.show();
-	}
-
 	this.set_default = function () {
 		$.each(this.fields, function () {
 			if (!$(this).val())
 				$(this).val(self.prop.meta.def);
 		});
 	}
+
+	this.set_values = function () {
+		var val = this.prop.val();
+
+		if (val.length) {
+			$.each(val, function () {
+				self.add_field(this);
+			});
+		}
+		else
+			self.add_field();
+	};
 
 	/**
 	 * Switches the form to editing mode. When the mode is switched, we
@@ -292,7 +314,7 @@ $forms.Field = function (prop, opt) {
 	this.cancel = function () {
 		this.node.hide();
 		this.opt.node.show();
-
+		this.editing = false;
 		this.node.empty();
 		this.fields = [];
 	};
@@ -382,6 +404,8 @@ $forms.Textarea = function () {
 $forms.DateTime = function () {
 	$forms.Field.apply(this, arguments);
 
+	var self = this;
+
 	this.opt.html.attr.type = 'text';
 
 	this.decorate_field = function (field) {
@@ -389,16 +413,15 @@ $forms.DateTime = function () {
 			showAnim: 'drop',
 			showOptions: {direction: 'down'},
 			duration: 350,
-			dateFormat: 'yy-mm-dd',
+			dateFormat: 'mm/dd/yy',
 			showTime: true,
-			time24h: true,
+			time24h: false,
 			altField: this.field,
 			changeMonth: true,
 			changeYear: true,
 			constrainInput: false,
 			onClose: function(dateText, inst) {
-				dateText = dateText.replace(' GMT', '') + ' GMT';
-				this.value = dateText;
+				this.value = dateText.toUpperCase();
 			},
 			// timePicker is quite unable to position itself. As soon as the
 			// datePicker starts to animate, we also position and start to
@@ -411,6 +434,18 @@ $forms.DateTime = function () {
 				}, 1);
 			}
 		});
+	};
+
+	this.set_values = function () {
+		var val = this.prop.toString(true);
+
+		if (val.length) {
+			$.each(val, function () {
+				self.add_field({val: this.toString()});
+			});
+		}
+		else
+			self.add_field();
 	};
 };
 

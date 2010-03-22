@@ -166,14 +166,21 @@
 						}
 					}
 					else if (block.obj && block.model.prop_map[val].is_type('dateTime')) {
-						new botoweb.ui.widget.DateTime(this, block.obj.data[val].toString());
+						var ts = block.obj.data[val].val();
+						var html = '';
+
+						if (ts && ts.length)
+							html += '<span class="hidden">' + ts[0].val + '</span>';
+
+						// Insert raw timestamp for sorting
+						this.html(html + block.obj.data[val].toString());
 					}
 
 					else if (block.obj && val in block.obj.data) {
 						this.html(block.obj.data[val].toString() || '');
 					}
 
-					if (editable && block.model.prop_map[val].meta.write) {
+					if (block.obj && editable && block.model.prop_map[val].meta.write) {
 						block.fields.push($forms.prop_field(block.obj.data[val], {
 							node: this
 						}));
@@ -354,7 +361,7 @@
 		relation: function (block) {
 			var matches = false;
 
-			if (!block.model && !block.obj)
+			if (!block.obj)
 				return;
 
 			$markup.find(block.node, 'relation', function(val, prop) {
@@ -369,21 +376,6 @@
 				block.obj.follow(val, function (data, page, count) {
 					results.update(data, page, count);
 				});
-			});
-
-			return matches;
-		},
-
-		/**
-		 * Parse date times.
-		 */
-		date_time: function (block) {
-			var matches = false;
-
-			$markup.find(block.node, 'date_time', function() {
-				matches = true;
-
-				new botoweb.ui.widget.DateTime(this);
 			});
 
 			return matches;
