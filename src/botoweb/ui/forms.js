@@ -236,7 +236,7 @@ $forms.Field = function (prop, opt) {
 								// sync updater will check if it exists and
 								// assign the updated object if it does.
 								// Otherwise the null value will be ignored.
-								self.model.objs[self.obj.id] = null;
+								//self.model.objs[self.obj.id] = null;
 
 								function updated () {
 									$($ldb.sync).unbind('end', updated);
@@ -244,11 +244,14 @@ $forms.Field = function (prop, opt) {
 									$ui.page.refresh();
 								}
 
-								setTimeout(function () {
+								function update() {
 									$($ldb.sync).bind('end', updated);
 
 									$ldb.sync.update();
-								}, 500);
+								}
+
+								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
+									setTimeout(update, 500);
 							});
 							return false;
 						}),
@@ -403,6 +406,7 @@ $forms.Textarea = function () {
 
 $forms.DateTime = function () {
 	$forms.Field.apply(this, arguments);
+	this.opt.type = 'dateTime';
 
 	var self = this;
 
@@ -434,6 +438,26 @@ $forms.DateTime = function () {
 				}, 1);
 			}
 		});
+
+
+		// Lists already have a clear button, if not a list we need a clear button
+		if (!this.prop.is_type('list')) {
+			self.node.hide();
+			setTimeout(function () {
+				field.css('width', self.node.width() - 30);
+				self.node.show();
+			}, 50);
+
+			field.addClass('al');
+
+			field.after(
+				$ui.button('', { icon: 'ui-icon-close', no_text: true, corners: [0,1,1,0], primary: false })
+					.attr('tabindex', -1)
+					.click(function () {
+						field.val('');
+					})
+			);
+		}
 	};
 
 	this.set_values = function () {
@@ -488,13 +512,14 @@ $forms.Dropdown = function () {
 
 $forms.Bool = function () {
 	$forms.Field.apply(this, arguments);
+	this.opt.type = 'boolean';
+
+	var self = this;
 
 	this.build_field = function (value) {
 		value = value.val;
 
 		var field = $('<div><div class="al"><input type="radio" value="1"/> Yes &nbsp; <input type="radio" value="0"/> No &nbsp; </div></div>');
-
-
 
 		field.append(
 			$ui.button('Clear')
@@ -518,14 +543,136 @@ $forms.Bool = function () {
 
 		return field;
 	};
+
+	/**
+	 * Returns the value represented by the field selections for the purpose of
+	 * saving that value to botoweb.
+	 *
+	 * @return A single value, an Array of values, or null.
+	 */
+	this.val = function () {
+		var val = [];
+
+		// Preserve field order according to the DOM
+		this.node.find('.edit_field').each(function () {
+			var selected = $(this).find(':checked');
+
+			val.push({val: selected.val(), type: 'boolean'});
+		});
+
+		return val;
+	};
 };
 
 $forms.File = function () {
 	$forms.Field.apply(this, arguments);
 
-	//this.build_field = function () {
+	var self = this;
 
-	//};
+	this.opt.html.tagName = 'textarea';
+
+	this.decorate_field = function (field) {
+		if (this.opt.html.attr.type == 'file') {
+			var button = $ui.button('Add File', { icon: 'ui-icon-folder-open' });
+
+			field.replaceWith(button);
+
+			button.before(
+				$ui.button('Switch to Text Input', {icon: 'ui-icon-shuffle', primary: false})
+					.addClass('small')
+					.css('margin-bottom', '5px')
+					.click(function () { self.toggle() })
+			);
+
+			var selections = $('<div class="selections clear"/>').insertAfter(button)
+				.css('margin-top', '5px');
+
+			var upload = new AjaxUpload(button, {
+				name: this.prop.meta.name,
+				autoSubmit: false,
+				onChange: function (file, ext) {
+					selections.empty();
+
+					selections.append(
+						$('<div class="selection"/>')
+							.html('&nbsp;' + file)
+							.prepend(
+								$ui.button('', { icon: 'ui-icon-close', no_text: true, mini: true, primary: false })
+									.addClass('ui-state-error')
+									.click(function () {
+										self.cancel();
+										self.edit(self.atomic);
+									})
+							)
+					);
+				}
+			});
+
+			/* Uploadify will not work until Flash supports Basic Auth
+			field.uploadify({
+				uploader: '/swf/uploadify.swf',
+				cancelImg: '/images/cancel.png',
+				buttonImg: '/images/add_file.png',
+				width: 75,
+				height: 18,
+				method: 'POST',
+				scriptData: { name: this.prop.meta.name }
+			});
+			*/
+
+			setTimeout(function () {
+				button.siblings('br.clear').remove();
+				selections.before($('<br class="clear"/>'));
+			}, 10);
+
+			$($forms).bind('save_complete.' + this.id, function (e, obj, fnc) {
+				/* Uploadify will not work until Flash supports Basic Auth
+				field.uploadifySettings('script', $util.url_join(botoweb.env.base_url, self.model.href, self.obj.id, self.prop.meta.name));
+				field.uploadifySettings('onError', function (e,q,f,error) {
+					alert(error.info)
+				});
+				field.uploadifySettings('onComplete', function () {
+					if (fnc)
+						fnc();
+				});
+				field.uploadifyUpload();
+				*/
+
+				upload._settings.action = $util.url_join($ui.page.location.base_href, botoweb.env.base_url, self.model.href, self.obj.id, self.prop.meta.name);
+				upload._settings.onComplete = fnc;
+
+				upload.submit();
+
+				return false;
+			});
+		}
+		else {
+			field.before(
+				$ui.button('Switch to File Uploader', {icon: 'ui-icon-shuffle', primary: false})
+					.addClass('small')
+					.css('margin-bottom', '5px')
+					.click(function () { self.toggle() })
+			);
+		}
+	};
+
+	this.toggle = function () {
+		$($forms).unbind('save_complete.' + this.id);
+
+		if (this.opt.html.tagName == 'textarea') {
+			this.opt.html.attr.type = 'file';
+			this.opt.html.tagName = 'input';
+		}
+		else {
+			delete this.opt.html.attr.type;
+			this.opt.html.tagName = 'textarea';
+		}
+
+		this.node.empty();
+		this.fields = [];
+
+		this.edit(this.atomic);
+	}
 };
 
 $forms.Mapping = function () {
