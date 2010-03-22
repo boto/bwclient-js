@@ -198,6 +198,7 @@ var botoweb = {
 				//else
 					fnc();
 			};
+			opts.error = botoweb.util.error
 		}
 		$.ajax(opts);
 	},

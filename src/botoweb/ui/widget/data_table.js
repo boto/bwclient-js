@@ -116,23 +116,6 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 			this.button_stop = $('<div/>')
 				.css('display', 'inline-block')
 				.addClass('ac')
-				.append(
-					/*$('<div/>')
-						.addClass('ui-button ui-corner-tl ui-corner-bl ui-state-default')
-						.html('<span class="ui-icon ui-icon-circle-close"></span> Stop Loading')
-						.click(function() {
-							$(this)
-								.unbind()
-								.html('<span class="ui-icon ui-icon-clock"></span> Please Wait');
-							self.opts.stop();
-						}),*/
-					$('<div/>')
-						.addClass('ui-button ui-corner-all ui-state-default')
-						.html('<span class="ui-icon ui-icon-circle-zoomout"></span> Preview Results')
-						.click(function() {
-							self.data_table.fnDraw();
-						})
-				)
 				.appendTo(this.status);
 		}
 
