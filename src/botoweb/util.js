@@ -19,7 +19,7 @@ $util.timestamp = function (d) {
 		d = new Date();
 	else if (typeof d == 'string') {
 		//           mm     dd     yyyy     hh    mm       ss     am|pm
-		var data = /(\d+)\/(\d+)\/(\d+)(?: (\d+):(\d+)(?::(\d+))? (..))?/.exec(this.val);
+		var data = /(\d+)\/(\d+)\/(\d+)(?: (\d+):(\d+)(?::(\d+))? (..))?/.exec(d);
 
 		// String to number (except am|pm)
 		for (var i in data) {
@@ -64,7 +64,7 @@ $util.timestamp = function (d) {
 $util.from_timestamp = function (ts) {
 	var t = ts.match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/);
 
-	if (t.length < 7)
+	if (!t || t.length < 7)
 		return
 
 	// String to number
@@ -100,13 +100,13 @@ $util.from_timestamp = function (ts) {
 $util.url_join = function () {
 	return $.map(arguments, function (part, i) {
 		if (!part)
-			return;
+			return null;
 
 		if (i > 0)
-			part = part.replace(/^\/+/, '');
+			part = part.replace(/^\/+/g, '');
 
 		if (i < arguments.length - 1)
-			part = part.replace(/\/+$/, '');
+			part = part.replace(/\/+$/g, '');
 
 		return escape(part).replace('%3A//', '://');
 	}).join('/');
