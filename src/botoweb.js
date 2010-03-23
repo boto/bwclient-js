@@ -204,6 +204,14 @@ var botoweb = {
 		$.ajax(opts);
 	},
 
+	del: function(url, fnc){
+		$.ajax({
+			type: "DELETE",
+			url: url,
+			complete: fnc
+		});
+	},
+
 	/**
 	 * Simple Initialization script which handles the everyday setup that
 	 * most of our apps will have to do. We make available the environment
@@ -229,6 +237,10 @@ var botoweb = {
 				if (fnc)
 					fnc();
 				botoweb.ldb.sync.update();
+
+				env.models.Account.get('1a6d1eba-07d5-4191-850b-e7b6bcecade4', function (o) {
+					o.del();
+				});
 
 				// Update the local database every 2 minutes
 				setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);

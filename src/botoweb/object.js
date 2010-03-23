@@ -131,7 +131,8 @@ botoweb.Object = function(id, model, data) {
 		});
 	};
 
-	this.del = function() {
+	this.del = function(fnc) {
 		$(this).trigger('delete');
+		this.model.del(this.id, fnc);
 	};
 };

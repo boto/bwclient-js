@@ -158,11 +158,10 @@ botoweb.Model = function (name, href, methods, props) {
 	// Delete this object
 	//
 	this.del = function(id, fnc){
-		ref = this.href;
-		return botoweb.del(botoweb.env.base_url + ref + "/" + id, function(x) {
-			delete self.data_tables[id];
-			delete self._cache[id];
-			return fnc(x);
+		return botoweb.del(botoweb.util.url_join(botoweb.env.base_url, this.href, id), function(x) {
+			delete self.objs[id];
+			if (fnc)
+				fnc(x);
 		});
 	}
 
