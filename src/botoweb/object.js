@@ -100,9 +100,20 @@ botoweb.Object = function(id, model, data) {
 	this.update = function (data, fnc) {
 		botoweb.save(
 			botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id),
-			self.model.name, data, 'PUT', fnc
+			self.model.name, data, ((this.id) ? 'PUT' : 'POST'), fnc
 		);
 	};
+
+	this.save = function (fnc) {
+		var data = {};
+
+		$.each(this.data, function (name, prop) {
+			if (prop.toString())
+				data[name] = prop.data;
+		});
+
+		return this.update(data, fnc);
+	}
 
 	this.load = function(property, fnc) {
 		var props = self.data[property];

@@ -12,6 +12,7 @@
  */
 botoweb.Model = function (name, href, methods, props) {
 
+	var self = this;
 	this._DEBUG_MODEL_INSTANCE = 1;
 	this.name = name;
 	this.href = href;
@@ -122,6 +123,9 @@ botoweb.Model = function (name, href, methods, props) {
 		return obj;
 	}
 
+	this.instance = function (data) {
+		botoweb.Object.call(this, null, self, data);
+	};
 
 	this.get = function(id, fnc, opt){
 		opt = opt || {};

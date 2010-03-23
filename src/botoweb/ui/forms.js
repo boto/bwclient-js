@@ -639,7 +639,18 @@ $forms.File = function () {
 				*/
 
 				upload._settings.action = $util.url_join($ui.page.location.base_href, botoweb.env.base_url, self.model.href, self.obj.id, self.prop.meta.name);
-				upload._settings.onComplete = fnc;
+				upload._settings.onComplete = function () {
+					selections.find('.ui-icon')
+						.removeClass('ui-icon-close')
+						.addClass('ui-icon-check');
+					selections.find('.ui-state-error')
+						.removeClass('ui-state-error')
+						.addClass('ui-state-highlight')
+						.unbind();
+
+					if (fnc)
+						fnc();
+				}
 
 				upload.submit();
 

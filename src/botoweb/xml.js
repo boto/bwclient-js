@@ -220,8 +220,6 @@ botoweb.xml = {
 			$.each(val, function () {
 				var v = '';
 
-				alert(this.val);
-
 				if (this.val == 1)
 					v = 'True';
 				else if (this.val == 0)
