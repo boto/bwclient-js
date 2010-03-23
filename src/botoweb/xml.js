@@ -202,15 +202,15 @@ botoweb.xml = {
 				if (this.type)
 					node.attr('type', this.type);
 
-				node.clone().text(this.id || this.val || '').appendTo(parent);
+				node.clone().text($util.normalize_string(this.id || this.val || '')).appendTo(parent);
 			});
 		},
 		complexType: function (val, node, parent) {
 			$.each(val, function () {
 				$('<mapping/>').attr({
-					name: this.key,
+					name: $util.normalize_string(this.key),
 					type: 'string'
-				}).text(this.val).appendTo(node);
+				}).text($util.normalize_string(this.val)).appendTo(node);
 			});
 			node.appendTo(parent);
 		},

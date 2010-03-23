@@ -143,6 +143,24 @@ $util.html_unescape = function (str) {
 	return '';
 };
 
+/**
+ * Converts certain special characters to their normal ascii equivalents.
+ *
+ * @param {String} str The string to normalize.
+ */
+$util.normalize_string = function (str) {
+	$.each({
+		curly_quote: '"',
+		curly_apostrophe: "'",
+		dash: '-',
+		ellipse: '...'
+	}, function (type, replacement) {
+		str = str.replace($util.re[type], replacement);
+	});
+
+	return str;
+};
+
 $util.log = function (msg, err_type) {
 	if (!msg)
 		return;
@@ -177,6 +195,16 @@ $util.error = function (msg) {
 
 $util.warn = function (msg) {
 	botoweb.util.log(msg, 'w');
+};
+
+/**
+ * Some RegExps which are used enough to warrant being cached.
+ */
+$util.re = {
+	curly_quote: /[“”]/g,
+	curly_apostrophe: /[‘’]/g,
+	dash: /[‒–—―]/g,
+	ellipse: /…/g
 };
 
 })(jQuery);
