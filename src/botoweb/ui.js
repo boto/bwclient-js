@@ -10,6 +10,27 @@ botoweb.ui = {
 	nodes: {},
 
 	/**
+	 * Overlays the entire page with a very transparent block to prevent
+	 * interaction.
+	 */
+	overlay: {
+		node: null,
+		show: function () {
+			botoweb.ui.overlay.node
+			.css({
+				width: $('body').width(),
+				height: $('body').height(),
+				zIndex: 999999,
+				opacity: .35
+			})
+			.show();
+		},
+		hide: function () {
+			botoweb.ui.overlay.node.hide();
+		}
+	},
+
+	/**
 	 * Initializes the interface.
 	 *
 	 * NOTE: currently this is used for testing the local DB sync.
@@ -29,6 +50,10 @@ botoweb.ui = {
 			$('#ui-timepicker-div, #ui-datepicker-div').hide();
 			botoweb.ui.nodes.search_results.hide();
 		})
+
+		botoweb.ui.overlay.node = $('<div/>').addClass('ui-widget-overlay')
+			.appendTo(document.body)
+			.hide();
 
 		var loc = botoweb.ui.page.location;
 

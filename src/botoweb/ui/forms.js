@@ -231,6 +231,8 @@ $forms.Field = function (prop, opt) {
 							var data = {};
 							data[self.prop.meta.name] = self.val();
 
+							$ui.overlay.show();
+
 							self.obj.update(data, function (obj) {
 								// We do not delete the ID key here because the
 								// sync updater will check if it exists and
@@ -242,6 +244,7 @@ $forms.Field = function (prop, opt) {
 									$($ldb.sync).unbind('end', updated);
 									self.cancel();
 									$ui.page.refresh();
+									$ui.overlay.hide();
 								}
 
 								function update() {
@@ -251,7 +254,7 @@ $forms.Field = function (prop, opt) {
 								}
 
 								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
-									setTimeout(update, 500);
+									setTimeout(update, 1000);
 							});
 							return false;
 						}),
@@ -641,16 +644,19 @@ $forms.File = function () {
 				upload._settings.action = $util.url_join($ui.page.location.base_href, botoweb.env.base_url, self.model.href, self.obj.id, self.prop.meta.name);
 				upload._settings.onComplete = function () {
 					selections.find('.ui-icon')
-						.removeClass('ui-icon-close')
+						.removeClass('ui-icon-clock')
 						.addClass('ui-icon-check');
-					selections.find('.ui-state-error')
-						.removeClass('ui-state-error')
-						.addClass('ui-state-highlight')
-						.unbind();
-
 					if (fnc)
 						fnc();
 				}
+
+				selections.find('.ui-icon')
+					.removeClass('ui-icon-close')
+					.addClass('ui-icon-clock');
+				selections.find('.ui-state-error')
+					.removeClass('ui-state-error')
+					.addClass('ui-state-default')
+					.unbind();
 
 				upload.submit();
 
