@@ -55,7 +55,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 		this.meta = model_prop.meta;
 
-		$.each(['is_type','val','load','toString','format_val'], function () {
+		$.each(['is_type','val','load','toString','to_sql','format_val'], function () {
 			if (this in model_prop)
 				self[this] = model_prop[this];
 		});
@@ -81,13 +81,14 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	 * its native toString, or it can be joined with whatever is desired (line
 	 * breaks, commas, etc).
 	 */
-	this.toString = function (wantarray) {
+	this.toString = function (wantarray, opt) {
 		var values = [];
 		var self = this;
+		opt = opt || {};
 
 		$.each(this.data, function () {
 			if ('val' in this && this.val)
-				values.push(self.format_val(this.val));
+				values.push(self.format_val(this.val, opt));
 		});
 
 		if (wantarray)
@@ -200,7 +201,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			};
 			break;
 		case 'dateTime':
-			this.format_val = function (val) {
+			this.format_val = function (val, opt) {
+				if (opt.sql)
+					return val.toString();
+
 				return botoweb.util.from_timestamp(val);
 			};
 			break;
@@ -215,6 +219,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				return '';
 			};
 			break;
+	}
+
+	this.to_sql = function () {
+		return this.toString(false, { sql: true });
 	}
 
 	if (is_list) {

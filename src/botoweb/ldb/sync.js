@@ -284,7 +284,7 @@ botoweb.ldb.sync = {
 						column_names.push(botoweb.ldb.prop_to_column(this));
 
 						if (prop)
-							bind_params.push(prop.toString());
+							bind_params.push(prop.to_sql());
 						else
 							bind_params.push(null);
 					}
