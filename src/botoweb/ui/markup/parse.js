@@ -392,7 +392,7 @@
 
 			$markup.find(block.node, 'editing_tools', function() {
 				matches = true;
-				new botoweb.ui.widget.EditingTools(this, block.model, (this.attr($markup.prop.attributes) || ''));
+				new botoweb.ui.widget.EditingTools(this, block, (this.attr($markup.prop.attributes) || ''), block);
 			});
 
 			return matches;

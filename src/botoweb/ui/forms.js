@@ -386,10 +386,10 @@ $forms.Field = function (prop, opt) {
 	};
 
 	if (this.obj) {
-		$(this.obj).bind('edit', function () {
+		$(this.obj).bind('edit clone', function () {
 			self.edit();
 		});
-		$(this.obj).bind('cancel_edit', function () {
+		$(this.obj).bind('cancel_edit cancel_clone', function () {
 			self.cancel();
 		});
 	}
@@ -788,6 +788,9 @@ $forms.Picklist = function () {
 										.click(function () {
 											$(this).parent().remove();
 										})
+								)
+								.append(
+									$('<span class="small"/>').text(' (' + obj.model.name + ')')
 								)
 						);
 					}

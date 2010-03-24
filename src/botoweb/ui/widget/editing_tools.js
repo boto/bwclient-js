@@ -8,14 +8,16 @@
  *
  * @param node where to insert the icons.
  */
-botoweb.ui.widget.EditingTools = function(node, model, actions) {
+botoweb.ui.widget.EditingTools = function(node, block, actions) {
 	var self = this;
 
 	if (!node.is('ul'))
 		node = $('<ul />').appendTo(node);
 
 	self.node = $(node).addClass('widget-editing_tools');
-	self.model = model;
+	self.model = block.model;
+	self.obj = block.obj;
+	self.block = block;
 
 	actions = actions || 'edit clone delete';
 	actions = actions.split(/[, ]+/);
@@ -48,6 +50,47 @@ botoweb.ui.widget.EditingTools = function(node, model, actions) {
 					$('<li/>').prependTo(self.node)
 				);
 		}
+	}
+
+	if (self.obj) {
+		function onsave () {
+			self.block.save();
+		}
+
+		function oncancel () {
+			document.location.href = document.location.href.replace(/&action=[^&]*/, '');
+		}
+
+		function cleanup () {
+			self.node.find('.tmp').remove();
+			self.node.find('li').show();
+		}
+
+		$(self.obj).bind('edit', function () {
+			self.node.find('li').hide();
+
+			botoweb.ui.button('Save Changes', { icon: 'ui-icon-disk' })
+				.click(onsave)
+				.appendTo($('<li class="tmp"/>').appendTo(self.node));
+
+			botoweb.ui.button('Cancel', { icon: 'ui-icon-close', primary: false })
+				.click(oncancel)
+				.appendTo($('<li class="tmp"/>').appendTo(self.node));
+		});
+		$(self.obj).bind('cancel_edit', cleanup);
+
+		$(self.obj).bind('clone create', function () {
+			self.node.find('li').hide();
+
+			botoweb.ui.button('Save New ' + self.model.name, { icon: 'ui-icon-disk' })
+				.click(onsave)
+				.appendTo($('<li class="tmp"/>').appendTo(self.node));
+
+			botoweb.ui.button('Cancel', { icon: 'ui-icon-close', primary: false })
+				.click(oncancel)
+				.appendTo($('<li class="tmp"/>').appendTo(self.node));
+		});
+		$(self.obj).bind('cancel_clone cancel_create', cleanup);
 	}
 
 	self.node.find('a').addClass('ui-button ui-state-default ui-corner-all');

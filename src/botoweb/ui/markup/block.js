@@ -66,13 +66,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 			}
 		}
 
-		for (var i in this.fields) {
-			var val = this.fields[i].val();
-			if (val === undefined) {
-				child.save();
-				return;
-			}
-		}
+		if (this.parent)
+			this.parent.save();
 	}
 
 	/**
@@ -108,6 +103,11 @@ botoweb.ui.markup.Block = function (node, opt) {
 		if (this.obj && this.opt.action == 'edit' && this.state != 'edit') {
 			this.state = 'edit';
 			$(this.obj).triggerHandler('edit');
+		}
+
+		if (this.obj && this.opt.action == 'clone' && this.state != 'clone') {
+			this.state = 'clone';
+			$(this.obj).triggerHandler('clone');
 		}
 
 		if (this.obj && !this.opt.action && this.state != 'view') {
