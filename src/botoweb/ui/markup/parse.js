@@ -212,6 +212,10 @@
 		 * click event to the linked node. Links will be generated regardless of
 		 * permissions, so the handler of the link should provide an alert when
 		 * the user does not have appropriate permissions.
+		 *
+		 * The delete action does not have an associated link and must be
+		 * handled with a click event. This is to prevent any accidental
+		 * deletion by sharing links or clicking Back.
 		 */
 		link: function (block) {
 			var matches = false;
@@ -228,6 +232,11 @@
 				/()/.test(''); // reset RegExp backrefs
 				val = val.replace(/\((.*?)\)/, '');
 				var data = RegExp.$1;
+
+				// It is safest not to make a history entry for deletes, just
+				// attach a click event.
+				if (val == 'delete')
+					return;
 
 				var set_href;
 				var node = this;
@@ -281,15 +290,6 @@
 							set_href('#' + botoweb.env.cfg.templates.editor[block.model.name] + '&action=create');
 						else
 							set_href('#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '&action=create');
-						break;
-
-					case 'delete':
-						this.bind('click', function () {
-							// TODO deletion interface
-							//new botoweb.ui.widgets.DeleteObject();
-
-							return false;
-						});
 						break;
 
 					case 'attr':

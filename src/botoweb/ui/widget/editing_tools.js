@@ -14,10 +14,10 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 	if (!node.is('ul'))
 		node = $('<ul />').appendTo(node);
 
-	self.node = $(node).addClass('widget-editing_tools');
-	self.model = block.model;
-	self.obj = block.obj;
-	self.block = block;
+	this.node = $(node).addClass('widget-editing_tools');
+	this.model = block.model;
+	this.obj = block.obj;
+	this.block = block;
 
 	actions = actions || 'edit clone delete';
 	actions = actions.split(/[, ]+/);
@@ -27,19 +27,19 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 
 		switch (actions[i]) {
 			case 'create':
-				if ('post' in self.model.methods)
-					button = botoweb.ui.button('Create ' + self.model.name, { icon: 'ui-icon-plus' });
+				if ('post' in this.model.methods)
+					button = botoweb.ui.button('Create ' + this.model.name, { icon: 'ui-icon-plus' });
 				break;
 			case 'clone':
-				if ('post' in self.model.methods)
-					button = botoweb.ui.button('Clone ' + self.model.name, { icon: 'ui-icon-copy' });
+				if (this.obj && 'post' in this.model.methods)
+					button = botoweb.ui.button('Clone ' + this.model.name, { icon: 'ui-icon-copy' });
 				break;
 			case 'delete':
-				if ('delete' in self.model.methods)
+				if (this.obj && 'delete' in this.model.methods)
 					button = botoweb.ui.button('Delete', { icon: 'ui-icon-trash' });
 				break;
 			case 'edit':
-				if ('put' in self.model.methods)
+				if (this.obj && 'put' in this.model.methods)
 					button = botoweb.ui.button('Edit', { icon: 'ui-icon-pencil' });
 				break;
 		}
@@ -47,7 +47,7 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 		if (button) {
 			button.attr(botoweb.ui.markup.prop.link, actions[i])
 				.appendTo(
-					$('<li/>').prependTo(self.node)
+					$('<li/>').prependTo(this.node)
 				);
 		}
 	}
