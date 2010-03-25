@@ -98,9 +98,17 @@ botoweb.Object = function(id, model, data) {
 	}
 
 	this.update = function (data, fnc) {
+		var changed = {};
+
+		$.each(data, function (name, val) {
+
+
+			changed[data] = val;
+		});
+
 		botoweb.save(
 			botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id),
-			self.model.name, data, ((this.id) ? 'PUT' : 'POST'), fnc
+			self.model.name, changed, ((this.id) ? 'PUT' : 'POST'), fnc
 		);
 	};
 
@@ -115,20 +123,13 @@ botoweb.Object = function(id, model, data) {
 		return this.update(data, fnc);
 	}
 
-	this.load = function(property, fnc) {
-		var props = self.data[property];
+	this.load = function(prop, fnc) {
+		var prop = this.data[prop];
 
-		if (typeof props == 'undefined')
+		if (typeof prop == 'undefined' || !prop.is_type('blob'))
 			return;
 
-		if (!$.isArray(props))
-			props = [props];
-
-		$(props).each(function() {
-			if (this.type == 'blob') {
-				botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.href, self.id, this.href), fnc);
-			}
-		});
+		botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name), fnc);
 	};
 
 	this.del = function(fnc) {
