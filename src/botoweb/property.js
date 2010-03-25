@@ -29,6 +29,11 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			type = opt.item_type;
 	}
 
+	// Calculated types are handled the same as blobs in the front-end.
+	if (type == 'calculated') {
+		type = 'blob';
+	}
+
 	/**
 	 * Creates a new object. Expects data to be in the right format.
 	 *

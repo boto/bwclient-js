@@ -168,6 +168,13 @@
 							this.remove();
 						}
 					}
+
+					else if (block.obj && block.model.prop_map[val].is_type('blob')) {
+						block.obj.load(val, function (data) {
+							node.html(data);
+						});
+					}
+
 					else if (block.obj && block.model.prop_map[val].is_type('dateTime')) {
 						var ts = block.obj.data[val].val();
 						var html = '';

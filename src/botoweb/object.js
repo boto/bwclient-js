@@ -103,7 +103,7 @@ botoweb.Object = function(id, model, data) {
 		$.each(data, function (name, val) {
 
 
-			changed[data] = val;
+			changed[name] = val;
 		});
 
 		botoweb.save(
@@ -129,7 +129,13 @@ botoweb.Object = function(id, model, data) {
 		if (typeof prop == 'undefined' || !prop.is_type('blob'))
 			return;
 
-		botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name), fnc);
+		if (prop.data.length && prop.data[0].val === undefined)
+			prop.data = [];
+
+		botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name), function (data) {
+			prop.data.push({val: data});
+			fnc(data);
+		});
 	};
 
 	this.del = function(fnc) {
