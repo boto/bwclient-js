@@ -66,20 +66,24 @@ botoweb.ui.page = new function() {
 			full: url,
 			hash: '',
 			hash_href: '',
-			query: ''
+			query: '',
+			data: {}
 		};
 
 		if (url.indexOf('#') >= 0) {
 			loc.hash = url.replace(/.*#/, '');
 			loc.hash_href = loc.hash.replace(/\?.*/g, '');
-			loc.query = loc.hash.replace(/.*\?/, '');
+			loc.query = '';
 			loc.data = {};
+
+			if (loc.hash.indexOf('?') >= 0)
+				loc.query = loc.hash.replace(/.*\?/, '');
 
 			if (loc.query) {
 				var query = loc.query.split(/[&=]/);
 
 				for (var i = 0; i < query.length; i += 2)
-					loc.data[query[i]] = query[i + 1];
+					loc.data[query[i]] = unescape(query[i + 1]);
 			}
 		}
 
@@ -215,11 +219,11 @@ botoweb.ui.page = new function() {
 	 *
 	 * @private
 	 */
-	function check () {
+	function check (force) {
 		var self = botoweb.ui.page;
 		var loc = self.get_location();
 
-		if (!self.history.length || loc.hash != self.location.hash) {
+		if (force || !self.history.length || loc.hash != self.location.hash) {
 			var new_page = false;
 
 			// If the base page has changed, load it, otherwise rely on page
@@ -248,6 +252,14 @@ botoweb.ui.page = new function() {
 				self.load(loc);
 		}
 	}
+
+	/**
+	 * Forces the change event to be triggered again. This may be useful for
+	 * extensions which maintain state between pages.
+	 */
+	this.force_change = function () {
+		check(true);
+	};
 
 	/**
 	 * Does a soft refresh by reloading the current URL without refreshing the
