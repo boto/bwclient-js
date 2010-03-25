@@ -171,7 +171,9 @@
 
 					else if (block.obj && block.model.prop_map[val].is_type('blob')) {
 						block.obj.load(val, function (data) {
-							node.html(data);
+							if (!data) return;
+
+							node.html(botoweb.util.html_format(data));
 						});
 					}
 

@@ -609,7 +609,8 @@ $forms.File = function () {
 
 	this.decorate_field = function (field) {
 		if (this.opt.html.attr.type == 'file') {
-			var button = $ui.button('Add File', { icon: 'ui-icon-folder-open' });
+			var button = $ui.button('Add File', { icon: 'ui-icon-folder-open' })
+				.addClass('clear');
 
 			field.replaceWith(button);
 

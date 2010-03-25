@@ -144,6 +144,25 @@ $util.html_unescape = function (str) {
 };
 
 /**
+ * Escapes any HTML in the given text and restores whitespace formatting with
+ * br tags and HTML nonbreaking space entities.
+ *
+ * @param {String} str The string to format.
+ * @return An HTML string suitable for safe insertion with $(...).html()
+ */
+$util.html_format = function (str) {
+	return str.replace(/[<>\n\t]|  /g, function (chr) {
+		switch (chr) {
+			case '>':	return '&gt;';
+			case '<':	return '&lt;';
+			case '\n':	return '<br />';
+			case '  ':	return ' &nbsp;';
+			case '\t':	return '&nbsp;&nbsp; &nbsp;';
+		}
+	})
+}
+
+/**
  * Converts certain special characters to their normal ascii equivalents.
  *
  * @param {String} str The string to normalize.
