@@ -59,7 +59,8 @@ $forms.Field = function (prop, opt) {
 			attr: {}
 		},
 		choices: [],
-		type: 'string'
+		type: 'string',
+		def: ''
 	}, opt);
 
 	this.template = this.opt.template;
@@ -127,6 +128,9 @@ $forms.Field = function (prop, opt) {
 	 * property type.
 	 */
 	this.add_field = function (value) {
+		if (typeof value != 'object')
+			value = {val: value};
+
 		var field = this.build_field(value);
 
 		// Allows field's DOM node to be mapped to the field by ID so that we
@@ -134,32 +138,49 @@ $forms.Field = function (prop, opt) {
 		field.attr('id', this.fields.length + '_' + this.id)
 			.addClass('edit_field');
 
-		if (this.prop && this.prop.is_type('list') && this.opt.allow_list) {
-			var node = $('<li class="sortable_item clear"/>').append(field);
+		if (this.opt.allow_multiple || this.prop && this.prop.is_type('list') && this.opt.allow_list) {
+			var sortable = this.prop && this.prop.is_type('list');
+
+			var node;
+
+			if (sortable)
+				node = $('<li class="sortable_item clear"/>').append(field);
+			else
+				node = $('<div class="sortable_item"/>').append(field);
 
 			node.hide();
 			setTimeout(function () {
-				field.css('width', self.node.width() - 42);
-				$ui.sort_icons(self.node.find('ul'));
+				if (sortable) {
+					field.css('width', self.node.width() - 42);
+					$ui.sort_icons(self.node.find('ul'));
+				}
+				else
+					field.css('width', self.node.width() - 30);
+
 				node.show();
 			}, 50);
 
-			this.node.find('ul').append(node);
-
 			field.addClass('al');
 
-			field.before($('<span class="ui-icon"/>'));
+			if (sortable) {
+				this.node.find('ul').append(node);
+				field.before($('<span class="ui-icon"/>'));
+			}
+			else
+				this.node.append(node);
+
 			field.after(
 				$ui.button('', { icon: 'ui-icon-close', no_text: true, corners: [0,1,1,0], primary: false })
 					.attr('tabindex', -1)
 					.click(function () {
-						if (self.node.find('li').length == 1)
+						if (self.node.find('.sortable_item').length == 1)
 							self.add_field();
 
 						setTimeout(function () {
 							node.remove();
 
-							$ui.sort_icons(self.node.find('ul'));
+							if (sortable)
+								$ui.sort_icons(self.node.find('ul'));
 						}, 50);
 					}),
 				$('<br class="clear"/>')
@@ -186,6 +207,10 @@ $forms.Field = function (prop, opt) {
 		this.fields.push(field);
 	};
 
+	this.empty_fields = function () {
+		$.each(this.fields, function () { this.parent().remove() });
+	};
+
 	/**
 	 * Switches the form to editing mode. When the mode is switched, we
 	 * generate a fresh UI for editing the item. This facilitates canceling
@@ -208,15 +233,16 @@ $forms.Field = function (prop, opt) {
 
 		this.set_values();
 
-		if (this.prop.is_type('list') && this.opt.allow_list) {
-			this.node.prepend(
-				$ui.button('Add item', { icon: 'ui-icon-arrowthick-1-s', corners: [1,1,0,0] })
-					.addClass('small add_selection')
-					.click(function () {
-						self.add_field();
-						return false;
-					})
-			);
+		if (this.prop.is_type('list') && this.opt.allow_list || this.opt.allow_multiple) {
+			var add_selection = $ui.button('Add item', { icon: 'ui-icon-arrowthick-1-s', corners: [1,1,0,0] })
+				.addClass('small add_selection')
+				.click(function () {
+					self.add_field();
+					return false;
+				}).prependTo(this.node);
+
+			if (!this.prop.is_type('list'))
+				add_selection.css('margin-left', 0);
 		}
 
 		if (this.atomic) {
@@ -268,7 +294,8 @@ $forms.Field = function (prop, opt) {
 			);
 		}
 
-		this.opt.node.hide();
+		if (this.opt.node)
+			this.opt.node.hide();
 
 		this.node.show();
 
@@ -278,14 +305,14 @@ $forms.Field = function (prop, opt) {
 	this.set_default = function () {
 		$.each(this.fields, function () {
 			if (!$(this).val())
-				$(this).val(self.prop.meta.def);
+				$(this).val(self.opt.def || self.prop.meta.def);
 		});
 	}
 
 	this.set_values = function () {
 		var val = this.prop.val();
 
-		if (val.length) {
+		if (val && val.length) {
 			$.each(val, function () {
 				self.add_field(this);
 			});
@@ -427,8 +454,10 @@ $forms.DateTime = function () {
 			changeMonth: true,
 			changeYear: true,
 			constrainInput: false,
+			showOtherMonths: true,
+			selectOtherMonths: true,
 			onClose: function(dateText, inst) {
-				this.value = dateText.toUpperCase();
+				this.value = dateText.toUpperCase().replace(' 12:00 AM', '');
 			},
 			// timePicker is quite unable to position itself. As soon as the
 			// datePicker starts to animate, we also position and start to
@@ -444,7 +473,7 @@ $forms.DateTime = function () {
 
 
 		// Lists already have a clear button, if not a list we need a clear button
-		if (!this.prop.is_type('list')) {
+		if (!this.prop.is_type('list') && !this.opt.allow_multiple) {
 			self.node.hide();
 			setTimeout(function () {
 				field.css('width', self.node.width() - 30);
@@ -466,7 +495,7 @@ $forms.DateTime = function () {
 	this.set_values = function () {
 		var val = this.prop.toString(true);
 
-		if (val.length) {
+		if (val && val.length) {
 			$.each(val, function () {
 				self.add_field({val: this.toString()});
 			});
@@ -487,18 +516,21 @@ $forms.Dropdown = function () {
 
 	this.opt.html.tagName = 'select';
 
+	var self = this;
+
 	/**
 	 * Updates the choices in the UI to the current value of
 	 * this.opt.choices.
 	 */
 	this.reset_choices = function (field) {
-		var self = this;
-
 		function reset_choices () {
 			var field = $(this);
 			field.empty();
 
-			field.append($('<option/>'));
+			if (self.opt.default_choice)
+				field.append($('<option/>').text(self.opt.default_choice.name).val(self.opt.default_choice.value));
+			else if (!('default_choice' in self.opt))
+				field.append($('<option/>'));
 
 			$.each(self.prop.meta.choices, function () {
 				if (this.name || this.value)
@@ -520,7 +552,8 @@ $forms.Bool = function () {
 	var self = this;
 
 	this.build_field = function (value) {
-		value = value.val;
+		if (value)
+			value = value.val;
 
 		var field = $('<div><div class="al"><input type="radio" value="1"/> Yes &nbsp; <input type="radio" value="0"/> No &nbsp; </div></div>');
 
@@ -889,12 +922,14 @@ $forms.Picklist = function () {
 				.click(do_search)
 		);
 
-		this.prop.val(function (objs) {
-			$.each(objs, function () {
-				if (this && this.val)
-					add_selection(this.val.id);
-			});
-		})
+		if (this.prop.data) {
+			this.prop.val(function (objs) {
+				$.each(objs, function () {
+					if (this && this.val)
+						add_selection(this.val.id);
+				});
+			})
+		}
 
 		return field
 	};
