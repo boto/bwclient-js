@@ -90,14 +90,17 @@
 					var node = this;
 
 					if (block.model.prop_map[val].is_type('reference', 'query')) {
+						if (follow_props) {
+							this.append($('<span/>')
+								.attr(prop, follow_props));
+						}
+
+						if (this.find($markup.sel.attribute).length == 0) {
+							this.append('<a bwAttribute="name" bwLink="view"/>');
+						}
+
 						var contents = this.contents().clone();
 						this.empty();
-
-						if (follow_props) {
-							contents = $('<span/>')
-								.attr(prop, follow_props)
-								.append(contents);
-						}
 
 						function descend (obj) {
 							if (obj && obj.id) {

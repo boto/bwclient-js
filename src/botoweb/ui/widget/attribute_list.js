@@ -16,6 +16,7 @@ botoweb.ui.widget.AttributeList = function(node, model, obj) {
 	self.node.empty();
 	self.model = model;
 	self.properties = [];
+	self.follow_props = [];
 	self.sequence = self.node.attr(botoweb.ui.markup.prop.attributes);
 	self.existing_only = self.node.attr(botoweb.ui.markup.prop.existing_only) || '';
 	self.existing_only = self.existing_only.split(',');
@@ -29,7 +30,8 @@ botoweb.ui.widget.AttributeList = function(node, model, obj) {
 		if (!name) {
 			return {meta:{label: '&nbsp;'}};
 		}
-		var n = name.replace(/\..*/, '');
+		/()/.test(name);
+		var n = name.replace(/\.(.*)/, '');
 		if (!(n in self.model.prop_map))
 			return;
 
@@ -37,6 +39,8 @@ botoweb.ui.widget.AttributeList = function(node, model, obj) {
 
 		if (!prop.meta.read)
 			return;
+
+		self.follow_props.push(RegExp.$1);
 
 		return prop;
 	});
@@ -73,18 +77,15 @@ botoweb.ui.widget.AttributeList = function(node, model, obj) {
 		var container = $('<div/>')
 			.addClass('property');
 
+		var follow = '';
+
+		if (self.follow_props[num])
+			follow = '.' + self.follow_props[num];
+
 		if (template.length)
 			container.append(template.clone());
-		else if (props._type in {list:1,query:1,reference:1}) {
-			var field = $('<div/>').attr(botoweb.ui.markup.prop.attribute, props.meta.name);
-
-			if ($.inArray(props.name, self.existing_only) >= 0)
-				field.attr(botoweb.ui.markup.prop.existing_only, 'true');
-
-			container.append(field);
-		}
 		else
-			container.attr(botoweb.ui.markup.prop.attribute, props.meta.name);
+			container.attr(botoweb.ui.markup.prop.attribute, props.meta.name + follow);
 
 		c.append(
 			$('<div/>')
