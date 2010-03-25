@@ -161,6 +161,13 @@ $util.normalize_string = function (str) {
 	return str;
 };
 
+$util.sort_props = function(a,b) {
+	if (a.meta)
+		return (a.meta.label || a.meta.name || a).toString().toLowerCase() > (b.meta.label || b.meta.name || b).toString().toLowerCase() ? 1 : -1;
+
+	return (a.name || a).toString().toLowerCase() > (b.name || b).toString().toLowerCase() ? 1 : -1;
+}
+
 $util.log = function (msg, err_type) {
 	if (!msg)
 		return;

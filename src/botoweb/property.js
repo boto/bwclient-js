@@ -82,6 +82,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	 * breaks, commas, etc).
 	 */
 	this.toString = function (wantarray, opt) {
+		if (!this.data)
+			return null;
+
 		var values = [];
 		var self = this;
 		opt = opt || {};
@@ -291,7 +294,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			// property, the val property will be null. undefined is used ONLY
 			// when the value has not yet been loaded. If val is null or
 			// anything else, this statement will evaluate to true.
-			if (this.data.length == 0 || this.data[0].val !== undefined)
+			if (this.data && (this.data.length == 0 || this.data[0].val !== undefined))
 				return fnc(this.data);
 
 			// Load the data as defined by its type

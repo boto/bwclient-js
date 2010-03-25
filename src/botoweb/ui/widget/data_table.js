@@ -16,12 +16,12 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 	this.data_table = table.dataTable({
 		bJQueryUI: true,
 		oLanguage: {
-			sSearch: 'Quick Search these results:',
-			sLengthMenu: "Show _MENU_ records per page",
+			sSearch: 'Filter results: ',
+			sLengthMenu: "Show _MENU_ per page",
 			sInfo: 'Showing _START_ to _END_ of _TOTAL_ results'
 		},
 		aaSorting: [],
-		sDom: '<"fg-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix"lTfr<"clear">p>t<"fg-toolbar ui-widget-header ui-corner-bl ui-corner-br ui-helper-clearfix"ip>',
+		sDom: '<"fg-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix"flT<"clear">p>t<"fg-toolbar ui-widget-header ui-corner-bl ui-corner-br ui-helper-clearfix"ip>',
 		sPaginationType: 'full_numbers'
 	});
 

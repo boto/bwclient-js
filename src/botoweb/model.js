@@ -165,4 +165,8 @@ botoweb.Model = function (name, href, methods, props) {
 		});
 	}
 
+	this.toString = function () {
+		return this.name;
+	}
+
 };

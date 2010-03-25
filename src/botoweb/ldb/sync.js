@@ -136,7 +136,7 @@ botoweb.ldb.sync = {
 		var timestamp = botoweb.util.timestamp();
 
 		if (!refresh && localStorage['last_update_' + model.name])
-			model.query([['modified_at', '>', localStorage['last_update_' + model.name]]], self.process, { no_ldb: true, no_cache: true });
+			model.query([['sys_modstamp', '>', localStorage['last_update_' + model.name]]], self.process, { no_ldb: true, no_cache: true });
 		else
 			model.all(self.process, { no_ldb: true, no_cache: true });
 

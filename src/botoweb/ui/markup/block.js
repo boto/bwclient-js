@@ -1,3 +1,5 @@
+(function ( $ ) {
+
 /**
  * Represents and holds data for a specific block of markup.
  *
@@ -7,7 +9,6 @@
 botoweb.ui.markup.Block = function (node, opt) {
 	if (!opt) opt = {};
 
-	var $markup = botoweb.ui.markup;
 	var self = this;
 
 	this.node = node;
@@ -24,6 +25,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 	if (opt.onready)
 		this.onready.push(opt.onready);
+
+	if (typeof this.model == 'string')
+		this.model = botoweb.env.models[this.model];
 
 	if (this.obj && !this.model)
 		this.model = this.obj.model;
@@ -144,7 +148,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 		parse('nested', $markup.remove_nested);
 
 		// Parse stuff in the order specified
-		$.each(['condition', 'trigger', 'attribute_list', 'attribute', 'editing_tools', 'link'], function () {
+		$.each($markup.Block.parse_order.normal, function () {
 			if (!self.skip_markup[this])
 				parse(this, $markup.parse[this]);
 		});
@@ -153,7 +157,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 		$markup.restore_nested(this);
 
 		// Parse stuff in the order specified
-		$.each(['relation','search'], function () {
+		$.each($markup.Block.parse_order.nested, function () {
 			if (!self.skip_markup[this])
 				parse(this, $markup.parse[this]);
 		});
@@ -179,3 +183,12 @@ botoweb.ui.markup.Block = function (node, opt) {
 	else
 		this.init();
 };
+
+var $markup = botoweb.ui.markup;
+
+$markup.Block.parse_order = {
+	normal: ['condition', 'trigger', 'attribute_list', 'attribute', 'editing_tools', 'link'],
+	nested: ['relation','search']
+};
+
+})(jQuery);

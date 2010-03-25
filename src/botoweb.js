@@ -103,8 +103,10 @@ var botoweb = {
 
 			var count = 0;
 
+			try {
 			if (xhr && typeof xhr.getResponseHeader == 'function')
 				count = xhr.getResponseHeader('X-Result-Count');
+			} catch (e) { }
 
 			function next_page() {
 				if (url)
@@ -237,10 +239,6 @@ var botoweb = {
 				if (fnc)
 					fnc();
 				botoweb.ldb.sync.update();
-
-				env.models.Account.get('1a6d1eba-07d5-4191-850b-e7b6bcecade4', function (o) {
-					o.del();
-				});
 
 				// Update the local database every 2 minutes
 				setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);
