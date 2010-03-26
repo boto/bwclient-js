@@ -133,12 +133,28 @@ botoweb.ldb.sync = {
 		self.task_total = 0;
 		self.update_model = model;
 
-		var timestamp = botoweb.util.timestamp();
+		// Next time, find any updates within 60 seconds of the current time
+		// just in case we missed something new this time
+		var recent_date = new Date(new Date().valueOf() - 60000);
 
-		if (!refresh && localStorage['last_update_' + model.name])
-			model.query([['sys_modstamp', '>', localStorage['last_update_' + model.name]]], self.process, { no_ldb: true, no_cache: true });
+		var timestamp = botoweb.util.timestamp(recent_date);
+
+		var options = {
+			no_ldb: true,
+			no_cache: true
+		};
+		var processor = self.process;
+
+		if (self.update_model.name == 'Trash') {
+			options.minimal_parse = true;
+			processor = self.process_trash;
+		}
+
+		if (!refresh && localStorage['last_update_' + model.name]) {
+			model.query([['modified_at', '>', localStorage['last_update_' + model.name]]], processor, options);
+		}
 		else
-			model.all(self.process, { no_ldb: true, no_cache: true });
+			model.all(processor, options);
 
 		// Although we may fetch multiple pages of results, these results are a
 		// snapshot of the current state, so the update time is now, not when
@@ -188,7 +204,8 @@ botoweb.ldb.sync = {
 	 * @param {Integer} page The current results page.
 	 * @param {Integer} total_count The total results count.
 	 */
-	process: function (results, page, total_count) {
+	process: function (results, page, total_count, opt) {
+		opt = opt || {};
 		var self = botoweb.ldb.sync;
 
 		if (page == 0) {
@@ -213,8 +230,12 @@ botoweb.ldb.sync = {
 				var column_names = [];
 
 				// Update any cached versions of this object
-				if (obj.id in model.objs)
-					model.objs[obj.id] = obj;
+				if (obj.id in model.objs) {
+					if (opt.trash)
+						delete model.objs[obj.id];
+					else
+						model.objs[obj.id] = obj;
+				}
 
 				result_id++;
 
@@ -237,7 +258,7 @@ botoweb.ldb.sync = {
 							);
 						}
 
-						if (!prop)
+						if (opt.trash || !prop)
 							return;
 
 						var v = prop.val();
@@ -266,7 +287,7 @@ botoweb.ldb.sync = {
 							);
 						});
 					}
-					else if (this.is_type('reference')) {
+					else if (!opt.trash && this.is_type('reference')) {
 						column_names.push(botoweb.ldb.prop_to_column(this));
 						column_names.push(botoweb.ldb.prop_to_column(this) + '__type');
 
@@ -292,21 +313,39 @@ botoweb.ldb.sync = {
 
 				var rid = result_id + 0;
 
-				txn.executeSql( ((self.first_sync) ? 'INSERT' : 'REPLACE') +
-					' INTO ' + botoweb.ldb.model_to_table(model) +
-					' VALUES (' + $.map(bind_params, function() { return '?' }).join(', ') + ')',
-					bind_params,
-					function () {
-						if (rid % 50 == 0) {
-							// The UI code can establish a listener for the change event
-							$(self).trigger('change', [{
-								percent_updated: (self.task_total) ? Math.round(10000 * rid / self.task_total) / 100 : 100,
-								percent_downloaded: (self.task_total) ? Math.round(10000 * self.task_processed / self.task_total) / 100 : 100
-							}]);
-						}
-					},
-					botoweb.util.error
-				);
+				if (opt.trash) {
+					txn.executeSql( 'DELETE FROM ' + botoweb.ldb.model_to_table(model) +
+						' WHERE id = ?',
+						[obj.id],
+						function () {
+							if (rid % 50 == 0) {
+								// The UI code can establish a listener for the change event
+								$(self).trigger('change', [{
+									percent_updated: (self.task_total) ? Math.round(10000 * rid / self.task_total) / 100 : 100,
+									percent_downloaded: (self.task_total) ? Math.round(10000 * self.task_processed / self.task_total) / 100 : 100
+								}]);
+							}
+						},
+						botoweb.util.error
+					);
+				}
+				else {
+					txn.executeSql( ((self.first_sync) ? 'INSERT' : 'REPLACE') +
+						' INTO ' + botoweb.ldb.model_to_table(model) +
+						' VALUES (' + $.map(bind_params, function() { return '?' }).join(', ') + ')',
+						bind_params,
+						function () {
+							if (rid % 50 == 0) {
+								// The UI code can establish a listener for the change event
+								$(self).trigger('change', [{
+									percent_updated: (self.task_total) ? Math.round(10000 * rid / self.task_total) / 100 : 100,
+									percent_downloaded: (self.task_total) ? Math.round(10000 * self.task_processed / self.task_total) / 100 : 100
+								}]);
+							}
+						},
+						botoweb.util.error
+					);
+				}
 			});
 		});
 
@@ -321,5 +360,13 @@ botoweb.ldb.sync = {
 
 		// Signals botoweb to fetch more pages
 		return true;
+	},
+
+	/**
+	 * Calls process with a trash argument which causes results to be deleted
+	 * from local DB.
+	 */
+	process_trash: function (results, page, total_count) {
+		return botoweb.ldb.sync.process(results, page, total_count, { trash: 1 });
 	}
 };

@@ -142,4 +142,11 @@ botoweb.Object = function(id, model, data) {
 		$(this).trigger('delete');
 		this.model.del(this.id, fnc);
 	};
+
+	this.toString = function () {
+		if ('name' in this.data)
+			return this.data.name.toString();
+
+		return this.model.name + ' Object'
+	};
 };
