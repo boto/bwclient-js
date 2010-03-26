@@ -114,62 +114,64 @@ botoweb.xml = {
 
 		var data = {};
 
-		$.each(model.props, function() {
-			// May match more than one!
-			var tags = xml.find('> ' + this.meta.name);
+		if (!opt.minimal_parse) {
+			$.each(model.props, function() {
+				// May match more than one!
+				var tags = xml.find('> ' + this.meta.name);
 
-			var prop = new this.instance();
-			var d;
+				var prop = new this.instance();
+				var d;
 
-			if (prop.is_type('reference', 'blob', 'query')) {
-				d = tags.map(function (i, tag) {
-					tag = $(tag);
-					return {
-						// The value is undefined until the object is loaded
-						val: undefined,
+				if (prop.is_type('reference', 'blob', 'query')) {
+					d = tags.map(function (i, tag) {
+						tag = $(tag);
+						return {
+							// The value is undefined until the object is loaded
+							val: undefined,
 
-						href: tag.attr('href'),
-						type: tag.attr('item_type'),
-						id: tag.attr('id')
-					};
-				});
-			}
+							href: tag.attr('href'),
+							type: tag.attr('item_type'),
+							id: tag.attr('id')
+						};
+					});
+				}
 
-			else if (prop.is_type('complexType')) {
-				d = tags.children().map(function(i, tag) {
-					tag = $(tag);
-					return {
-						key: tag.attr('name'),
-						type: tag.attr('type'),
-						val: tag.text()
-					};
-				});
-			}
+				else if (prop.is_type('complexType')) {
+					d = tags.children().map(function(i, tag) {
+						tag = $(tag);
+						return {
+							key: tag.attr('name'),
+							type: tag.attr('type'),
+							val: tag.text()
+						};
+					});
+				}
 
-			else if (prop.is_type('boolean')) {
-				d = tags.map(function(i, tag) {
-					switch ($(tag).text()) {
-						case 'True':
-							return { val: '1' };
-						case 'False':
-							return { val: '0' };
-					}
-					return { val: null };
-				});
-			}
+				else if (prop.is_type('boolean')) {
+					d = tags.map(function(i, tag) {
+						switch ($(tag).text()) {
+							case 'True':
+								return { val: '1' };
+							case 'False':
+								return { val: '0' };
+						}
+						return { val: null };
+					});
+				}
 
-			else {
-				d = tags.map(function(i, tag) {
-					return { val: $(tag).text() };
-				});
-			}
+				else {
+					d = tags.map(function(i, tag) {
+						return { val: $(tag).text() };
+					});
+				}
 
-			// Do not replace the default data if nothing was provided in XML
-			if (d && d.length > 0)
-				prop.data = d;
+				// Do not replace the default data if nothing was provided in XML
+				if (d && d.length > 0)
+					prop.data = d;
 
-			data[this.meta.name] = prop;
-		});
+				data[this.meta.name] = prop;
+			});
+		}
 
 		return new botoweb.Object(xml.attr('id'), model, data);
 	},
