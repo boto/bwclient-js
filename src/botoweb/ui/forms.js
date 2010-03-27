@@ -22,7 +22,7 @@ $forms.prop_field = function (prop, opt) {
 		return new $forms.Text(prop, opt);
 	else if (prop.is_type('dateTime') || opt.input == 'dateTime')
 		return new $forms.DateTime(prop, opt);
-	else if (prop.is_type('reference'))
+	else if (prop.is_type('reference','query'))
 		return new $forms.Picklist(prop, opt);
 	else if (prop.is_type('boolean'))
 		return new $forms.Bool(prop, opt);
@@ -799,7 +799,7 @@ $forms.Picklist = function () {
 
 	this.build_field = function (value, opt) {
 		if (opt.use_template && this.opt.template && this.opt.template.length) {
-			if (!self.prop.is_type('list')) {
+			if (!self.prop.is_type('list','query')) {
 				self.node.find('.selections').empty();
 				self.node.find('.editing_template').parent().remove();
 			}
@@ -818,25 +818,36 @@ $forms.Picklist = function () {
 					.addClass('remove_editing_template small')
 					.click(function () {
 						$(this).parent().remove();
+						self.node.find('#' + value.id).remove();
 					}),
 				block.node
 			);
 		}
 
-		var field = $('<div class="ui-picklist"><div class="selections"></div><div class="search clear"></div></div>');
+		var field = this.node.find('.ui-picklist');
+		var new_field = false;
+
+		if (!field.length) {
+			field = $('<div class="ui-picklist"><div class="selections"></div><div class="search clear"></div></div>');
+			new_field = true;
+		}
+
 		var selections = field.find('.selections:first');
 		var search = field.find('.search:first');
 		var search_results = $ui.nodes.search_results;
 
-		var search_field = new $forms.Text();
-
 		var selecting = false;
 		var autosearch;
 		var prev_value;
+		var focused = false;
 
-		search_field.add_field();
+		var search_box = field.find('.search input');
 
-		var search_box = search_field.fields[0];
+		if (new_field) {
+			var search_field = new $forms.Text();
+			search_field.add_field();
+			search_box = search_field.fields[0];
+		}
 
 		field.hide();
 		setTimeout(function () {
@@ -881,42 +892,46 @@ $forms.Picklist = function () {
 				search_box.val('');
 		}
 
-		function add_selection (id) {
+		function add_selection (obj) {
+			// obj may just be a string ID
+			if (typeof obj == 'string') {
+				self.model.get(obj, add_selection);
+				return;
+			}
+
 			// Don't add if already selected
-			if (selections.find('#' + id).length == 0) {
-				if (!self.prop.is_type('list')) {
+			if (selections.find('#' + obj.id).length == 0) {
+				if (!self.prop.is_type('list','query')) {
 					selections.empty();
 					self.node.find('.editing_template').parent().remove();
 				}
 
-				self.model.get(id, function (obj) {
-					var template_field;
-					if (self.opt.template) {
-						template_field = self.add_field(obj, { use_template: true });
-					}
+				var template_field;
+				if (self.opt.template) {
+					template_field = self.add_field(obj, { use_template: true });
+				}
 
-					if (obj) {
-						selections.append(
-							$('<div class="selection"/>')
-								.attr('id', obj.id)
-								.attr($ui.markup.prop.model, obj.model.name)
-								.text(' ' + obj.data.name.toString())
-								.prepend(
-									$ui.button('', { icon: 'ui-icon-close', no_text: true, mini: true, primary: false })
-										.addClass('ui-state-error')
-										.click(function () {
-											$(this).parent().remove();
+				if (obj && obj.model) {
+					selections.append(
+						$('<div class="selection"/>')
+							.attr('id', obj.id)
+							.attr($ui.markup.prop.model, obj.model.name)
+							.text(' ' + obj.data.name.toString())
+							.prepend(
+								$ui.button('', { icon: 'ui-icon-close', no_text: true, mini: true, primary: false })
+									.addClass('ui-state-error')
+									.click(function () {
+										$(this).parent().remove();
 
-											if (template_field)
-												template_field.remove();
-										})
-								)
-								.append(
-									$('<span class="small"/>').text(' (' + obj.model.name + ')')
-								)
-						);
-					}
-				});
+										if (template_field)
+											template_field.remove();
+									})
+							)
+							.append(
+								$('<span class="small"/>').text(' (' + obj.model.name + ')')
+							)
+					);
+				}
 			}
 
 			cancel_search(true);
@@ -942,7 +957,7 @@ $forms.Picklist = function () {
 				else {
 					// Get the string form of each object
 					$.each(objs, function () {
-						items.push({ id: this.id, text: this.data.name.toString(), model: this.model.name });
+						items.push({ obj: this, text: this.data.name.toString() });
 					});
 
 					// Sort alphabetically, ignoring a, an, and the
@@ -950,12 +965,21 @@ $forms.Picklist = function () {
 						return (a.text.toLowerCase().replace(/^\s*((the|a|an)\s+)?/, '') > b.text.toLowerCase().replace(/^\s+(the |a |an )?/, '')) ? 1 : -1;
 					});
 
-					$.each(items, function (i, obj) {
+					// To allow faster data entry, if the user has already tabbed
+					// out of the field, add the first matching item.
+					if (!focused && search_box.val()) {
+						if (items.length)
+							add_selection(items[0].obj);
+
+						return;
+					}
+
+					$.each(items, function (i, data) {
 						result_node.append(
-							$ui.button('<div class="ar small">' + obj.model + '</div>' + obj.text, { corners: [0,0,0,0] })
-								.attr('id', obj.id)
+							$ui.button('<div class="ar small">' + data.obj.model.name + '</div>' + data.text, { corners: [0,0,0,0] })
+								.attr('id', data.obj.id)
 								.click(function () {
-									add_selection(obj.id);
+									add_selection(data.obj);
 								})
 						);
 					});
@@ -988,39 +1012,52 @@ $forms.Picklist = function () {
 			});
 		}
 
-		search.append(
-			search_box
-				.addClass('al')
-				.keyup(function (e) {
-					if (e.keyCode == 40 && !selecting)
-						do_search();
-					else if (e.keyCode) {
-						clearTimeout(autosearch);
+		if (new_field) {
+			search.append(
+				search_box
+					.addClass('al')
+					.keyup(function (e) {
+						if (e.keyCode == 40 && !selecting)
+							do_search();
+						else if (e.keyCode) {
+							clearTimeout(autosearch);
 
-						if (this.value == '' && !selecting)
-							cancel_search();
-						else if (this.value != prev_value) {
-							cancel_search();
-							autosearch = setTimeout(do_search, 750);
+							if (this.value == '' && !selecting)
+								cancel_search();
+							else if (this.value != prev_value) {
+								cancel_search();
+								autosearch = setTimeout(do_search, 500);
+							}
 						}
-					}
 
-					prev_value = this.value;
-				}),
-			$ui.button('', { icon: 'ui-icon-search', no_text: true, corners: [0,1,1,0] })
-				.click(do_search)
-		);
-
-		if (this.prop.data) {
-			this.prop.val(function (objs) {
-				$.each(objs, function () {
-					if (this && this.val)
-						add_selection(this.val.id);
-				});
-			})
+						prev_value = this.value;
+					})
+					.focus(function () {
+						focused = true;
+					})
+					.blur(function () {
+						focused = false;
+					}),
+				$ui.button('', { icon: 'ui-icon-search', no_text: true, corners: [0,1,1,0] })
+					.click(do_search)
+			);
 		}
 
-		return field
+		/*if (this.prop.data) {
+			this.prop.val(function (objs) {
+				$.each(objs, function () {
+					if (this && this.val) {
+						add_selection(this.val);
+					}
+				});
+			})
+		}*/
+
+		if (value && value.val) {
+			add_selection(value.val);
+		}
+
+		return field;
 	};
 };
 
