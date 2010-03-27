@@ -101,7 +101,7 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 				break;
 		}
 
-		if (button) {
+		if (button && actions[i]) {
 			button.attr(botoweb.ui.markup.prop.link, actions[i])
 				.appendTo(
 					$('<li/>').prependTo(this.node)
@@ -109,7 +109,7 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 		}
 	}
 
-	if (self.obj) {
+	if (self.block) {
 		function onsave () {
 			self.block.save();
 		}
@@ -123,7 +123,7 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 			self.node.find('li').show();
 		}
 
-		$(self.obj).bind('edit', function () {
+		$(self.block).bind('edit', function () {
 			self.node.find('li').hide();
 
 			botoweb.ui.button('Save Changes', { icon: 'ui-icon-disk' })
@@ -134,9 +134,9 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 				.click(oncancel)
 				.appendTo($('<li class="tmp"/>').appendTo(self.node));
 		});
-		$(self.obj).bind('cancel_edit', cleanup);
+		$(self.block).bind('cancel_edit', cleanup);
 
-		$(self.obj).bind('clone create', function () {
+		$(self.block).bind('clone create', function () {
 			self.node.find('li').hide();
 
 			botoweb.ui.button('Save New ' + self.model.name, { icon: 'ui-icon-disk' })
@@ -147,7 +147,7 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 				.click(oncancel)
 				.appendTo($('<li class="tmp"/>').appendTo(self.node));
 		});
-		$(self.obj).bind('cancel_clone cancel_create', cleanup);
+		$(self.block).bind('cancel_clone cancel_create', cleanup);
 	}
 
 	self.node.find('a').addClass('ui-button ui-state-default ui-corner-all');

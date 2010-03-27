@@ -21,7 +21,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.nested = [];
 	this.waiting = 0;
 	this.opt = opt;
-	this.state = 'view';
+	this.state = opt.state || 'view';
 
 	if (opt.onready)
 		this.onready.push(opt.onready);
@@ -104,18 +104,18 @@ botoweb.ui.markup.Block = function (node, opt) {
 		$.each(this.onready, function () { this(self) });
 		this.onready = [];
 
-		if (this.obj && this.opt.action == 'edit' && this.state != 'edit') {
+		if (this.opt.action == 'edit' && this.state != 'edit') {
 			this.state = 'edit';
-			$(this.obj).triggerHandler('edit');
+			$(this).triggerHandler('edit');
 		}
 
-		if (this.obj && this.opt.action == 'clone' && this.state != 'clone') {
+		if (this.opt.action == 'clone' && this.state != 'clone') {
 			this.state = 'clone';
-			$(this.obj).triggerHandler('clone');
+			$(this).triggerHandler('clone');
 		}
 
-		if (this.obj && !this.opt.action && this.state != 'view') {
-			$(this.obj).triggerHandler('cancel_' + this.state);
+		if (!this.opt.action && this.state != 'view') {
+			$(this).triggerHandler('cancel_' + this.state);
 			this.state = 'view';
 		}
 /*
