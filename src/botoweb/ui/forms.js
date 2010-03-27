@@ -204,7 +204,12 @@ $forms.Field = function (prop, opt) {
 				field.show();
 			}, 50);
 
-			if (this.fields.length) {
+			// Fixes an issue with query and reference types which is caused by
+			// their editing templates being displayed before the search field,
+			// this forces the search field to stay above the templates.
+			if (this.prop && this.prop.is_type('query','reference'))
+				this.node.prepend(field);
+			else if (this.fields.length) {
 				this.fields[this.fields.length - 1].after(field);
 				field.before($('<br class="clear"/>'));
 			}
@@ -272,9 +277,9 @@ $forms.Field = function (prop, opt) {
 					}, 100);
 
 					return false;
-				}).appendTo(this.node);
+				}).insertAfter(this.node.find('.search:first'));
 
-			if (!this.prop.is_type('list')) {
+			if (!this.prop.is_type('list', 'query')) {
 				$ui.button('Selecting or creating a new ' + this.prop.meta.label + ' will replace any existing selections.', {
 					icon: 'ui-icon-alert',
 					corners: [0,0,1,1],
@@ -334,10 +339,10 @@ $forms.Field = function (prop, opt) {
 			);
 		}
 
-		// Pull out a header from the h2
+		// Pull out a header
 		// TODO decide if there is a better way to do this...
 		if (this.opt.template) {
-			this.opt.template.find('h2:first')
+			this.opt.template.find('h2:first, h3:first').first()
 				.clone()
 				.addClass('clear')
 				.prependTo(this.node);
@@ -804,7 +809,12 @@ $forms.Picklist = function () {
 				self.node.find('.editing_template').parent().remove();
 			}
 
-			var node = $('<div class="editing_template clear"/>').append(this.opt.template.clone());
+			var node = $('<div class="editing_template ui-state-default clear"/>').append(
+				$('<div class="block"/>').append(
+					this.opt.template.clone(),
+					$('<br class="clear"/>')
+				)
+			);
 
 			var block = new $ui.markup.Block(node, {
 				model: this.model,
@@ -814,11 +824,13 @@ $forms.Picklist = function () {
 			});
 
 			return $('<div class="clear"/>').append(
-				$ui.button('Remove selection', { icon: 'ui-icon-close', corners: [1,1,0,0] })
+				$ui.button('Remove this selection', { icon: 'ui-icon-close', corners: [1,1,0,0] })
 					.addClass('remove_editing_template small')
 					.click(function () {
 						$(this).parent().remove();
-						self.node.find('#' + value.id).remove();
+
+						if (value)
+							self.node.find('#' + value.id).remove();
 					}),
 				block.node
 			);

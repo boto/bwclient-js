@@ -61,6 +61,12 @@ botoweb.ui.markup.Block = function (node, opt) {
 		});
 	}
 
+	if (botoweb.env.cfg.markup.page_store) {
+		$.each(botoweb.env.cfg.markup.page_store, function () {
+			this(self.node);
+		});
+	}
+
 	this.save = function () {
 		for (var i in this.children) {
 			var child = this.children[i];
