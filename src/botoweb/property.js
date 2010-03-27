@@ -14,6 +14,7 @@
 botoweb.Property = function(name, type, perm, model, opt) {
 	opt = opt || {};
 
+	var self = this;
 	var model_prop = this;
 	var is_list = false;
 
@@ -30,7 +31,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	}
 
 	// Calculated types are handled the same as blobs in the front-end.
-	if (type == 'calculated') {
+	else if (type == 'calculated') {
 		type = 'blob';
 	}
 
@@ -350,4 +351,32 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 	// Copy any optional data
 	$.extend(this.meta, opt);
+
+	if (this.is_type('query')) {
+		setTimeout(function () {
+			self.meta.ref_props = [];
+
+			var ref_model = botoweb.env.models[self.meta.item_type];
+
+			if (!ref_model)
+				return;
+
+			self.meta.write = false;
+			self.meta.read = false;
+
+			// Query may map to multiple values in another object
+			$.each(self.meta.refs, function () {
+				var ref_prop = ref_model.prop_map[this];
+
+				if (!ref_prop) return;
+
+				self.meta.ref_props.push(ref_prop);
+
+				if (ref_prop.meta.read)
+					self.meta.read = true;
+				if (ref_prop.meta.write)
+					self.meta.write = true;
+			});
+		}, 50);
+	}
 };

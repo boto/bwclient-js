@@ -47,6 +47,9 @@ botoweb.xml = {
 					opt[a] = tags.attr(b);
 			});
 
+			if (opt.ref_name)
+				opt.refs = opt.ref_name.split(',');
+
 			// Pull text content of children of the property node
 			map = {
 				label: 'description',
