@@ -31,6 +31,8 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 	this.cfg = $.extend(true, {
 		static_host: '',
 
+		time_delta: 0,
+
 		templates: {
 			home: 'index.html',
 			model: '{{ name }}.html',
@@ -88,7 +90,7 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 	var self = this;
 
 	// Parse API xml to set up environment
-	botoweb.ajax.get(this.base_url, function(xml){
+	botoweb.ajax.get(this.base_url, function(xml, xhr){
 		xml = $(xml);
 
 		// Setup our name
@@ -120,6 +122,12 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 			}
 		});
 		*/
+
+		// Find the time offset between the server and client computer
+		var server_date = Date.parse(xhr.getResponseHeader('Date'));
+		var client_date = new Date().valueOf();
+
+		self.cfg.time_delta = server_date - client_date;
 
 		if(fnc){ fnc(self); }
 	});

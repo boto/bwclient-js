@@ -134,8 +134,10 @@ botoweb.ldb.sync = {
 		self.update_model = model;
 
 		// Next time, find any updates within 60 seconds of the current time
-		// just in case we missed something new this time
-		var recent_date = new Date(new Date().valueOf() - 60000);
+		// just in case we missed something new this time. In case the client's
+		// time is considerably different than the server time, we add the
+		// time_delta which is calculated when the API is loaded.
+		var recent_date = new Date(new Date().valueOf() - 60000 + botoweb.env.cfg.time_delta);
 
 		var timestamp = botoweb.util.timestamp(recent_date);
 
