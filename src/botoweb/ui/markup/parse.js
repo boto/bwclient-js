@@ -85,11 +85,13 @@
 					if (editable === undefined)
 						editable = block.opt.editable
 					else
-						editable = (editable == 'false') ? false : true;
+						editable = (editable == 'false' || editable === false) ? false : true;
 
 					var node = this;
+					var contents;
+					var prop = block.model.prop_map[val];
 
-					if (block.model.prop_map[val].is_type('reference', 'query')) {
+					if (prop.is_type('reference', 'query')) {
 						if (follow_props) {
 							this.append($('<span/>')
 								.attr(prop, follow_props));
@@ -99,7 +101,7 @@
 							this.append('<a bwAttribute="name" bwLink="view"/>');
 						}
 
-						var contents = this.contents().clone();
+						contents = this.contents().clone();
 						this.empty();
 
 						function descend (obj) {
@@ -135,7 +137,7 @@
 						}
 					}
 
-					else if (block.model.prop_map[val].is_type('list')) {
+					else if (prop.is_type('list')) {
 						if (block.obj) {
 							block.waiting++;
 							var async = false;
@@ -169,7 +171,7 @@
 						}
 					}
 
-					else if (block.obj && block.model.prop_map[val].is_type('blob')) {
+					else if (block.obj && prop.is_type('blob')) {
 						block.obj.load(val, function (data) {
 							if (!data) return;
 
@@ -177,7 +179,7 @@
 						});
 					}
 
-					else if (block.obj && block.model.prop_map[val].is_type('dateTime')) {
+					else if (block.obj && prop.is_type('dateTime')) {
 						var ts = block.obj.data[val].val();
 						var html = '';
 
@@ -192,10 +194,20 @@
 						this.html(block.obj.data[val].toString() || '');
 					}
 
-					if (block.obj && editable && block.model.prop_map[val].meta.write) {
-						block.fields.push($forms.prop_field(block.obj.data[val], {
-							node: this
-						}));
+					if (editable && prop.meta.write) {
+						var opt = {
+							node: this,
+							block: block
+						};
+
+						if (prop.is_type('reference','query') && contents.find($markup.sel.attribute).length) {
+							opt.template = contents;
+						}
+
+						if (block.obj && val in block.obj.data)
+							prop = block.obj.data[val];
+
+						block.fields.push($forms.prop_field(prop, opt));
 					}
 				}, {
 					suffix: ':first'
@@ -236,6 +248,10 @@
 				// It is safest not to make a history entry for deletes, just
 				// attach a click event.
 				if (val == 'delete')
+					return;
+
+				// Without an object, the only supported link type is create
+				if (val != 'create' && !block.obj)
 					return;
 
 				var set_href;

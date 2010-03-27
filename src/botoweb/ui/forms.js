@@ -50,6 +50,12 @@ $forms.Field = function (prop, opt) {
 		this.prop = prop;
 		this.obj = prop.obj;
 		this.model = prop.meta.model;
+
+		this.node.addClass('prop_type_' + prop.meta.type);
+
+		// Lists are a special prop which can be of any type
+		if (prop.is_type('list'))
+			this.node.addClass('prop_type_list');
 	}
 
 	this.opt = $.extend(true, {
@@ -127,11 +133,13 @@ $forms.Field = function (prop, opt) {
 	 * for filtering a single-value property, this method is agnostic of the
 	 * property type.
 	 */
-	this.add_field = function (value) {
+	this.add_field = function (value, opt) {
+		opt = opt || {};
+
 		if (typeof value != 'object')
 			value = {val: value};
 
-		var field = this.build_field(value);
+		var field = this.build_field(value, opt);
 
 		// Allows field's DOM node to be mapped to the field by ID so that we
 		// can preserve the order of lists.
@@ -186,6 +194,9 @@ $forms.Field = function (prop, opt) {
 				$('<br class="clear"/>')
 			);
 		}
+		else if (field.find('.editing_template').length) {
+			this.node.append(field);
+		}
 		else {
 			field.hide();
 			setTimeout(function () {
@@ -205,6 +216,8 @@ $forms.Field = function (prop, opt) {
 			this.decorate_field(field);
 
 		this.fields.push(field);
+
+		return field;
 	};
 
 	this.empty_fields = function () {
@@ -233,7 +246,7 @@ $forms.Field = function (prop, opt) {
 
 		this.set_values();
 
-		if (this.prop.is_type('list') && this.opt.allow_list || this.opt.allow_multiple) {
+		if (this.opt.allow_multiple || this.prop.is_type('list') && this.opt.allow_list) {
 			var add_selection = $ui.button('Add item', { icon: 'ui-icon-arrowthick-1-s', corners: [1,1,0,0] })
 				.addClass('small add_selection')
 				.click(function () {
@@ -243,6 +256,33 @@ $forms.Field = function (prop, opt) {
 
 			if (!this.prop.is_type('list'))
 				add_selection.css('margin-left', 0);
+		}
+
+		if (this.prop.is_type('reference','query') && this.opt.template) {
+			var txt = 'Create New ' + this.model.name;
+
+			var button = $ui.button(txt, { icon: 'ui-icon-arrowthick-1-s', corners: [0,0,1,1] })
+				.addClass('small add_selection create_new')
+				.click(function () {
+					xyz = true;
+					var field = self.add_field(null, { use_template: true });
+
+					setTimeout(function () {
+						field.find('.editing_template :input:first').focus();
+					}, 100);
+
+					return false;
+				}).appendTo(this.node);
+
+			if (!this.prop.is_type('list')) {
+				$ui.button('Selecting or creating a new ' + this.prop.meta.label + ' will replace any existing selections.', {
+					icon: 'ui-icon-alert',
+					corners: [0,0,1,1],
+					primary: false
+				})
+					.addClass('ar small ui-state-highlight add_selection_warning')
+					.insertBefore(button);
+			}
 		}
 
 		if (this.atomic) {
@@ -292,6 +332,15 @@ $forms.Field = function (prop, opt) {
 						})
 				)
 			);
+		}
+
+		// Pull out a header from the h2
+		// TODO decide if there is a better way to do this...
+		if (this.opt.template) {
+			this.opt.template.find('h2:first')
+				.clone()
+				.addClass('clear')
+				.prependTo(this.node);
 		}
 
 		if (this.opt.node)
@@ -401,6 +450,10 @@ $forms.Field = function (prop, opt) {
 		else
 			value = '';
 
+		if (this.opt.template) {
+			return this.opt.template.clone().addClass('editing_template');
+		}
+
 		var field = $('<' + this.opt.html.tagName + '/>')
 			.attr(this.opt.html.attr);
 
@@ -412,11 +465,11 @@ $forms.Field = function (prop, opt) {
 		return field;
 	};
 
-	if (this.obj) {
-		$(this.obj).bind('edit clone', function () {
+	if (this.opt.block) {
+		$(this.opt.block).bind('edit clone', function () {
 			self.edit();
 		});
-		$(this.obj).bind('cancel_edit cancel_clone', function () {
+		$(this.opt.block).bind('cancel_edit cancel_clone', function () {
 			self.cancel();
 		});
 	}
@@ -744,7 +797,32 @@ $forms.Picklist = function () {
 
 	this.model = botoweb.env.models[this.prop.meta.item_type];
 
-	this.build_field = function (value) {
+	this.build_field = function (value, opt) {
+		if (opt.use_template && this.opt.template && this.opt.template.length) {
+			if (!self.prop.is_type('list')) {
+				self.node.find('.selections').empty();
+				self.node.find('.editing_template').parent().remove();
+			}
+
+			var node = $('<div class="editing_template clear"/>').append(this.opt.template.clone());
+
+			var block = new $ui.markup.Block(node, {
+				model: this.model,
+				obj: value,
+				action: 'edit',
+				editable: true
+			});
+
+			return $('<div class="clear"/>').append(
+				$ui.button('Remove selection', { icon: 'ui-icon-close', corners: [1,1,0,0] })
+					.addClass('remove_editing_template small')
+					.click(function () {
+						$(this).parent().remove();
+					}),
+				block.node
+			);
+		}
+
 		var field = $('<div class="ui-picklist"><div class="selections"></div><div class="search clear"></div></div>');
 		var selections = field.find('.selections:first');
 		var search = field.find('.search:first');
@@ -806,10 +884,17 @@ $forms.Picklist = function () {
 		function add_selection (id) {
 			// Don't add if already selected
 			if (selections.find('#' + id).length == 0) {
-				if (!self.prop.is_type('list'))
+				if (!self.prop.is_type('list')) {
 					selections.empty();
+					self.node.find('.editing_template').parent().remove();
+				}
 
 				self.model.get(id, function (obj) {
+					var template_field;
+					if (self.opt.template) {
+						template_field = self.add_field(obj, { use_template: true });
+					}
+
 					if (obj) {
 						selections.append(
 							$('<div class="selection"/>')
@@ -821,6 +906,9 @@ $forms.Picklist = function () {
 										.addClass('ui-state-error')
 										.click(function () {
 											$(this).parent().remove();
+
+											if (template_field)
+												template_field.remove();
 										})
 								)
 								.append(
