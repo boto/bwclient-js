@@ -99,17 +99,73 @@ botoweb.Object = function(id, model, data) {
 
 	this.update = function (data, fnc) {
 		var changed = {};
+		var changed_any = false;
 
 		$.each(data, function (name, val) {
+			var model_prop = self.model.prop_map[name];
 
+			if (!model_prop.meta.write)
+				return;
 
-			changed[name] = val;
+			// Special processing must be done for queries... if an object was
+			// previously linked but is no longer, we need to update that object
+			// to remove the link.
+			if (model_prop.is_type('query')) {
+				var ids = {};
+				var old = self.data[name].data;
+
+				$.each(val, function () {
+					ids[this.val] = 1;
+				});
+
+				// Iterate over the query's cached objects
+				$.each(old, function () {
+					// If the object is not found in the new ids list, clear
+					// the property that forms that link.
+					if (this.val && !(this.val.id in ids)) {
+						alert(this.val.id + ' ' + model_prop.meta.ref_props[0].meta.name);
+						var data = {};
+						data[model_prop.meta.ref_props[0].meta.name] = [{val:''}];
+						this.val.update(data, function () {});
+					}
+				});
+
+				return;
+			}
+
+			var diff = false;
+			var old = self.data[name].toString(true);
+
+			$.each(val, function (i, v) {
+				if (!v.val && !old[i])
+					return;
+				if (v.val && v.val.toString() == old[i])
+					return;
+
+				diff = true;
+
+				if (v.val)
+					alert(v.val.toString() + ' /// ' + old[i])
+				else
+					alert($.dump(v));
+			});
+
+			if (diff) {
+				changed[name] = val;
+				changed_any = true;
+			}
 		});
 
-		botoweb.save(
-			botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id),
-			self.model.name, changed, ((this.id) ? 'PUT' : 'POST'), fnc
-		);
+		if (changed_any) {
+			alert($.dump(changed));
+			botoweb.save(
+				botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id),
+				self.model.name, changed, ((this.id) ? 'PUT' : 'POST'), fnc
+			);
+		}
+		else {
+			fnc(this.obj);
+		}
 	};
 
 	this.save = function (fnc) {
