@@ -299,33 +299,37 @@ $forms.Field = function (prop, opt) {
 					$ui.button('Save', '', true)
 						.addClass('small')
 						.click(function () {
-							var data = {};
-							data[self.prop.meta.name] = self.val();
+							self.val(function (val) {
+								var data = {};
+								data[self.prop.meta.name] = val;
 
-							$ui.overlay.show();
+								alert('DATA  ' + $.dump(data));
 
-							self.obj.update(data, function (obj) {
-								// We do not delete the ID key here because the
-								// sync updater will check if it exists and
-								// assign the updated object if it does.
-								// Otherwise the null value will be ignored.
-								//self.model.objs[self.obj.id] = null;
+								$ui.overlay.show();
 
-								function updated () {
-									$($ldb.sync).unbind('end', updated);
-									self.cancel();
-									$ui.page.refresh();
-									$ui.overlay.hide();
-								}
+								self.obj.update(data, function (obj) {
+									// We do not delete the ID key here because the
+									// sync updater will check if it exists and
+									// assign the updated object if it does.
+									// Otherwise the null value will be ignored.
+									//self.model.objs[self.obj.id] = null;
 
-								function update() {
-									$($ldb.sync).bind('end', updated);
+									function updated () {
+										$($ldb.sync).unbind('end', updated);
+										self.cancel();
+										$ui.page.refresh();
+										$ui.overlay.hide();
+									}
 
-									$ldb.sync.update();
-								}
+									function update() {
+										$($ldb.sync).bind('end', updated);
 
-								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
-									setTimeout(update, 1000);
+										$ldb.sync.update();
+									}
+
+									if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
+										setTimeout(update, 1000);
+								});
 							});
 							return false;
 						}),
@@ -434,9 +438,11 @@ $forms.Field = function (prop, opt) {
 
 		// Preserve field order according to the DOM
 		this.node.find('.edit_field').each(function () {
-			var field = self.fields[$(this).attr('id').replace('_' + self.id, '') * 1];
+			var field = self.fields[this.id.replace('_' + self.id, '') * 1];
 
-			val.push({val: self.format(field.val()), type: self.opt.type});
+			if (field) {
+				val.push({val: self.format(field.data('get_val')()), type: self.opt.type});
+			}
 		});
 
 		return val;
@@ -466,6 +472,10 @@ $forms.Field = function (prop, opt) {
 		this.reset_choices(field);
 
 		field.val(value);
+
+		field.data('get_val', function () {
+			return field.val();
+		});
 
 		return field;
 	};
@@ -634,6 +644,16 @@ $forms.Bool = function () {
 
 		if (value !== null)
 			field.find('input[value=' + value + ']').attr('checked', true);
+
+		field.data('get_val', function () {
+			var val = field.find(':checked').val()
+
+			if (val == '1')
+				return true;
+
+			if (val == '0')
+				return false;
+		});
 
 		return field;
 	};
@@ -823,6 +843,26 @@ $forms.Picklist = function () {
 				editable: true
 			});
 
+			// Add a field to set the backreference, this is critical when
+			// adding a new reference property
+			if (self.prop.is_type('query')) {
+				$.each(self.prop.meta.ref_props, function () {
+					var ref_field = new $ui.forms.Text(new this.instance()).edit();
+
+					ref_field.val = function () {
+						// The parent object's UUID is generated client-side so
+						// that nested objects which must reference the parent
+						// can do so even if the parent has not yet been created
+						if (!self.opt.block.obj)
+							self.opt.block.obj = {id: Math.uuidFast()};
+
+						return {val: self.opt.block.obj.id};
+					};
+
+					block.fields.push(ref_field);
+				});
+			}
+
 			return $('<div class="clear"/>').append(
 				$ui.button('Remove this selection', { icon: 'ui-icon-close', corners: [1,1,0,0] })
 					.addClass('remove_editing_template small')
@@ -833,7 +873,12 @@ $forms.Picklist = function () {
 							self.node.find('#' + value.id).remove();
 					}),
 				block.node
-			);
+			).data('get_val', function (fnc) {
+				if (block.saved)
+					return [block.obj.id];
+
+				block.save(fnc);
+			});
 		}
 
 		var field = this.node.find('.ui-picklist');
@@ -1069,7 +1114,56 @@ $forms.Picklist = function () {
 			add_selection(value.val);
 		}
 
+		field.data('get_val', function (fnc) {
+			var val = [];
+
+			selections.find('.selection').each(function() {
+				val.push(this.id);
+			});
+
+			return val;
+		});
+
 		return field;
+	};
+
+	this.val = function (fnc) {
+		var val = {};
+
+		var stop = false;
+
+		// Preserve field order according to the DOM
+		this.node.find('> .edit_field').each(function () {
+			var field = self.fields[this.id.replace('_' + self.id, '') * 1];
+
+			if (field) {
+				var v = field.data('get_val')(function () {
+					self.val(fnc);
+				});
+
+				if (v === undefined) {
+					stop = true;
+					return false;
+				}
+
+				$.each(v, function () {
+					val[this] = {val: this.toString(), type: self.opt.type};
+				});
+			}
+		});
+
+		if (stop)
+			return;
+
+		var a_val = [];
+
+		for (var i in val)
+			a_val.push(val[i]);
+
+		if (fnc)
+			fnc(a_val);
+
+		return a_val;
 	};
 };
 
