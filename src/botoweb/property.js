@@ -77,8 +77,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		}
 	};
 
-	this.format_val = function (val) {
-		return val.toString();
+	this.format_val = function (data) {
+		if ('val' in data && data.val !== null)
+			return data.val.toString();
 	};
 
 
@@ -96,8 +97,8 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		opt = opt || {};
 
 		$.each(this.data, function () {
-			if ('val' in this && this.val)
-				values.push(self.format_val(this.val, opt));
+			if (this)
+				values.push(self.format_val(this, opt));
 		});
 
 		if (wantarray)
@@ -165,7 +166,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 					return ids;
 
 				return ids.join(', ');
-			}
+			};
 
 		case 'query':
 			/**
@@ -210,16 +211,19 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			};
 			break;
 		case 'dateTime':
-			this.format_val = function (val, opt) {
-				if (opt.sql)
-					return val.toString();
+			this.format_val = function (data, opt) {
+				if (!data.val)
+					return;
 
-				return botoweb.util.from_timestamp(val);
+				if (opt.sql)
+					return data.val.toString();
+
+				return botoweb.util.from_timestamp(data.val.toString());
 			};
 			break;
 		case 'boolean':
-			this.format_val = function (val) {
-				switch (val) {
+			this.format_val = function (data) {
+				switch (data.val) {
 					case '1':
 						return 'Yes';
 					case '0':

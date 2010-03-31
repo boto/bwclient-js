@@ -145,12 +145,10 @@ botoweb.Model = function (name, href, methods, props) {
 		ref = botoweb.env.base_url + this.href;
 		method = "POST";
 		if("id" in data && typeof data.id != 'undefined'){
-			delete self._cache[data.id];
 			ref += ("/" + data.id);
-			delete(data['id']);
+			delete data.id;
 			method = "PUT";
 		}
-		delete self._cache[data.id];
 		return botoweb.save(ref, this.name, data, method, fnc);
 	}
 

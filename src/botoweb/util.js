@@ -34,7 +34,7 @@ $util.timestamp = function (d) {
 		if (data[4] == 12)
 			data[4] = 0;
 
-		if (data[7].toUpperCase() == 'PM')
+		if (data[7] && data[7].toUpperCase() == 'PM')
 			data[4] += 12;
 
 		d = new Date(data[3], data[1], data[2], data[4], data[5], data[6]);
