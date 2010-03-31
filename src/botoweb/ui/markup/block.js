@@ -72,18 +72,18 @@ botoweb.ui.markup.Block = function (node, opt) {
 		if (this.saved)
 			return;
 
-		function try_again () {
-			self.save(fnc);
-		}
-
+			this.node.css('border', '2px solid #f00');
+/*
 		for (var i in this.children) {
 			var child = this.children[i];
 			if (!child.saved) {
-				child.save();
+				child.save(function () {
+					self.save(fnc);
+				});
 				return;
 			}
 		}
-
+*/
 		var data = {};
 
 		for (var i in this.fields) {
@@ -91,28 +91,28 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 			field.node.addClass('ui-state-highlighted');
 
-			// The callback will fire if the field needs to do some async work
-			// before returning a value (i.e. saving a new object)
-			var val = field.val(try_again);
-
-			if (val === undefined)
-				return;
+			var val = field.val();
 
 			data[field.prop.meta.name] = val;
 		}
+
+		alert('BLOCKDATA ' + $.dump(data));
 
 		if (this.obj) {
 			if (this.opt.root)
 				this.obj.update(data, function () { alert('done'); botoweb.ui.page.refresh(); });
 			else
-				this.obj.update(data, function (obj) { alert('updated ' + obj) });
+				this.obj.update(data, function (obj) {
+					alert('updated ' + obj)
+					self.saved = true;
+					if (fnc)
+						fnc();
+				});
 
-			this.saved = true;
-
-			if (fnc)
+			/*if (fnc)
 				fnc(this.obj);
 			else if (this.parent)
-				this.parent.save();
+				this.parent.save();*/
 		}
 		else {
 			this.model.save(data, function (obj) {
@@ -120,10 +120,10 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 				self.saved = true;
 
-				if (fnc)
+				/*if (fnc)
 					fnc(obj);
 				else if (self.parent)
-					self.parent.save();
+					self.parent.save();*/
 			});
 		}
 	}

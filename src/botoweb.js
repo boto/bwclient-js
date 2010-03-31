@@ -178,8 +178,8 @@ var botoweb = {
 
 		//DEBUG
 		alert(url + "\n\n" + (new XMLSerializer()).serializeToString(doc));
-		fnc({status: 201, getResponseHeader: function() { return '123' ;}});
-		return
+		//fnc({status: 201, getResponseHeader: function() { return '123' ;}});
+		//return
 
 		opts = {
 			url: url,

@@ -188,14 +188,19 @@ botoweb.xml = {
 			if (val == undefined)
 				return;
 
-			if (!(name in model.prop_map))
+			if (!(name in model.prop_map) && name != 'id')
 				return;
 
 			var model_prop = model.prop_map[name];
 			var node = $(doc.createElement(name));
 			node.attr('type', 'string');
 
-			($xml.to_xml[model_prop.meta.type] || $xml.to_xml.def)(val, node, obj, model_prop);
+			var type = 'def';
+
+			if (model_prop)
+				type = model_prop.meta.type;
+
+			($xml.to_xml[type] || $xml.to_xml.def)(val, node, obj, model_prop);
 		});
 
 		return doc;

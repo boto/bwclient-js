@@ -123,7 +123,6 @@ botoweb.Object = function(id, model, data) {
 					// If the object is not found in the new ids list, clear
 					// the property that forms that link.
 					if (this.val && !(this.val.id in ids)) {
-						alert(this.val.id + ' ' + model_prop.meta.ref_props[0].meta.name);
 						var data = {};
 						data[model_prop.meta.ref_props[0].meta.name] = [{val:''}];
 						this.val.update(data, function () {});
@@ -136,18 +135,18 @@ botoweb.Object = function(id, model, data) {
 			var diff = false;
 			var old = self.data[name].toString(true);
 
+			// Check each new value to see if it is the same as the old, also
+			// preserves list order.
 			$.each(val, function (i, v) {
-				if (!v.val && !old[i])
+				if (v.val === undefined && old[i] === undefined)
 					return;
 				if (v.val && v.val.toString() == old[i])
 					return;
 
 				diff = true;
 
-				if (v.val)
-					alert(v.val.toString() + ' /// ' + old[i])
-				else
-					alert($.dump(v));
+				// Stop checking
+				return false;
 			});
 
 			if (diff) {
@@ -157,10 +156,15 @@ botoweb.Object = function(id, model, data) {
 		});
 
 		if (changed_any) {
+			var is_new = this.unsaved || !this.id;
+
+			if (is_new)
+				changed['id'] = [{val:self.id, type:'string'}];
+
 			alert($.dump(changed));
 			botoweb.save(
-				botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id),
-				self.model.name, changed, ((this.id) ? 'PUT' : 'POST'), fnc
+				botoweb.util.url_join(botoweb.env.base_url, self.model.href, ((is_new) ? null : self.id)),
+				self.model.name, changed, ((is_new) ? 'POST' : 'PUT'), fnc
 			);
 		}
 		else {

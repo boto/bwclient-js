@@ -299,37 +299,40 @@ $forms.Field = function (prop, opt) {
 					$ui.button('Save', '', true)
 						.addClass('small')
 						.click(function () {
-							self.val(function (val) {
-								var data = {};
-								data[self.prop.meta.name] = val;
+							var val = self.val();
 
-								alert('DATA  ' + $.dump(data));
+							if (val.length == 0)
+								val = [{val: null}];
 
-								$ui.overlay.show();
+							var data = {};
+							data[self.prop.meta.name] = val;
 
-								self.obj.update(data, function (obj) {
-									// We do not delete the ID key here because the
-									// sync updater will check if it exists and
-									// assign the updated object if it does.
-									// Otherwise the null value will be ignored.
-									//self.model.objs[self.obj.id] = null;
+							alert('DATA  ' + $.dump(data));
 
-									function updated () {
-										$($ldb.sync).unbind('end', updated);
-										self.cancel();
-										$ui.page.refresh();
-										$ui.overlay.hide();
-									}
+							$ui.overlay.show();
 
-									function update() {
-										$($ldb.sync).bind('end', updated);
+							self.obj.update(data, function (obj) {
+								// We do not delete the ID key here because the
+								// sync updater will check if it exists and
+								// assign the updated object if it does.
+								// Otherwise the null value will be ignored.
+								self.model.objs[self.obj.id] = null;
 
-										$ldb.sync.update();
-									}
+								function updated () {
+									$($ldb.sync).unbind('end', updated);
+									self.cancel();
+									$ui.page.refresh();
+									$ui.overlay.hide();
+								}
 
-									if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
-										setTimeout(update, 1000);
-								});
+								function update() {
+									$($ldb.sync).bind('end', updated);
+
+									$ldb.sync.update();
+								}
+
+								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
+									setTimeout(update, 1000);
 							});
 							return false;
 						}),
@@ -850,16 +853,22 @@ $forms.Picklist = function () {
 					var ref_field = new $ui.forms.Text(new this.instance()).edit();
 
 					ref_field.val = function () {
-						// The parent object's UUID is generated client-side so
+						// The parent object's ID is generated client-side so
 						// that nested objects which must reference the parent
 						// can do so even if the parent has not yet been created
-						if (!self.opt.block.obj)
-							self.opt.block.obj = {id: Math.uuidFast()};
+						if (!self.opt.block.obj) {
+							self.opt.block.obj = new self.opt.model.instance();
+						}
 
-						return {val: self.opt.block.obj.id};
+						return [{val: self.opt.block.obj.id}];
 					};
 
+					ref_field.node.attr('id', block.fields.length + '_' + block.id)
+						.addClass('edit_field');
+
 					block.fields.push(ref_field);
+
+					node.find('.block').append(ref_field.node.hide())
 				});
 			}
 
@@ -873,11 +882,15 @@ $forms.Picklist = function () {
 							self.node.find('#' + value.id).remove();
 					}),
 				block.node
-			).data('get_val', function (fnc) {
-				if (block.saved)
-					return [block.obj.id];
+			).data('get_val', function () {
+				if (!block.saved) {
+					if (!block.obj)
+						block.obj = new block.model.instance();
 
-				block.save(fnc);
+					block.save();
+				}
+
+				return [block.obj.id];
 			});
 		}
 
@@ -1114,7 +1127,7 @@ $forms.Picklist = function () {
 			add_selection(value.val);
 		}
 
-		field.data('get_val', function (fnc) {
+		field.data('get_val', function () {
 			var val = [];
 
 			selections.find('.selection').each(function() {
@@ -1127,24 +1140,15 @@ $forms.Picklist = function () {
 		return field;
 	};
 
-	this.val = function (fnc) {
+	this.val = function () {
 		var val = {};
-
-		var stop = false;
 
 		// Preserve field order according to the DOM
 		this.node.find('> .edit_field').each(function () {
 			var field = self.fields[this.id.replace('_' + self.id, '') * 1];
 
 			if (field) {
-				var v = field.data('get_val')(function () {
-					self.val(fnc);
-				});
-
-				if (v === undefined) {
-					stop = true;
-					return false;
-				}
+				var v = field.data('get_val')();
 
 				$.each(v, function () {
 					val[this] = {val: this.toString(), type: self.opt.type};
@@ -1152,16 +1156,10 @@ $forms.Picklist = function () {
 			}
 		});
 
-		if (stop)
-			return;
-
 		var a_val = [];
 
 		for (var i in val)
 			a_val.push(val[i]);
-
-		if (fnc)
-			fnc(a_val);
 
 		return a_val;
 	};

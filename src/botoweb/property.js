@@ -213,7 +213,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		case 'dateTime':
 			this.format_val = function (data, opt) {
 				if (!data.val)
-					return;
+					return '';
 
 				if (opt.sql)
 					return data.val.toString();

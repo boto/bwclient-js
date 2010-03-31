@@ -124,7 +124,8 @@ botoweb.Model = function (name, href, methods, props) {
 	}
 
 	this.instance = function (data) {
-		botoweb.Object.call(this, null, self, data);
+		botoweb.Object.call(this, Math.uuidFast().toLowerCase(), self, data);
+		this.unsaved = true;
 	};
 
 	this.get = function(id, fnc, opt){
