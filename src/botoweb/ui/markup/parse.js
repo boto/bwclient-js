@@ -143,20 +143,24 @@
 							var async = false;
 
 							block.obj.data[val].val(function (data) {
-								if (node.is('li')) {
-									var items = block.obj.data[val].toString(true);
-									$.each(items, function () {
-										node.after(node.clone().html('' + this));
-									});
+								if (data.length && (data.length > 1 || data[0].val)) {
+									if (node.is('li')) {
+										var items = block.obj.data[val].toString(true);
+										$.each(items, function () {
+											node.after(node.clone().html('' + this));
+										});
 
+										node.remove();
+									}
+									else {
+										var str = block.obj.data[val].toString();
+
+										if (str)
+											node.html(str);
+									}
+								}
+								else
 									node.remove();
-								}
-								else {
-									var str = block.obj.data[val].toString();
-
-									if (str)
-										node.html(str);
-								}
 
 								block.waiting--;
 
