@@ -190,7 +190,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 					if (objs.length) {
 						$.each(objs, function () {
-							self.data.push({ val: this });
+							self.data.push({ val: this, id: this.id });
 						});
 					}
 					// null signifies that we tried to load the value and it
@@ -216,6 +216,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 					return '';
 
 				if (opt.sql)
+					return data.val.toString();
+
+				// Check if it is already in the human-friendly format
+				if (data.val.toString().indexOf('/') >= 0)
 					return data.val.toString();
 
 				return botoweb.util.from_timestamp(data.val.toString());

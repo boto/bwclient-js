@@ -166,9 +166,6 @@
 
 							async = true;
 						}
-						else {
-							this.remove();
-						}
 					}
 
 					else if (block.obj && prop.is_type('blob')) {
@@ -197,7 +194,8 @@
 					if (editable && prop.meta.write) {
 						var opt = {
 							node: this,
-							block: block
+							block: block,
+							model: block.model
 						};
 
 						if (prop.is_type('reference','query') && contents.find($markup.sel.attribute).length) {

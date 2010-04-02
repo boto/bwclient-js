@@ -860,7 +860,7 @@ $forms.Picklist = function () {
 							self.opt.block.obj = new self.opt.model.instance();
 						}
 
-						return [{val: self.opt.block.obj.id}];
+						return [{val: self.opt.block.obj.id, id: self.opt.block.obj.id, type: self.opt.block.obj.model.name}];
 					};
 
 					ref_field.node.attr('id', block.fields.length + '_' + block.id)
@@ -1151,7 +1151,7 @@ $forms.Picklist = function () {
 				var v = field.data('get_val')();
 
 				$.each(v, function () {
-					val[this] = {val: this.toString(), type: self.opt.type};
+					val[this] = {val: this.toString(), id: this.toString(), type: self.prop.meta.item_type};
 				});
 			}
 		});
