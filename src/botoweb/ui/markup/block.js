@@ -72,58 +72,31 @@ botoweb.ui.markup.Block = function (node, opt) {
 		if (this.saved)
 			return;
 
-			this.node.css('border', '2px solid #f00');
-/*
-		for (var i in this.children) {
-			var child = this.children[i];
-			if (!child.saved) {
-				child.save(function () {
-					self.save(fnc);
-				});
-				return;
-			}
-		}
-*/
 		var data = {};
 
 		for (var i in this.fields) {
 			var field = this.fields[i];
-
-			field.node.addClass('ui-state-highlighted');
 
 			var val = field.val();
 
 			data[field.prop.meta.name] = val;
 		}
 
-		alert('BLOCKDATA ' + $.dump(data));
-
 		if (this.obj) {
 			if (this.opt.root)
 				this.obj.update(data, function () { alert('done'); botoweb.ui.page.refresh(); });
 			else
 				this.obj.update(data, function (obj) {
-					alert('updated ' + obj)
 					self.saved = true;
 					if (fnc)
 						fnc();
 				});
-
-			/*if (fnc)
-				fnc(this.obj);
-			else if (this.parent)
-				this.parent.save();*/
 		}
 		else {
 			this.model.save(data, function (obj) {
 				alert('done ' + obj.id);
 
 				self.saved = true;
-
-				/*if (fnc)
-					fnc(obj);
-				else if (self.parent)
-					self.parent.save();*/
 			});
 		}
 	}
