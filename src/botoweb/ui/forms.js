@@ -307,8 +307,6 @@ $forms.Field = function (prop, opt) {
 							var data = {};
 							data[self.prop.meta.name] = val;
 
-							alert('DATA  ' + $.dump(data));
-
 							$ui.overlay.show();
 
 							self.obj.update(data, function (obj) {

@@ -84,7 +84,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 		if (this.obj) {
 			if (this.opt.root)
-				this.obj.update(data, function () { alert('done'); botoweb.ui.page.refresh(); });
+				this.obj.update(data, function () { botoweb.ui.page.refresh(); });
 			else
 				this.obj.update(data, function (obj) {
 					self.saved = true;
@@ -94,8 +94,6 @@ botoweb.ui.markup.Block = function (node, opt) {
 		}
 		else {
 			this.model.save(data, function (obj) {
-				alert('done ' + obj.id);
-
 				self.saved = true;
 			});
 		}

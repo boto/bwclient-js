@@ -177,7 +177,8 @@ var botoweb = {
 		var doc = botoweb.xml.from_obj(obj_name, data);
 
 		//DEBUG
-		alert(url + "\n\n" + (new XMLSerializer()).serializeToString(doc));
+		//alert(url + "\n\n" + (new XMLSerializer()).serializeToString(doc));
+		botoweb.util.log(method + ' ' + url + "\n\n" + (new XMLSerializer()).serializeToString(doc));
 		//fnc({status: 201, getResponseHeader: function() { return '123' ;}});
 		//return
 
