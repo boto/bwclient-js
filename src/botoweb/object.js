@@ -134,22 +134,36 @@ botoweb.Object = function(id, model, data) {
 
 			var diff = false;
 			var old = self.data[name].toString(true);
+			var updated = new model_prop.instance(val).toString(true);
 
-			// Check each new value to see if it is the same as the old, also
-			// preserves list order.
-			$.each(val, function (i, v) {
-				if (v.val === undefined && old[i] === undefined)
-					return;
-				if (v.val && v.val.toString() == old[i])
-					return;
+			if (!old.length)
+				old.push('');
 
+			if (!updated.length)
+				updated.push('');
+
+			if (old.length != updated.length)
 				diff = true;
+			else {
+				// Check each new value to see if it is the same as the old, also
+				// preserves list order.
+				$.each(updated, function (i, v) {
+					if (!v && !old[i])
+						return;
+					if (v == old[i])
+						return;
 
-				// Stop checking
-				return false;
-			});
+					diff = true;
+
+					// Stop checking
+					return false;
+				});
+			}
 
 			if (diff) {
+				if (val.length == 0)
+					val.push({});
+
 				changed[name] = val;
 				changed_any = true;
 			}
@@ -161,7 +175,6 @@ botoweb.Object = function(id, model, data) {
 			if (is_new)
 				changed['id'] = [{val:self.id, type:'string'}];
 
-			alert($.dump(changed));
 			botoweb.save(
 				botoweb.util.url_join(botoweb.env.base_url, self.model.href, ((is_new) ? null : self.id)),
 				self.model.name, changed, ((is_new) ? 'POST' : 'PUT'), fnc
