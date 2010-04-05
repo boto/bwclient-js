@@ -48,6 +48,80 @@
 		},
 
 		/**
+		 * Parses forms which are enhanced with botoweb markup.
+		 */
+		action: function (block) {
+			var matches = false;
+
+			$markup.find(block.node, 'action', function(val, prop) {
+				matches = true;
+
+				var model = this.attr($markup.prop.model);
+
+				if (model)
+					model = botoweb.env.models[model];
+
+				if (!model) {
+					this.remove();
+					return;
+				}
+
+				// Additional data may be included in parens after the link type
+				/()/.test(''); // reset RegExp backrefs
+				val = val.replace(/\((.*?)\)/, '');
+				var data = RegExp.$1;
+
+				if (block.obj)
+					data = $util.interpolate(data, block.obj);
+				else if (block.model)
+					data = $util.interpolate(data, block.model);
+				else
+					data = $util.interpolate(data);
+
+				this.removeAttr(prop);
+
+				var b = new $markup.Block(this);
+
+				try {
+					eval('data = ' + data);
+
+					for (var prop in data) {
+						b.fields.push($forms.prop_field(new model.prop_map[prop].instance(), {
+							block: b,
+							def: data[prop]
+						}));
+					}
+				} catch (e) {}
+
+				$(b).trigger('edit');
+
+				botoweb.ui.button('Create ' + model.name)
+					.click(function (e) {
+						b.save(function () {
+							botoweb.ui.page.refresh();
+						});
+
+						e.preventDefault();
+
+						return false;
+					})
+					.appendTo(this);
+
+				botoweb.ui.button('Reset', { primary: false })
+					.click(function (e) {
+						$(b).trigger('edit');
+
+						e.preventDefault();
+
+						return false;
+					})
+					.appendTo(this);
+			});
+
+			return matches;
+		},
+
+		/**
 		 * Parse attributes.
 		 */
 		attribute: function (block) {
@@ -70,6 +144,12 @@
 					val = val[1];
 
 					this.removeAttr(prop);
+
+					// Special cases
+					if (val == 'id')
+						return this.html(block.obj.id);
+					else if (val == 'model')
+						return this.html(block.obj.model.name);
 
 					// If the property is not supported, empty the container to
 					// prevent anything inside from being parsed according to
@@ -149,24 +229,24 @@
 										$.each(items, function () {
 											node.after(node.clone().html('' + this));
 										});
-
-										node.remove();
 									}
 									else {
 										var str = block.obj.data[val].toString();
 
 										if (str)
 											node.html(str);
+
+										node.show();
 									}
 								}
-								else
-									node.remove();
 
 								block.waiting--;
 
 								if (async && !block.waiting)
 									block.done();
 							});
+
+							node.hide();
 
 							async = true;
 						}
@@ -460,4 +540,5 @@
 
 	var $markup = botoweb.ui.markup;
 	var $forms = botoweb.ui.forms;
+	var $util = botoweb.util;
 })(jQuery);

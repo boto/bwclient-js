@@ -9,6 +9,7 @@ botoweb.ui.markup = new function () {
 	 * Property accessors, used in $(node).attr(prop)
 	 */
 	this.prop = {
+		'action':         'bwAction',
 		'attribute':      'bwAttribute',
 		'attributes':     'bwAttributes',
 		'class_name':     'bwClass',
@@ -29,6 +30,7 @@ botoweb.ui.markup = new function () {
 	 * Node selectors, used in $(sel)
 	 */
 	this.sel = {
+		'action':         'form[bwAction]',
 		'attribute':      '*[bwAttribute]',
 		'attribute_list': '*[bwWidget=attributeList]',
 		'breadcrumbs':    '*[bwWidget=breadcrumbs]',
@@ -62,6 +64,7 @@ botoweb.ui.markup = new function () {
 	var nesting = [
 		this.sel.search_results,
 		this.sel.relation,
+		this.sel.action
 
 		// Only properties which refer to a different object may be nested, the
 		// parser must provide the names of any such properties.
