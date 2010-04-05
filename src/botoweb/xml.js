@@ -176,7 +176,7 @@ botoweb.xml = {
 			});
 		}
 
-		return new botoweb.Object(xml.attr('id'), model, data);
+		return new botoweb.Object(xml.attr('id'), model, data, opt);
 	},
 
 	from_obj: function (model_name, data) {

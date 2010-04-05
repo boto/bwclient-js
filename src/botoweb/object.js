@@ -9,7 +9,8 @@
  *
  * @constructor
  */
-botoweb.Object = function(id, model, data) {
+botoweb.Object = function(id, model, data, opt) {
+	opt = opt || {};
 	var self = this;
 
 	self._DEBUG_OBJECT_INSTANCE = 1;
@@ -20,7 +21,10 @@ botoweb.Object = function(id, model, data) {
 	if (typeof self.model == 'string')
 		self.model = botoweb.env.models[self.model];
 
-	self.model.objs[self.id] = self;
+	// Certain circumstances require the object to not be cached in which case
+	// it will be removed by the garbage collector when it is no longer needed.
+	if (!opt.no_cache)
+		self.model.objs[self.id] = self;
 
 	$.each(self.model.props, function () {
 		if (!(this.meta.name in self.data))
