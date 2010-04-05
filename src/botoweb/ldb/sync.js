@@ -77,10 +77,10 @@ botoweb.ldb.sync = {
 		var refresh = false;
 
 		// Choose from the update queue first (these are generally faster jobs)
-		if (this.update_queue.length)
-			model = this.update_queue.shift();
-		else if (this.refresh_queue.length) {
-			model = this.refresh_queue.shift();
+		if (self.update_queue.length)
+			model = self.update_queue.shift();
+		else if (self.refresh_queue.length) {
+			model = self.refresh_queue.shift();
 			refresh = true;
 		}
 
@@ -230,7 +230,7 @@ botoweb.ldb.sync = {
 	 * @param {Integer} page The current results page.
 	 * @param {Integer} total_count The total results count.
 	 */
-	process: function (results, page, total_count, opt) {
+	process: function (results, page, total_count, next_page, opt) {
 		opt = opt || {};
 		var self = botoweb.ldb.sync;
 
@@ -373,26 +373,32 @@ botoweb.ldb.sync = {
 					);
 				}
 			});
+
+			self.task_processed += results.length;
+
+			// The following lines use setTimeout to call the function. This
+			// allows the call stack to be cleared to prevent a rather bad
+			// memory leak from every page of results piling up in memory.
+
+			// When we finish, run the next queued update
+			if (self.task_processed >= self.task_total)
+				setTimeout(self.next_update, 10);
+
+			// Otherwise grab the next page of results
+			else if (next_page)
+				setTimeout(next_page, 10);
 		});
 
-		self.task_processed += results.length;
-
-		// When we finish, run the next queued update
-		if (self.task_processed >= self.task_total) {
-			self.next_update();
-
-			return false;
-		}
-
-		// Signals botoweb to fetch more pages
-		return true;
+		// DB transaction is asynchronous, so we return false to prevent loading
+		// the next page of results right away
+		return false;
 	},
 
 	/**
 	 * Calls process with a trash argument which causes results to be deleted
 	 * from local DB.
 	 */
-	process_trash: function (results, page, total_count) {
-		return botoweb.ldb.sync.process(results, page, total_count, { trash: 1 });
+	process_trash: function (results, page, total_count, next_page) {
+		return botoweb.ldb.sync.process(results, page, total_count, next_page, { trash: 1 });
 	}
 };
