@@ -97,4 +97,8 @@ botoweb.ui.widget.Search = function(node) {
 			}),
 		$('<br class="clear"/>')
 	);
+
+	new botoweb.ui.markup.Block(self.node, {
+		model: self.model
+	});
 };

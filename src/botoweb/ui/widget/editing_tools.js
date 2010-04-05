@@ -19,7 +19,10 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 	this.obj = block.obj;
 	this.block = block;
 
-	actions = actions || 'edit clone delete';
+	if (this.obj)
+		actions = actions || 'edit clone delete';
+	else if (this.model)
+		actions = actions || 'create';
 	actions = actions.split(/[, ]+/);
 
 	for (i in actions.reverse()) {

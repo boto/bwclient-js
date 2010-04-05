@@ -385,9 +385,9 @@
 
 					case 'create':
 						if (block.model.name in botoweb.env.cfg.templates.editor)
-							set_href('#' + botoweb.env.cfg.templates.editor[block.model.name] + '&action=create');
+							set_href('#' + botoweb.env.cfg.templates.editor[block.model.name] + '?action=edit');
 						else
-							set_href('#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '&action=create');
+							set_href('#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?action=edit');
 						break;
 
 					case 'attr':
