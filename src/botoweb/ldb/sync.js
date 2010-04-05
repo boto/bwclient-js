@@ -36,6 +36,16 @@ botoweb.ldb.sync = {
 		opt = opt || {};
 		var self = botoweb.ldb.sync;
 
+		// sync_model is set when a model is being synced. If the page is
+		// refreshed while the update is running, this ensures that the model is
+		// fully re-synced, otherwise it would be left partially loaded.
+		if (localStorage.sync_model) {
+			self.reset(localStorage.sync_model);
+			return;
+		}
+
+		self.find_local_models();
+
 		if (!models)
 			models = botoweb.env.cfg.db.sync_models;
 
@@ -74,36 +84,17 @@ botoweb.ldb.sync = {
 			refresh = true;
 		}
 
-		else if (self.first_sync) {
-			botoweb.ldb.dbh.transaction(function (txn) {
-				var c = 0;
-
-				$.each(botoweb.env.models, function (i, model) {
-					txn.executeSql('SELECT 1 FROM ' + botoweb.ldb.model_to_table(model) + ' LIMIT 1', [], function (txn, results) {
-						if (results.rows.length)
-							model.local = true;
-
-						if (c == botoweb.env.model_names.length - 1) {
-							self.first_sync = false;
-							self.running = false;
-
-							$(self).trigger('end');
-						}
-
-						c++;
-					}, botoweb.util.error)
-				});
-			});
-
-			return;
-		}
-
 		// All updates complete
 		else {
+			self.find_local_models();
+
 			// The UI code can establish a listener for the end event
 			self.running = false;
 
 			$(self).trigger('end');
+
+			// Delete key to avoid running the update again on refresh
+			delete localStorage.sync_model;
 
 			return;
 		}
@@ -120,6 +111,8 @@ botoweb.ldb.sync = {
 			botoweb.util.error('Cannot sync unknown model: ' + model_name, 'warning');
 			return;
 		}
+
+		localStorage.setItem('sync_model', model.name);
 
 		// Clear the table for a full refresh to ensure that deleted items are
 		// deleted locally as well.
@@ -165,24 +158,55 @@ botoweb.ldb.sync = {
 	},
 
 	/**
-	 * Drops all tables in the database, creates a fresh schema, then does a
-	 * full CoreModel update. Use with caution, this will take a long time to
-	 * run!
+	 * Tries to select a single result from every model table. If the result is
+	 * not empty, updates the model to specify that it is stored locally.
 	 */
-	reset: function() {
-		var db = botoweb.ldb.dbh;
-		$.each(botoweb.ldb.tables, function(i, table) {
-			db.transaction(function (txn) {
-				table.__drop(txn);
+	find_local_models: function () {
+		botoweb.ldb.dbh.transaction(function (txn) {
+			$.each(botoweb.env.models, function (i, model) {
+				txn.executeSql('SELECT 1 FROM ' + botoweb.ldb.model_to_table(model) + ' LIMIT 1', [], function (txn, results) {
+					if (results.rows.length)
+						model.local = true;
+				}, function () {
+					model.local = false;
+				})
 			});
 		});
+	},
+
+	/**
+	 * Drops all tables in the database, creates a fresh schema, then does a
+	 * full update. Use with caution, this will take a long time to run! If the
+	 * optional model_name is provided, resets only that model.
+	 */
+	reset: function(model_name) {
+		var db = botoweb.ldb.dbh;
+
+		// This key is used to fire a reset, not deleting it will cause some
+		// circular recursion.
+		delete localStorage.sync_model;
+
+		if (model_name) {
+			db.transaction(function (txn) {
+				botoweb.ldb.tables[model_name].__drop(txn);
+			});
+
+			localStorage.setItem('last_update_' + model_name, '');
+		}
+		else {
+			$.each(botoweb.ldb.tables, function(i, table) {
+				db.transaction(function (txn) {
+					table.__drop(txn);
+				});
+			});
+
+			for (var key in localStorage) {
+				if (key.indexOf('last_update') == 0)
+					localStorage.setItem(key, '');
+			}
+		}
 
 		self.first_sync = false;
-
-		for (var key in localStorage) {
-			if (key.indexOf('last_update') == 0)
-				localStorage.setItem(key, '');
-		}
 
 		botoweb.ldb.prepare(function() {
 			botoweb.ldb.sync.update();
