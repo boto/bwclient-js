@@ -302,8 +302,6 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	 * direct return value.
 	 */
 	this.val = function (fnc) {
-		if (this.meta.name == 'email')
-			alert($.dump(this.data))
 		if (fnc) {
 			// Either the data need not be loaded or it has already been loaded
 			// VERY IMPORTANT: If the object does not have a value for this

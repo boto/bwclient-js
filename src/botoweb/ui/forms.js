@@ -243,11 +243,10 @@ $forms.Field = function (prop, opt) {
 			this.node.empty();
 
 		this.editing = true;
+		this.fields = [];
 
 		if (this.prop.is_type('list') && this.opt.allow_list)
 			this.node.append($ui.sortable($('<ul class="clear"/>')));
-
-		this.set_default();
 
 		this.set_values();
 
@@ -363,7 +362,7 @@ $forms.Field = function (prop, opt) {
 
 	this.set_default = function () {
 		$.each(this.fields, function () {
-			if (!$(this).val())
+			if (!$(this).val().length)
 				$(this).val(self.opt.def || self.prop.meta.def);
 		});
 	}
@@ -371,13 +370,14 @@ $forms.Field = function (prop, opt) {
 	this.set_values = function () {
 		var val = this.prop.val();
 
-		if (val && val.length) {
+		if (val && val.length && (val.length > 1 || val[0].val !== null)) {
 			$.each(val, function () {
 				self.add_field(this);
 			});
 		}
-		else
-			self.add_field();
+		else {
+			self.add_field(self.opt.def || self.prop.meta.def);
+		}
 	};
 
 	/**
@@ -405,7 +405,8 @@ $forms.Field = function (prop, opt) {
 	 */
 	this.cancel = function () {
 		this.node.hide();
-		this.opt.node.show();
+		if (this.opt.node)
+			this.opt.node.show();
 		this.editing = false;
 		this.node.empty();
 		this.fields = [];

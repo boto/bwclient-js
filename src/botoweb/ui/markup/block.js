@@ -95,6 +95,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 		else {
 			this.model.save(data, function (obj) {
 				self.saved = true;
+				if (fnc)
+					fnc();
 			});
 		}
 	}
@@ -214,7 +216,7 @@ var $markup = botoweb.ui.markup;
 
 $markup.Block.parse_order = {
 	normal: ['condition', 'trigger', 'attribute_list', 'attribute', 'editing_tools', 'link'],
-	nested: ['relation','search']
+	nested: ['relation','search','action']
 };
 
 })(jQuery);
