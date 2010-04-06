@@ -287,7 +287,7 @@
 							model: block.model
 						};
 
-						if (prop.is_type('reference','query') && contents.find($markup.sel.attribute).length) {
+						if (prop.is_type('reference','query') && contents.find($markup.sel.attribute + ',' + $markup.sel.attribute_list).length) {
 							opt.template = contents;
 						}
 
