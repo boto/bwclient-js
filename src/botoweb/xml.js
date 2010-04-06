@@ -110,8 +110,7 @@ botoweb.xml = {
 
 		var model = botoweb.env.models[opt.item_type || xml.get(0).tagName];
 
-		// If the object is cached, return it unless we have are reloading the
-		// object.
+		// If the object is cached, return it unless we are reloading the object
 		if (!opt.no_cache && model.objs[xml.attr('id')])
 			return model.objs[xml.attr('id')];
 
@@ -122,10 +121,9 @@ botoweb.xml = {
 				// May match more than one!
 				var tags = xml.find('> ' + this.meta.name);
 
-				var prop = new this.instance();
-				var d;
+				var d = null;
 
-				if (prop.is_type('reference', 'blob', 'query')) {
+				if (this.is_type('reference', 'blob', 'query')) {
 					d = tags.map(function (i, tag) {
 						tag = $(tag);
 						return {
@@ -139,7 +137,7 @@ botoweb.xml = {
 					});
 				}
 
-				else if (prop.is_type('complexType')) {
+				else if (this.is_type('complexType')) {
 					d = tags.children().map(function(i, tag) {
 						tag = $(tag);
 						return {
@@ -150,7 +148,7 @@ botoweb.xml = {
 					});
 				}
 
-				else if (prop.is_type('boolean')) {
+				else if (this.is_type('boolean')) {
 					d = tags.map(function(i, tag) {
 						switch ($(tag).text()) {
 							case 'True':
@@ -168,11 +166,12 @@ botoweb.xml = {
 					});
 				}
 
-				// Do not replace the default data if nothing was provided in XML
-				if (d && d.length > 0)
-					prop.data = d;
+				// Less content for the next query
+				tags.remove();
 
-				data[this.meta.name] = prop;
+				// Create an instance once the data is gathered, any data that
+				// is missing will be filled with defaults by the constructor.
+				data[this.meta.name] = new this.instance($.makeArray(d));
 			});
 		}
 

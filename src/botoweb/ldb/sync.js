@@ -248,146 +248,151 @@ botoweb.ldb.sync = {
 
 		var result_id = self.task_processed;
 
-		botoweb.ldb.dbh.transaction(function (txn) {
-			$.each(results, function(i, obj) {
-				var db = botoweb.ldb.dbh;
-				var bind_params = [obj.id];
-				var model = obj.model;
-				var column_names = [];
+		// Just used a lot of CPU to parse the XML, pause for a short time
+		// before Local DB processing to allow foreground processing.
+		setTimeout(function () {
+			botoweb.ldb.dbh.transaction(function (txn) {
+				$.each(results, function(i, obj) {
+					var db = botoweb.ldb.dbh;
+					var bind_params = [obj.id];
+					var model = obj.model;
+					var column_names = [];
 
-				// Update any cached versions of this object
-				if (obj.id in model.objs) {
-					if (opt.trash)
-						delete model.objs[obj.id];
-					else
-						model.objs[obj.id] = obj;
-				}
-
-				result_id++;
-
-				// Find all the bound parameters in the order specified in the table
-				$.each(model.props, function() {
-					var model_prop = this;
-					var prop = obj.data[this.meta.name];
-
-					if (this.is_type('query', 'blob'))
-						return;
-					else if (this.is_type('list', 'complexType')) {
-						// Ignore lookups to accelerate the first sync
-						if (!self.first_sync) {
-							txn.executeSql(
-								'DELETE FROM ' + botoweb.ldb.prop_to_table(model_prop) +
-								' WHERE id = ?',
-								[obj.id],
-								null,
-								botoweb.util.error
-							);
-						}
-
-						if (opt.trash || !prop)
-							return;
-
-						var v = prop.val();
-
-						bind_params.push(v.length);
-
-						$.each(v, function() {
-							var bp = [obj.id, this.val];
-							var values = '(?,?)';
-
-							if (model_prop.is_type('complexType')) {
-								bp = [obj.id, this.key, this.val];
-								values = '(?,?,?)';
-							}
-							else if (model_prop.is_type('reference')) {
-								bp = [obj.id, this.id, this.type];
-								values = '(?,?,?)';
-							}
-
-							txn.executeSql(
-								'INSERT INTO ' + botoweb.ldb.prop_to_table(model_prop) +
-								' VALUES ' + values,
-								bp,
-								null,
-								botoweb.util.error
-							);
-						});
+					// Update any cached versions of this object
+					if (obj.id in model.objs) {
+						if (opt.trash)
+							delete model.objs[obj.id];
+						else
+							model.objs[obj.id] = obj;
 					}
-					else if (!opt.trash && this.is_type('reference')) {
-						column_names.push(botoweb.ldb.prop_to_column(this));
-						column_names.push(botoweb.ldb.prop_to_column(this) + '__type');
 
-						if (prop) {
-							var v = prop.val()[0];
-							bind_params.push(v.id);
-							bind_params.push(v.type);
+					result_id++;
+
+					// Find all the bound parameters in the order specified in the table
+					$.each(model.props, function() {
+						var model_prop = this;
+						var prop = obj.data[this.meta.name];
+
+						if (this.is_type('query', 'blob'))
+							return;
+						else if (this.is_type('list', 'complexType')) {
+							// Ignore lookups to accelerate the first sync
+							if (!self.first_sync) {
+								txn.executeSql(
+									'DELETE FROM ' + botoweb.ldb.prop_to_table(model_prop) +
+									' WHERE id = ?',
+									[obj.id],
+									null,
+									botoweb.util.error
+								);
+							}
+
+							if (opt.trash || !prop)
+								return;
+
+							var v = prop.val();
+
+							bind_params.push(v.length);
+
+							$.each(v, function() {
+								var bp = [obj.id, this.val];
+								var values = '(?,?)';
+
+								if (model_prop.is_type('complexType')) {
+									bp = [obj.id, this.key, this.val];
+									values = '(?,?,?)';
+								}
+								else if (model_prop.is_type('reference')) {
+									bp = [obj.id, this.id, this.type];
+									values = '(?,?,?)';
+								}
+
+								txn.executeSql(
+									'INSERT INTO ' + botoweb.ldb.prop_to_table(model_prop) +
+									' VALUES ' + values,
+									bp,
+									null,
+									botoweb.util.error
+								);
+							});
+						}
+						else if (!opt.trash && this.is_type('reference')) {
+							column_names.push(botoweb.ldb.prop_to_column(this));
+							column_names.push(botoweb.ldb.prop_to_column(this) + '__type');
+
+							if (prop) {
+								var v = prop.val()[0];
+								bind_params.push(v.id);
+								bind_params.push(v.type);
+							}
+							else {
+								bind_params.push(null);
+								bind_params.push(null);
+							}
 						}
 						else {
-							bind_params.push(null);
-							bind_params.push(null);
+							column_names.push(botoweb.ldb.prop_to_column(this));
+
+							if (prop)
+								bind_params.push(prop.to_sql());
+							else
+								bind_params.push(null);
 						}
+					});
+
+					var rid = result_id + 0;
+
+					if (opt.trash) {
+						txn.executeSql( 'DELETE FROM ' + botoweb.ldb.model_to_table(model) +
+							' WHERE id = ?',
+							[obj.id],
+							function () {
+								if (rid % 50 == 0) {
+									// The UI code can establish a listener for the change event
+									$(self).trigger('change', [{
+										percent_updated: (self.task_total) ? Math.round(10000 * rid / self.task_total) / 100 : 100,
+										percent_downloaded: (self.task_total) ? Math.round(10000 * self.task_processed / self.task_total) / 100 : 100
+									}]);
+								}
+							},
+							botoweb.util.error
+						);
 					}
 					else {
-						column_names.push(botoweb.ldb.prop_to_column(this));
-
-						if (prop)
-							bind_params.push(prop.to_sql());
-						else
-							bind_params.push(null);
+						txn.executeSql( ((self.first_sync) ? 'INSERT' : 'REPLACE') +
+							' INTO ' + botoweb.ldb.model_to_table(model) +
+							' VALUES (' + $.map(bind_params, function() { return '?' }).join(', ') + ')',
+							bind_params,
+							function () {
+								if (rid % 50 == 0) {
+									// The UI code can establish a listener for the change event
+									$(self).trigger('change', [{
+										percent_updated: (self.task_total) ? Math.round(10000 * rid / self.task_total) / 100 : 100,
+										percent_downloaded: (self.task_total) ? Math.round(10000 * self.task_processed / self.task_total) / 100 : 100
+									}]);
+								}
+							},
+							botoweb.util.error
+						);
 					}
 				});
 
-				var rid = result_id + 0;
+				self.task_processed += results.length;
 
-				if (opt.trash) {
-					txn.executeSql( 'DELETE FROM ' + botoweb.ldb.model_to_table(model) +
-						' WHERE id = ?',
-						[obj.id],
-						function () {
-							if (rid % 50 == 0) {
-								// The UI code can establish a listener for the change event
-								$(self).trigger('change', [{
-									percent_updated: (self.task_total) ? Math.round(10000 * rid / self.task_total) / 100 : 100,
-									percent_downloaded: (self.task_total) ? Math.round(10000 * self.task_processed / self.task_total) / 100 : 100
-								}]);
-							}
-						},
-						botoweb.util.error
-					);
-				}
-				else {
-					txn.executeSql( ((self.first_sync) ? 'INSERT' : 'REPLACE') +
-						' INTO ' + botoweb.ldb.model_to_table(model) +
-						' VALUES (' + $.map(bind_params, function() { return '?' }).join(', ') + ')',
-						bind_params,
-						function () {
-							if (rid % 50 == 0) {
-								// The UI code can establish a listener for the change event
-								$(self).trigger('change', [{
-									percent_updated: (self.task_total) ? Math.round(10000 * rid / self.task_total) / 100 : 100,
-									percent_downloaded: (self.task_total) ? Math.round(10000 * self.task_processed / self.task_total) / 100 : 100
-								}]);
-							}
-						},
-						botoweb.util.error
-					);
-				}
+				// The following lines use setTimeout to call the function. This
+				// allows the call stack to be cleared to prevent a rather bad
+				// memory leak from every page of results piling up in memory. It
+				// also provides a break for foreground processing.
+
+				// When we finish, run the next queued update
+				if (self.task_processed >= self.task_total)
+					setTimeout(self.next_update, 500);
+
+				// Otherwise grab the next page of results
+				else if (next_page)
+					setTimeout(next_page, 250);
 			});
-
-			self.task_processed += results.length;
-
-			// The following lines use setTimeout to call the function. This
-			// allows the call stack to be cleared to prevent a rather bad
-			// memory leak from every page of results piling up in memory.
-
-			// When we finish, run the next queued update
-			if (self.task_processed >= self.task_total)
-				setTimeout(self.next_update, 10);
-
-			// Otherwise grab the next page of results
-			else if (next_page)
-				setTimeout(next_page, 10);
-		});
+		}, 250);
 
 		// DB transaction is asynchronous, so we return false to prevent loading
 		// the next page of results right away

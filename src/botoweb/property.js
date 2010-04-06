@@ -46,7 +46,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 		this.data = data;
 
-		if (!this.data) {
+		if (!this.data || this.data.length == 0) {
 			// If the data MUST be loaded from botoweb to know if there is a
 			// value, then default it to undefined to signify "unknown"
 			if (model_prop.is_type('query', 'blob'))
