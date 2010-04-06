@@ -80,18 +80,23 @@
 
 				this.removeAttr(prop);
 
-				var b = new $markup.Block(this);
+				var b = new $markup.Block(this, {
+					model: model,
+					editable: true
+				});
 
-				try {
-					eval('data = ' + data);
+				if (data) {
+					try {
+						eval('data = ' + data);
 
-					for (var prop in data) {
-						b.fields.push($forms.prop_field(new model.prop_map[prop].instance(), {
-							block: b,
-							def: data[prop]
-						}));
-					}
-				} catch (e) {}
+						for (var prop in data) {
+							b.fields.push($forms.prop_field(new model.prop_map[prop].instance(), {
+								block: b,
+								def: data[prop]
+							}));
+						}
+					} catch (e) {}
+				}
 
 				$(b).trigger('edit');
 
