@@ -95,8 +95,13 @@ botoweb.ui.markup.Block = function (node, opt) {
 		else {
 			this.model.save(data, function (obj) {
 				self.saved = true;
+
 				if (fnc)
-					fnc();
+					fnc(obj);
+
+				if (self.opt.root) {
+					document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
+				}
 			});
 		}
 	}
