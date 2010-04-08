@@ -144,9 +144,9 @@ botoweb.ldb.sync = {
 
 		if (!refresh && localStorage['last_update_' + model.name]) {
 			model.query([['modified_at', '>', localStorage['last_update_' + model.name]]], processor, options);
-		}
-		else
+		} else {
 			model.all(processor, options);
+		}
 
 		// Although we may fetch multiple pages of results, these results are a
 		// snapshot of the current state, so the update time is now, not when
@@ -244,6 +244,7 @@ botoweb.ldb.sync = {
 		}
 
 		var result_id = self.task_processed;
+		console.log("Process: " + result_id);
 
 		// Just used a lot of CPU to parse the XML, pause for a short time
 		// before Local DB processing to allow foreground processing.
@@ -383,15 +384,15 @@ botoweb.ldb.sync = {
 
 				// When we finish, run the next queued update
 				if (next_page) {
+					setTimeout(next_page, 250);
+				}
+				// Otherwise grab the next page of results
+				else{
 					// Delete key to avoid running the update again on refresh
 					delete localStorage.sync_model;
 
 					setTimeout(self.next_update, 500);
 				}
-
-				// Otherwise grab the next page of results
-				else
-					setTimeout(next_page, 250);
 			});
 		}, 250);
 
