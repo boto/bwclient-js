@@ -195,11 +195,8 @@ var botoweb = {
 		}
 
 		if(fnc){
-			opts.complete = function (data) {
-				// Read the new obejct's ID from the Location header. Following
-				// this as a redirect does not work since SDB will not instantly
-				// recognize the new object.
-				fnc(data.getResponseHeader('Location'));
+			opts.success = function (data) {
+				fnc(botoweb.xml.to_obj($(data).children().first()));
 			};
 			opts.error = botoweb.util.error
 		}
