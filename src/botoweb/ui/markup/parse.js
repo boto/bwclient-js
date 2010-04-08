@@ -71,7 +71,9 @@
 				val = val.replace(/\((.*?)\)/, '');
 				var data = RegExp.$1;
 
-				if (block.obj)
+				if (block.opt.data)
+					data = $util.interpolate(data, block.opt.data);
+				else if (block.obj)
 					data = $util.interpolate(data, block.obj);
 				else if (block.model)
 					data = $util.interpolate(data, block.model);
@@ -100,9 +102,11 @@
 
 				$(b).trigger('edit');
 
+				$('<br class="clear"/>').appendTo(this);
+
 				botoweb.ui.button('Create ' + model.name)
 					.click(function (e) {
-						b.save(function () {
+						b.save(block.opt.onsave || function () {
 							botoweb.ui.page.refresh();
 						});
 

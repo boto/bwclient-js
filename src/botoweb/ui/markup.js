@@ -161,6 +161,10 @@ botoweb.ui.markup = new function () {
 				$(botoweb.ui.page).bind('change', function (e, loc) { botoweb.ui.page.load(loc); });
 			}
 		}, botoweb.ui.page.location.data));
+
+		$.each(botoweb.env.cfg.markup.page_show, function () {
+			this(node);
+		});
 	};
 
 	/**
