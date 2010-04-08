@@ -41,11 +41,14 @@ botoweb.ldb = {
 			if (!window.openDatabase)
 				return ready();
 
-			botoweb.ldb.dbh = db = openDatabase(
+			var est_size = Math.round(botoweb.ldb.size_mb * 1024 * 1024);
+			var version = botoweb.ldb.version.split(" ")[0];
+
+			botoweb.ldb.dbh = db = window.openDatabase(
 				botoweb.ldb.name,
-				botoweb.ldb.version,
+				version,
 				botoweb.ldb.title,
-				Math.round(botoweb.ldb.size_mb * 1024 * 1024)
+				est_size
 			);
 		}
 
