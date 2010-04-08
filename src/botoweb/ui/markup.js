@@ -157,8 +157,6 @@ botoweb.ui.markup = new function () {
 			root: true,
 			oninit: function () {
 				fnc(this.node);
-
-				$(botoweb.ui.page).bind('change', function (e, loc) { botoweb.ui.page.load(loc); });
 			}
 		}, botoweb.ui.page.location.data));
 
