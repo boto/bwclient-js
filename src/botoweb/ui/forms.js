@@ -51,7 +51,7 @@ $forms.Field = function (prop, opt) {
 		this.obj = prop.obj;
 		this.model = prop.meta.model;
 
-		this.node.addClass('prop_type_' + prop.meta.type);
+		this.node.addClass('prop_type_' + prop.meta.type + ' prop_name_' + prop.meta.name);
 
 		// Lists are a special prop which can be of any type
 		if (prop.is_type('list'))
@@ -370,7 +370,7 @@ $forms.Field = function (prop, opt) {
 	this.set_values = function () {
 		var val = this.prop.val();
 
-		if (val && val.length && (val.length > 1 || val[0].val !== null)) {
+		if (val && val.length && (val.length > 1 || val[0].val)) {
 			$.each(val, function () {
 				self.add_field(this);
 			});

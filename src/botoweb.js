@@ -50,13 +50,16 @@ var botoweb = {
 			if (xhr && typeof xhr.getResponseHeader == 'function')
 				count = xhr.getResponseHeader('X-Result-Count');
 
-			function next_page() {
-				if (url)
+			var next_page;
+
+			if (url) {
+				next_page = function () {
 					botoweb.ajax.get(url, process);
+				}
 			}
 
 			// Get the next page if the callback returns true
-			if (fnc && fnc(data, page++, count, next_page))
+			if (fnc && fnc(data, page++, count, next_page) && next_page)
 				next_page();
 		}
 
@@ -108,13 +111,16 @@ var botoweb = {
 				count = xhr.getResponseHeader('X-Result-Count');
 			} catch (e) { }
 
-			function next_page() {
-				if (url)
+			var next_page;
+
+			if (url) {
+				next_page = function () {
 					botoweb.ajax.get(url, process);
+				}
 			}
 
 			// Get the next page
-			if (fnc(data, page++, count, next_page))
+			if (fnc(data, page++, count, next_page) && next_page)
 				next_page()
 		}
 
@@ -195,11 +201,9 @@ var botoweb = {
 		}
 
 		if(fnc){
-			opts.complete = function (data) {
-				// Read the new obejct's ID from the Location header. Following
-				// this as a redirect does not work since SDB will not instantly
-				// recognize the new object.
-				fnc(data.getResponseHeader('Location'));
+			opts.success = function (data) {
+				alert($.dump(data));
+				fnc(botoweb.xml.to_obj($(data).children().first()));
 			};
 			opts.error = botoweb.util.error
 		}

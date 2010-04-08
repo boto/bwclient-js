@@ -150,17 +150,7 @@ botoweb.Model = function (name, href, methods, props) {
 			delete data.id;
 			method = "PUT";
 		}
-		return botoweb.save(ref, this.name, data, method, function (id) {
-			if (id) {
-				// Wait 1 second for SDB to index the new object
-				setTimeout(function () {
-					// Query SDB for the new object
-					botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, self.href), id, fnc);
-				}, 1000);
-			}
-			else
-				fnc()
-		});
+		return botoweb.save(ref, this.name, data, method, fnc);
 	}
 
 	//
