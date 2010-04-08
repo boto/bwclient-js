@@ -93,9 +93,6 @@ botoweb.ldb.sync = {
 
 			$(self).trigger('end');
 
-			// Delete key to avoid running the update again on refresh
-			delete localStorage.sync_model;
-
 			return;
 		}
 
@@ -385,11 +382,15 @@ botoweb.ldb.sync = {
 				// also provides a break for foreground processing.
 
 				// When we finish, run the next queued update
-				if (self.task_processed >= self.task_total)
+				if (next_page) {
+					// Delete key to avoid running the update again on refresh
+					delete localStorage.sync_model;
+
 					setTimeout(self.next_update, 500);
+				}
 
 				// Otherwise grab the next page of results
-				else if (next_page)
+				else
 					setTimeout(next_page, 250);
 			});
 		}, 250);
