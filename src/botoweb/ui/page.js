@@ -121,15 +121,6 @@ botoweb.ui.page = new function() {
 	 */
 	function destroy () {
 		$('#botoweb.page').empty();
-
-		if (!self.preserve_cache) {
-			// TODO do this in a smarter way
-			$.each(botoweb.env.models, function () {
-				this.objs = {};
-			});
-		}
-
-		self.preserve_cache = false;
 	};
 
 	/**
@@ -142,10 +133,20 @@ botoweb.ui.page = new function() {
 
 		var self = botoweb.ui.page;
 
+		botoweb.util.log('PAGE: unload');
 		$(self).triggerHandler('unload');
 
 		// Unbind anything not in a namespace
 		$(self).unbind('.');
+
+		if (!self.preserve_cache) {
+			// TODO do this in a smarter way
+			$.each(botoweb.env.models, function () {
+				this.objs = {};
+			});
+		}
+
+		self.preserve_cache = false;
 	};
 
 	/**
@@ -206,9 +207,10 @@ botoweb.ui.page = new function() {
 		botoweb.ui.markup.page_show(html, function (node) {
 			destroy();
 
-			$(self).triggerHandler('load');
-
 			$('#botoweb.page').append(node);
+
+			botoweb.util.log('PAGE: load');
+			$(self).triggerHandler('load');
 		});
 	}
 
@@ -240,6 +242,7 @@ botoweb.ui.page = new function() {
 			// generic action which occurs every time the page changes.
 			// We support blockable global handlers by calling them only if the
 			// non-global do not return false.
+			botoweb.util.log('PAGE: change');
 			if ($(self).triggerHandler('change.', [loc, new_page]) !== false)
 				$(self).triggerHandler('change.global', [loc, new_page]);
 
