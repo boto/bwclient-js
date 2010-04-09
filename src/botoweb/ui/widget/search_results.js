@@ -49,6 +49,11 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 
 		var c = 0;
 		var sent_next_query = false;
+		var done = false;
+
+		// Do not allow another page to be loaded if we are at the requested limit
+		if (self.limit_pages != 'none' && self.limit_pages * 1 - 1 <= page)
+			done = true;
 
 		function add_row(block) {
 			if (self.stopped)
@@ -72,7 +77,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 				self.node.append(block.node);
 			}
 
-			if (self.num_results >= count) {
+			if (self.num_results >= count || done) {
 				if (self.data_table)
 					self.data_table.stop();
 			}
