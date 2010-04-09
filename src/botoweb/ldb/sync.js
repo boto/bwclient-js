@@ -36,6 +36,10 @@ botoweb.ldb.sync = {
 		opt = opt || {};
 		var self = botoweb.ldb.sync;
 
+		if (self.running)
+			return;
+
+
 		// sync_model is set when a model is being synced. If the page is
 		// refreshed while the update is running, this ensures that the model is
 		// fully re-synced, otherwise it would be left partially loaded.
@@ -58,9 +62,6 @@ botoweb.ldb.sync = {
 			else
 				self.update_queue.push(this);
 		});
-
-		if (self.running)
-			return;
 
 		self.next_update();
 	},
@@ -142,6 +143,9 @@ botoweb.ldb.sync = {
 			processor = self.process_trash;
 		}
 
+		console.log("=====> " + model.name + " <=====");
+		console.log("Refresh: " + refresh);
+		console.log("last_update: " + localStorage['last_update_' + model.name]);
 		if (!refresh && localStorage['last_update_' + model.name]) {
 			model.query([['modified_at', '>', localStorage['last_update_' + model.name]]], processor, options);
 		} else {
@@ -357,8 +361,8 @@ botoweb.ldb.sync = {
 						);
 					}
 					else {
-						txn.executeSql( ((self.first_sync) ? 'INSERT' : 'REPLACE') +
-							' INTO ' + botoweb.ldb.model_to_table(model) +
+						txn.executeSql( "INSERT OR REPLACE INTO " +
+							botoweb.ldb.model_to_table(model) +
 							' VALUES (' + $.map(bind_params, function() { return '?' }).join(', ') + ')',
 							bind_params,
 							function () {
