@@ -83,6 +83,7 @@
 				this.removeAttr(prop);
 
 				var b = new $markup.Block(this, {
+					obj: block.obj,
 					model: model,
 					editable: true
 				});
@@ -92,31 +93,32 @@
 						eval('data = ' + data);
 
 						for (var prop in data) {
-							b.fields.push($forms.prop_field(new model.prop_map[prop].instance(), {
+							var field = $forms.prop_field(new model.prop_map[prop].instance(), {
 								block: b,
 								def: data[prop]
-							}));
+							});
+							b.fields.push(field);
 						}
-					} catch (e) {}
+					} catch (e) { }
 				}
 
 				$(b).trigger('edit');
 
 				$('<br class="clear"/>').appendTo(this);
 
-				botoweb.ui.button('Create ' + model.name)
+				botoweb.ui.button('Create ' + model.name, { icon: 'ui-icon-disk' })
 					.click(function (e) {
+						e.preventDefault();
+
 						b.save(block.opt.onsave || function () {
 							botoweb.ui.page.refresh();
 						});
-
-						e.preventDefault();
 
 						return false;
 					})
 					.appendTo(this);
 
-				botoweb.ui.button('Reset', { primary: false })
+				botoweb.ui.button('Reset', { icon: 'ui-icon-arrowrefresh-1-e', primary: false })
 					.click(function (e) {
 						$(b).trigger('edit');
 

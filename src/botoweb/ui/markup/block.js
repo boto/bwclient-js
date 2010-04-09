@@ -151,14 +151,6 @@ botoweb.ui.markup.Block = function (node, opt) {
 			$(this).triggerHandler('cancel_' + this.state);
 			this.state = 'view';
 		}
-/*
-		if (this.parent) {
-			this.parent.waiting--;
-
-			if (this.parent.waiting == 0)
-				this.parent.done();
-		}
-*/
 	}
 
 	this.init = function () {
