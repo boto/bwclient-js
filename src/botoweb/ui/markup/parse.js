@@ -172,12 +172,14 @@
 						return;
 					}
 
-					var editable = this.parents($markup.sel.editable + ':first').attr($markup.prop.editable);
+					var editable;
 
-					if (editable === undefined)
+					if (block.opt.editable !== undefined)
 						editable = block.opt.editable
 					else
-						editable = (editable == 'false' || editable === false) ? false : true;
+						editable = this.parents($markup.sel.editable + ':first').attr($markup.prop.editable);
+
+					editable = (editable == 'false' || editable === false) ? false : true;
 
 					var node = this;
 					var contents;

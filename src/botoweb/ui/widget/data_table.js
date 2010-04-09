@@ -51,6 +51,10 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 			this.sClass = RegExp.$1;
 		}
 
+		if ($(this.nTh).attr(botoweb.ui.markup.prop.editable) == 'false') {
+			this.sClass += ' no-edit';
+		}
+
 		// For some reason the bSortable option is not handled very well by
 		// dataTables, so this removes the sort functionality from the UI
 		if (/\bno-sort\b/.test(this.nTh.className)) {
@@ -246,7 +250,7 @@ $.fn.dataTableExt.oSort['string-desc'] = function(x,y) {
 $('div.dataTables_wrapper td').live('dblclick', function (e) {
 	var node = $(this);
 
-	if (node.is('.editing'))
+	if (node.is('.editing, .no-edit'))
 		return;
 
 	var data = /BWOBJ (.*?)\/(.*?) /.exec(node.parent().html());
@@ -303,6 +307,12 @@ $('div.dataTables_wrapper td').live('dblclick', function (e) {
 				no_refresh: true
 			});
 
+			first_attr.triggerHandler('dblclick');
+
+			// Not editable
+			if (node.find('.prop_editor').length == 0)
+				return;
+
 			function reset_column (e, o) {
 				var clone = template.clone();
 				node.replaceWith(clone);
@@ -325,8 +335,6 @@ $('div.dataTables_wrapper td').live('dblclick', function (e) {
 			}
 
 			$(block).bind('save_complete edit_canceled', reset_column);
-
-			first_attr.triggerHandler('dblclick');
 
 			node.find(botoweb.ui.markup.sel._attribute).remove();
 
