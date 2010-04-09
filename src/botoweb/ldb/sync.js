@@ -147,7 +147,7 @@ botoweb.ldb.sync = {
 		console.log("Refresh: " + refresh);
 		console.log("last_update: " + localStorage['last_update_' + model.name]);
 		if (!refresh && localStorage['last_update_' + model.name]) {
-			model.query([['modified_at', '>', localStorage['last_update_' + model.name]]], processor, options);
+			model.query([['sys_modstamp', '>', localStorage['last_update_' + model.name]]], processor, options);
 		} else {
 			model.all(processor, options);
 		}
