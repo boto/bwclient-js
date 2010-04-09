@@ -495,9 +495,7 @@
 
 				var results = new botoweb.ui.widget.SearchResults(this, block.model);
 
-				block.obj.follow(val, function (data, page, count) {
-					results.update(data, page, count);
-				});
+				block.obj.follow(val, results.update);
 			});
 
 			return matches;
