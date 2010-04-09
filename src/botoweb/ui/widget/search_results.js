@@ -128,9 +128,6 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 		//botoweb.ajax.stop_by_url(self.model.href);
 	}
 
-	if(self.def == undefined)
-		self.def = "all";
-
 	if (self.def == 'all') {
 		self.model.all(function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; });
 	}
