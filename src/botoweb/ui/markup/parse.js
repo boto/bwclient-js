@@ -23,7 +23,7 @@
 						this.remove();
 				}
 				else
-					botoweb.util.error('UI condition does not exist: ' + val);
+					console.error('UI condition does not exist: ' + val);
 			});
 
 			return matches;

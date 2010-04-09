@@ -133,7 +133,7 @@ botoweb.ui.page = new function() {
 
 		var self = botoweb.ui.page;
 
-		botoweb.util.log('PAGE: unload');
+		console.log('PAGE: unload');
 		$(self).triggerHandler('unload');
 
 		// Unbind anything not in a namespace
@@ -209,7 +209,7 @@ botoweb.ui.page = new function() {
 
 			$('#botoweb.page').append(node);
 
-			botoweb.util.log('PAGE: load');
+			console.log('PAGE: load');
 			$(self).triggerHandler('load');
 		});
 	}
@@ -242,7 +242,7 @@ botoweb.ui.page = new function() {
 			// generic action which occurs every time the page changes.
 			// We support blockable global handlers by calling them only if the
 			// non-global do not return false.
-			botoweb.util.log('PAGE: change');
+			console.log('PAGE: change');
 			if ($(self).triggerHandler('change.', [loc, new_page]) !== false)
 				$(self).triggerHandler('change.global', [loc, new_page]);
 

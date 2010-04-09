@@ -185,42 +185,6 @@ $util.sort_props = function(a,b) {
 		return (a.meta.label || a.meta.name || a).toString().toLowerCase() > (b.meta.label || b.meta.name || b).toString().toLowerCase() ? 1 : -1;
 
 	return (a.name || a).toString().toLowerCase() > (b.name || b).toString().toLowerCase() ? 1 : -1;
-}
-
-$util.log = function (msg, err_type) {
-	if (!msg)
-		return;
-
-	// Support use in catching errors
-	if (msg.message)
-		msg = msg.message;
-
-	err_type = err_type || 'm';
-
-	switch (err_type.charAt(0)) {
-		case 'e':
-			msg = '[BW ERROR] ' + msg;
-			break;
-		case 'w':
-			msg = '[BW  WARN] ' + msg;
-			break;
-		default:
-			msg = '[BW  MESG] ' + msg;
-	}
-
-	try {
-		console.log(msg);
-	} catch (e) {
-		alert(msg);
-	}
-};
-
-$util.error = function (msg) {
-	botoweb.util.log(msg, 'e');
-};
-
-$util.warn = function (msg) {
-	botoweb.util.log(msg, 'w');
 };
 
 /**
@@ -234,3 +198,4 @@ $util.re = {
 };
 
 })(jQuery);
+

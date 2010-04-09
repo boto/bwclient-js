@@ -191,7 +191,7 @@ botoweb.sql = {
 		 */
 		this.all = function (txn, fnc) {
 			txn.executeSql(this, this.bind_params, this.simplify_results(fnc), function (txn, e) {
-				botoweb.util.error(e);
+				console.error(e);
 			});
 		};
 
@@ -209,7 +209,7 @@ botoweb.sql = {
 			this.limit(100, 100 * page);
 
 			txn.executeSql(this, this.bind_params, this.simplify_results(fnc, page), function (txn, e) {
-				botoweb.util.error(e);
+				console.error(e);
 			});
 		};
 

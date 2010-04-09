@@ -48,7 +48,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 			if (new_page)
 				return;
 
-			if (loc.data.id == self.obj.id) {
+			if (self.obj && loc.data.id == self.obj.id) {
 				self.opt = loc.data;
 
 				if (!self.waiting)

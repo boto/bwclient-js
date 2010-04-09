@@ -211,7 +211,7 @@ botoweb.ldb.sync = {
 
 		botoweb.ldb.prepare(function() {
 			botoweb.ldb.sync.update();
-		}, botoweb.util.error);
+		}, console.error);
 	},
 
 	/**
@@ -285,7 +285,7 @@ botoweb.ldb.sync = {
 									' WHERE id = ?',
 									[obj.id],
 									null,
-									botoweb.util.error
+									console.error
 								);
 							}
 
@@ -314,7 +314,7 @@ botoweb.ldb.sync = {
 									' VALUES ' + values,
 									bp,
 									null,
-									botoweb.util.error
+									console.error
 								);
 							});
 						}
@@ -374,7 +374,7 @@ botoweb.ldb.sync = {
 									}]);
 								}
 							},
-							botoweb.util.error
+							console.error
 						);
 					}
 				});

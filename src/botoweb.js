@@ -184,7 +184,7 @@ var botoweb = {
 
 		//DEBUG
 		//alert(url + "\n\n" + (new XMLSerializer()).serializeToString(doc));
-		botoweb.util.log(method + ' ' + url + "\n\n" + (new XMLSerializer()).serializeToString(doc));
+		console.log(method + ' ' + url + "\n\n" + (new XMLSerializer()).serializeToString(doc));
 		//fnc({status: 201, getResponseHeader: function() { return '123' ;}});
 		//return
 
@@ -205,7 +205,7 @@ var botoweb = {
 				alert($.dump(data));
 				fnc(botoweb.xml.to_obj($(data).children().first()));
 			};
-			opts.error = botoweb.util.error
+			opts.error = console.error
 		}
 		$.ajax(opts);
 	},
@@ -229,7 +229,7 @@ var botoweb = {
 		if (!opt) opt = {};
 
 		new botoweb.Environment(href, function(env) {
-			botoweb.util.log('API initialization complete');
+			console.log('API initialization complete');
 
 			botoweb.ldb.name = env.cfg.db.name;
 			botoweb.ldb.title = env.cfg.db.title;
@@ -238,7 +238,7 @@ var botoweb = {
 
 			// Prepare the database according to the environment settings
 			botoweb.ldb.prepare(function (db) {
-				botoweb.util.log('Data initialization complete, begin synchronizing');
+				console.log('Data initialization complete, begin synchronizing');
 				botoweb.ui.init();
 				if (fnc)
 					fnc();
@@ -246,7 +246,22 @@ var botoweb = {
 
 				// Update the local database every 2 minutes
 				setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);
-			}, botoweb.util.error);
+			}, console.error);
 		}, opt);
 	}
 };
+
+// console is a very annoying thing because it can cause errors in any browser
+// that either does not have a console or does not have it open. This tests for
+// console support and if it does not exist, console calls will melt away
+// without causing actual errors.
+try {
+	console.log;
+} catch (e) {
+	console = {
+		log: function () {},
+		warn: function () {},
+		error: function () {}
+	};
+}
+
