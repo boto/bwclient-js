@@ -386,11 +386,11 @@ botoweb.ldb.sync = {
 				// memory leak from every page of results piling up in memory. It
 				// also provides a break for foreground processing.
 
-				// When we finish, run the next queued update
+				// When we finish, grab the next page of results
 				if (next_page) {
 					setTimeout(next_page, 250);
 				}
-				// Otherwise grab the next page of results
+				// Otherwise run the next queued update
 				else{
 					// Delete key to avoid running the update again on refresh
 					delete localStorage.sync_model;
