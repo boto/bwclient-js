@@ -309,16 +309,13 @@ $forms.Field = function (prop, opt) {
 							$ui.overlay.show();
 
 							self.obj.update(data, function (obj) {
-								// We do not delete the ID key here because the
-								// sync updater will check if it exists and
-								// assign the updated object if it does.
-								// Otherwise the null value will be ignored.
-								self.model.objs[self.obj.id] = null;
-
 								function updated () {
 									$($ldb.sync).unbind('end', updated);
 									self.cancel();
-									$ui.page.refresh();
+
+									if (!self.opt.block.opt.no_refresh)
+										$ui.page.refresh();
+
 									$ui.overlay.hide();
 								}
 
@@ -327,6 +324,8 @@ $forms.Field = function (prop, opt) {
 
 									$ldb.sync.update();
 								}
+
+								$(self.opt.block).triggerHandler('save_complete', [obj, update]);
 
 								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
 									setTimeout(update, 1000);
@@ -337,6 +336,10 @@ $forms.Field = function (prop, opt) {
 						.addClass('small')
 						.click(function () {
 							self.cancel();
+							// Different from cancel_edit which is a request to
+							// cancel the edit, edit_canceled indicates that the
+							// edit has been canceled by the user.
+							$(self.opt.block).triggerHandler('edit_canceled');
 							return false;
 						})
 				)

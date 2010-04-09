@@ -66,6 +66,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			c++;
 
 			if (self.data_table) {
+				block.node.find('td:first').append($('<!-- BWOBJ ' + block.model.name + '/' + block.obj.id + ' -->'));
 				self.data_table.append(block.node);
 
 				// Update the progress bar no more than 100 times
@@ -141,7 +142,10 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			self.model.find(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; });
 	}
 
-	var dt_opts = {stop: true};
+	var dt_opts = {
+		stop: true,
+		template: self.template
+	};
 
 	if (self.node.is('tr, tbody')) {
 		setTimeout(function() {

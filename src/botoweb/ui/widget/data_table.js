@@ -181,7 +181,7 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 
 	this.append = function(row) {
 		var item = $(row).find('> td').map(function() {
-			return '<!-- ' + this.innerHTML.toLowerCase().replace(sort_regex, '') + ' -->' + this.innerHTML;
+			return self.sort_string(this.innerHTML) + this.innerHTML;
 		});
 		if (item.length == settings.aoColumns.length)
 			this.pending.push(item);
@@ -192,6 +192,10 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 		this.data_table.fnAddData(this.pending, false);
 
 		this.pending = [];
+	}
+
+	this.sort_string = function (str) {
+		return '<!-- ' + str.toLowerCase().replace(sort_regex, '') + ' -->';
 	}
 
 	this.update = function(row, values) {
@@ -237,5 +241,99 @@ $.fn.dataTableExt.oSort['string-asc']  = function(x,y) {
 $.fn.dataTableExt.oSort['string-desc'] = function(x,y) {
 	return ((x < y) ?  1 : ((x > y) ? -1 : 0));
 };
+
+// Row editing for data tables
+$('div.dataTables_wrapper td').live('dblclick', function (e) {
+	var node = $(this);
+
+	if (node.is('.editing'))
+		return;
+
+	var data = /BWOBJ (.*?)\/(.*?) /.exec(node.parent().html());
+	if (!data)
+		return;
+
+	var model = botoweb.env.models[data[1]];
+
+	if (!model)
+		return;
+
+	model.get(data[2], function (obj) {
+		// Convert the column back to proper markup
+		if (obj) {
+			var table = node.parents('table');
+			var data_table = table.data('data_table');
+
+			var index = node.index();
+
+			var template = data_table.opts.template.find('td:eq(' + index + ')');
+
+			// Only fix the columns widths once
+			if (table.css('table-layout') != 'fixed') {
+				var headings = table.find('> thead> tr > th');
+
+				// Lock the column widths. First we get the currently
+				// displayed widths, then we set the table to fixed column
+				// widths, then we apply those original widths back to the
+				// column headings
+				var widths = [];
+				headings.each(function () {
+					widths.push($(this).width());
+				});
+				table.css('table-layout', 'fixed');
+				headings.each(function () {
+					$(this).width(widths[0]);
+					widths.shift();
+				});
+			}
+
+			// Replace entire TD with original syntax
+			var clone = template.clone();
+			node.replaceWith(clone);
+			node = clone;
+
+			var first_attr = node.find(botoweb.ui.markup.sel.attribute).first();
+
+			// Used to prevent editing while we're already editing
+			node.addClass('editing');
+
+			var block = new botoweb.ui.markup.Block(node, {
+				obj: obj,
+				editable: true,
+				no_refresh: true
+			});
+
+			function reset_column (e, o) {
+				var clone = template.clone();
+				node.replaceWith(clone);
+
+				new botoweb.ui.markup.Block(clone, {
+					obj: (o || obj)
+				});
+
+				clone.prepend($(data_table.sort_string(clone.text())));
+
+				// Update the sorting data, identify this row by its DOM
+				// node and the column by its index. We give false to
+				// prevent a redraw.
+				data_table.data_table.fnUpdate(clone.html(), clone.parent().get(0), index, false);
+
+				botoweb.ui.overlay.hide();
+
+				if (index == 0)
+					clone.append($('<!-- BWOBJ ' + obj.model.name + '/' + obj.id + ' -->'));
+			}
+
+			$(block).bind('save_complete edit_canceled', reset_column);
+
+			first_attr.triggerHandler('dblclick');
+
+			node.find(botoweb.ui.markup.sel._attribute).remove();
+
+			if (index == 0)
+				node.append($('<!-- BWOBJ ' + obj.model.name + '/' + obj.id + ' -->'));
+		}
+	});
+});
 
 })(jQuery);

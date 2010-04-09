@@ -155,6 +155,7 @@
 					val = val[1];
 
 					this.removeAttr(prop);
+					this.attr('_' + prop, val);
 
 					// Special cases
 					if (val == 'id')

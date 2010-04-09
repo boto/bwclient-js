@@ -202,8 +202,16 @@ var botoweb = {
 
 		if(fnc){
 			opts.success = function (data) {
-				alert($.dump(data));
-				fnc(botoweb.xml.to_obj($(data).children().first()));
+				if (!data)
+					return fnc();
+
+				var obj = botoweb.xml.to_obj($(data).children().first(), { no_cache: true });
+
+				// Update cache
+				if (obj.id in obj.model.objs)
+					obj.model.objs = obj;
+
+				fnc(obj);
 			};
 			opts.error = console.error
 		}

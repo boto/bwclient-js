@@ -32,6 +32,7 @@ botoweb.ui.markup = new function () {
 	this.sel = {
 		'action':         'form[bwAction]',
 		'attribute':      '*[bwAttribute]',
+		'_attribute':     '*[_bwAttribute]',
 		'attribute_list': '*[bwWidget=attributeList]',
 		'breadcrumbs':    '*[bwWidget=breadcrumbs]',
 		'class_name':     '*[bwClass]',
