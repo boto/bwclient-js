@@ -243,8 +243,11 @@ botoweb.ui.page = new function() {
 			// We support blockable global handlers by calling them only if the
 			// non-global do not return false.
 			console.log('PAGE: change');
-			if ($(self).triggerHandler('change.', [loc, new_page]) !== false)
+			if ($(self).triggerHandler('change.', [loc, new_page]) !== false) {
+				// Signal that the page should be loaded
+				new_page = true;
 				$(self).triggerHandler('change.global', [loc, new_page]);
+			}
 
 			self.history.unshift(loc);
 
