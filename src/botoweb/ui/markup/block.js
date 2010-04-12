@@ -72,6 +72,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 		if (this.saved)
 			return;
 
+		$ui.overlay.show();
+
 		var data = {};
 
 		for (var i in this.fields) {
@@ -82,11 +84,12 @@ botoweb.ui.markup.Block = function (node, opt) {
 			data[field.prop.meta.name] = val;
 		}
 
-		if (this.obj) {
+		if (this.obj && this.state != 'clone') {
 			if (this.opt.root)
-				this.obj.update(data, function () { botoweb.ui.page.refresh(); });
+				this.obj.update(data, function () { $ui.page.refresh(); });
 			else
 				this.obj.update(data, function (obj) {
+					$ui.overlay.hide();
 					self.saved = true;
 					if (fnc)
 						fnc();
@@ -95,6 +98,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 		else {
 			this.model.save(data, function (obj) {
 				self.saved = true;
+
+				$ui.overlay.hide();
 
 				if (fnc)
 					fnc(obj);
@@ -209,7 +214,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 		this.init();
 };
 
-var $markup = botoweb.ui.markup;
+var $ui = botoweb.ui;
+var $markup = $ui.markup;
 
 $markup.Block.parse_order = {
 	normal: ['condition', 'trigger', 'attribute_list', 'attribute', 'editing_tools', 'link'],
