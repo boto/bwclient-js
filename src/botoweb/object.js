@@ -21,10 +21,13 @@ botoweb.Object = function(id, model, data, opt) {
 	if (typeof self.model == 'string')
 		self.model = botoweb.env.models[self.model];
 
-	// Certain circumstances require the object to not be cached in which case
-	// it will be removed by the garbage collector when it is no longer needed.
-	if (!opt.no_cache)
-		self.model.objs[self.id] = self;
+	// The cache is just an easy way to access an object instead of parsing its
+	// XML or requesting it by ID from botoweb. If an object is cached in this
+	// way, it will not be garbage collected. However, if an object is not
+	// cached in this way, it still may not be garbage collected.
+	if (!opt.no_cache) {
+		self.model.objs[this.id] = this;
+	}
 
 	$.each(self.model.props, function () {
 		if (!(this.meta.name in self.data))
@@ -174,6 +177,8 @@ botoweb.Object = function(id, model, data, opt) {
 		});
 
 		if (changed_any) {
+			this.clear_reference_data();
+
 			var is_new = this.unsaved || !this.id;
 
 			if (is_new)
@@ -198,6 +203,15 @@ botoweb.Object = function(id, model, data, opt) {
 		});
 
 		return this.update(data, fnc);
+	};
+
+	this.clear_reference_data = function () {
+		$.each(this.data, function () {
+			if (this.is_type('reference', 'query')) {
+				this.data = [this.data[0]];
+				delete this.data[0].val;
+			}
+		});
 	}
 
 	this.load = function(prop, fnc) {
