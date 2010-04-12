@@ -20,7 +20,7 @@ botoweb.ui = {
 			.css({
 				width: $('body').width(),
 				height: $('body').height(),
-				zIndex: 999999,
+				zIndex: 9999,
 				opacity: .35
 			})
 			.show();
@@ -28,6 +28,24 @@ botoweb.ui = {
 		hide: function () {
 			botoweb.ui.overlay.node.hide();
 		}
+	},
+
+	/**
+	 * Shows a modal jQuery dialog which the user must close to continue.
+	 */
+	alert: function(msg, title, callback) {
+		$('<div/>')
+			.html(msg)
+			.dialog({
+				modal: true,
+				dialogClass: 'alert',
+				title: title || 'Alert',
+				zIndex: 99999,
+				buttons: {
+					Ok: function() { $(this).dialog('close'); if (callback) callback(); }
+				}
+			})
+			.dialog('show')
 	},
 
 	/**

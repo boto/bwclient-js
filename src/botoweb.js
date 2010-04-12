@@ -54,7 +54,9 @@ var botoweb = {
 
 			if (url) {
 				next_page = function () {
-					botoweb.ajax.get(url, process);
+					setTimeout(function () {
+						botoweb.ajax.get(url, process);
+					}, 100);
 				}
 			}
 
@@ -115,7 +117,9 @@ var botoweb = {
 
 			if (url) {
 				next_page = function () {
-					botoweb.ajax.get(url, process);
+					setTimeout(function () {
+						botoweb.ajax.get(url, process);
+					}, 100);
 				}
 			}
 
@@ -133,13 +137,13 @@ var botoweb = {
 	// Function: get_by_id
 	// Find a specific object by ID
 	//
-	get_by_id: function(url, id, fnc){
+	get_by_id: function(url, id, fnc, opt){
 		if (!id)
 			return fnc();
 
 		botoweb.ajax.get(url + "/" + id, function(data){
 			if ($(data).children())
-				fnc(botoweb.xml.to_obj($(data).children().first()));
+				fnc(botoweb.xml.to_obj($(data).children().first(), opt));
 			else
 				fnc();
 		}, fnc);
@@ -207,13 +211,19 @@ var botoweb = {
 
 				var obj = botoweb.xml.to_obj($(data).children().first(), { no_cache: true });
 
-				// Update cache
-				if (obj.id in obj.model.objs)
-					obj.model.objs = obj;
+				// Update cache regardless of whether the object was cached before
+				// or not. This is *required* since SimpleDB will return a 404
+				// for the object immediately after creation, which will break
+				// any subsequent attempt to use the new object.
+				obj.model.objs[obj.id] = obj;
 
 				fnc(obj);
 			};
-			opts.error = console.error
+			opts.error = function (data) {
+				var info = $(data.responseText);
+
+				botoweb.ui.alert('The following error occurred while saving changes:<p><strong>' + info.find('description').html() + '</strong><br />' + info.find('message').html() + '</p>', 'Please check form values', fnc);
+			}
 		}
 		$.ajax(opts);
 	},
