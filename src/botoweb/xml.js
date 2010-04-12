@@ -192,7 +192,7 @@ botoweb.xml = {
 
 			var model_prop = model.prop_map[name];
 			var node = $(doc.createElement(name));
-			node.attr('type', 'string');
+			node.attr('type', model_prop.meta.item_type || 'string');
 
 			var type = 'def';
 
