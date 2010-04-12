@@ -276,16 +276,17 @@ botoweb.sql = {
 								var col = botoweb.ldb.prop_to_column(prop);
 
 								if (col in row) {
-									var prop_data;
+									var prop_data = null;
 
-									if (prop.is_type('reference'))
-										prop_data = { count: 1, id: (row[col] || null), type: row[col + '__type'], val: undefined };
-									else if (prop.is_type('list', 'complexType'))
+									if (prop.is_type('list', 'complexType'))
 										prop_data = { count: (row[col] || null), val: undefined };
+									else if (prop.is_type('reference')) {
+										prop_data = { count: 1, id: (row[col] || null), type: row[col + '__type'], val: undefined };
+									}
 									else
 										prop_data = { val: (row[col] || null) };
 
-									data[prop.meta.name] = new prop.instance(prop_data);
+									data[prop.meta.name] = new prop.instance([prop_data]);
 								}
 							});
 
