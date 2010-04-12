@@ -497,7 +497,7 @@
 
 				var results = new botoweb.ui.widget.SearchResults(this, block.model);
 
-				block.obj.follow(val, results.update);
+				block.obj.follow(val, results.update, null, { no_cache: true });
 			});
 
 			return matches;

@@ -18,6 +18,8 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	var model_prop = this;
 	var is_list = false;
 
+	this.onload = [];
+
 	// Lists are not treated as their own type since this adds an extra
 	// unnecessary level of complexity. Instead the meta.list property will be
 	// true if the property was defined as a list.
@@ -152,7 +154,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 								$.each(self.onload, function() { this(self.data, true); });
 
 							// The onload functions are no longer needed
-							delete self.onload;
+							self.onload = [];
 						});
 				});
 			};
@@ -203,7 +205,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 						$.each(self.onload, function() { this(self.data); });
 
 						// The onload functions are no longer needed
-						delete self.onload;
+						self.onload = [];
 					}
 				});
 
@@ -242,10 +244,14 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		return this.toString(false, { sql: true });
 	}
 
-	if (is_list && model.local) {
+	if (is_list) {
 		var load = this.load;
 
 		this.load = function (fnc) {
+			if (!model.local) {
+				return load(fnc);
+			}
+
 			// The count of list or complexType items is cached. If it is
 			// zero (null) we don't need to load anything.
 			if (!this.data[0].count) {
@@ -310,6 +316,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			// anything else, this statement will evaluate to true.
 			if (this.data && (this.data.length == 0 || this.data[0].val !== undefined))
 				return fnc(this.data);
+
+			// Don't try to load anything on a model property which has no data
+			if (!('data' in this))
+				return fnc([]);
 
 			// Load the data as defined by its type
 			if ('load' in this)

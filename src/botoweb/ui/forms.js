@@ -309,6 +309,12 @@ $forms.Field = function (prop, opt) {
 							$ui.overlay.show();
 
 							self.obj.update(data, function (obj) {
+								// Error, hide the overlay and let them edit again
+								if (!obj) {
+									$ui.overlay.hide();
+									return;
+								}
+
 								function updated () {
 									$($ldb.sync).unbind('end', updated);
 									self.cancel();
@@ -910,6 +916,7 @@ $forms.Picklist = function () {
 
 		var selecting = false;
 		var autosearch;
+		var autohide;
 		var prev_value;
 		var focused = false;
 
@@ -965,6 +972,9 @@ $forms.Picklist = function () {
 		}
 
 		function add_selection (obj) {
+			if (!obj)
+				return;
+
 			// obj may just be a string ID
 			if (typeof obj == 'string') {
 				self.model.get(obj, add_selection);
@@ -1106,9 +1116,11 @@ $forms.Picklist = function () {
 					})
 					.focus(function () {
 						focused = true;
+						clearTimeout(autohide);
 					})
 					.blur(function () {
 						focused = false;
+						autohide = setTimeout(cancel_search, 500);
 					}),
 				$ui.button('', { icon: 'ui-icon-search', no_text: true, corners: [0,1,1,0] })
 					.click(do_search)
@@ -1125,9 +1137,9 @@ $forms.Picklist = function () {
 			})
 		}*/
 
-		if (value && value.val) {
-			add_selection(value.val);
-		}
+		this.prop.val(function (objs) {
+			$.each(objs, function () { add_selection(this.val); });
+		});
 
 		field.data('get_val', function () {
 			var val = [];

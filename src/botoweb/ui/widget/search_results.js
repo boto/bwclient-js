@@ -89,7 +89,8 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 				if (c >= results.length / 2 && !sent_next_query) {
 					self.want_page = page + 1;
 					sent_next_query = true;
-					setTimeout(next_page, 50);
+					if (next_page)
+						next_page();
 				}
 			}
 		}
