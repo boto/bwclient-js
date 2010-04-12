@@ -160,16 +160,33 @@ botoweb.ldb.sync = {
 
 	/**
 	 * Tries to select a single result from every model table. If the result is
-	 * not empty, updates the model to specify that it is stored locally.
+	 * not empty, updates the model to specify that it is stored locally. A
+	 * callback can be provided to ensure that all tables are tested before
+	 * moving on.
 	 */
-	find_local_models: function () {
+	find_local_models: function (fnc) {
 		botoweb.ldb.dbh.transaction(function (txn) {
+			var completed = 0;
+
 			$.each(botoweb.env.models, function (i, model) {
 				txn.executeSql('SELECT 1 FROM ' + botoweb.ldb.model_to_table(model) + ' LIMIT 1', [], function (txn, results) {
-					if (results.rows.length)
+					completed++;
+
+					// The table is local if it has results, as long as it is
+					// not currently synchronizing - that means it is an
+					// incomplete portion of the results.
+					if (results.rows.length && model.name != localStorage.sync_model)
 						model.local = true;
+
+					if (fnc && completed == botoweb.env.model_names.length)
+						fnc();
 				}, function () {
+					completed++;
+
 					model.local = false;
+
+					if (fnc && completed == botoweb.env.model_names.length)
+						fnc();
 				})
 			});
 		});
@@ -278,16 +295,13 @@ botoweb.ldb.sync = {
 						if (this.is_type('query', 'blob'))
 							return;
 						else if (this.is_type('list', 'complexType')) {
-							// Ignore lookups to accelerate the first sync
-							if (!self.first_sync) {
-								txn.executeSql(
-									'DELETE FROM ' + botoweb.ldb.prop_to_table(model_prop) +
-									' WHERE id = ?',
-									[obj.id],
-									null,
-									console.error
-								);
-							}
+							txn.executeSql(
+								'DELETE FROM ' + botoweb.ldb.prop_to_table(model_prop) +
+								' WHERE id = ?',
+								[obj.id],
+								null,
+								console.error
+							);
 
 							if (opt.trash || !prop)
 								return;
@@ -388,7 +402,7 @@ botoweb.ldb.sync = {
 
 				// When we finish, grab the next page of results
 				if (next_page) {
-					setTimeout(next_page, 250);
+					next_page();
 				}
 				// Otherwise run the next queued update
 				else{

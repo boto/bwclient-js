@@ -197,7 +197,9 @@ botoweb.ldb = {
 				});
 			});
 
-			ready(db);
+			botoweb.ldb.sync.find_local_models(function () {
+				ready(db);
+			});
 		}
 	},
 
