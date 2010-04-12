@@ -249,7 +249,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 		this.load = function (fnc) {
 			if (!model.local) {
-				return load(fnc);
+				return load.call(this, fnc);
 			}
 
 			// The count of list or complexType items is cached. If it is
