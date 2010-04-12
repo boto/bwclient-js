@@ -151,7 +151,10 @@ $util.html_unescape = function (str) {
  * @return An HTML string suitable for safe insertion with $(...).html()
  */
 $util.html_format = function (str) {
-	return str.replace(/[<>\n\t]|  /g, function (chr) {
+	if (!str)
+		return '';
+
+	return str.toString().replace(/[<>\n\t]|  /g, function (chr) {
 		switch (chr) {
 			case '>':	return '&gt;';
 			case '<':	return '&lt;';
