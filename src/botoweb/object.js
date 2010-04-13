@@ -4,6 +4,8 @@
  * @author Ian Paterson
  */
 
+(function ($) {
+
 /**
  * Represents an object
  *
@@ -35,7 +37,8 @@ botoweb.Object = function(id, model, data, opt) {
 	});
 
 	$.each(self.data, function (i, prop) {
-		prop.obj = self;
+		prop.obj_id = self.id;
+		prop.obj_model = self.model;
 	});
 
 	self.follow = function(prop_name, fnc, filters, opt) {
@@ -87,12 +90,11 @@ botoweb.Object = function(id, model, data, opt) {
 				}
 				else
 					remaining--;
-
-				return;
 			});
 
-			if (remaining <= 0)
+			if (remaining <= 0) {
 				fnc(objs, 0, objs.length, true);
+			}
 		}
 		else {
 			opt.item_type = prop.meta.item_type;
@@ -102,6 +104,7 @@ botoweb.Object = function(id, model, data, opt) {
 			);
 		}
 
+		values = null;
 	}
 
 	this.update = function (data, fnc) {
@@ -229,6 +232,18 @@ botoweb.Object = function(id, model, data, opt) {
 		});
 	};
 
+	this.val = function(prop, fnc) {
+		var prop = this.data[prop];
+
+		if (typeof prop == 'undefined')
+			return;
+
+		if (prop.data.length && prop.data[0].val === undefined)
+			return fnc([]);
+
+		prop.val(fnc);
+	};
+
 	this.del = function(fnc) {
 		$(this).trigger('delete');
 		this.model.del(this.id, fnc);
@@ -241,3 +256,28 @@ botoweb.Object = function(id, model, data, opt) {
 		return this.model.name + ' Object'
 	};
 };
+
+var $Object = botoweb.Object;
+
+// Static proxies for object methods allow object functions to be called with
+// just the model and object id. Proxy functions load the object and then
+// perform the action on it.
+$.each(['follow', 'update', 'save', 'load', 'val', 'del'], function (i, fnc_name) {
+	$Object[fnc_name] = function () {
+		var args = $.makeArray(arguments);
+		var model = args.shift();
+		var id = args.shift();
+
+		if (!model)
+			return;
+
+		model.get(id, function (obj) {
+			if (obj)
+				obj[fnc_name].apply(obj, args);
+
+			obj = null;
+		});
+	};
+});
+
+})( jQuery );
