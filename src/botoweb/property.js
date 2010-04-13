@@ -19,6 +19,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	var is_list = false;
 
 	this.onload = [];
+	this.obj_model = model;
 
 	// Lists are not treated as their own type since this adds an extra
 	// unnecessary level of complexity. Instead the meta.list property will be
@@ -69,7 +70,8 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		});
 
 		if ('load' in this) {
-			this.obj = undefined;
+			this.obj_id = undefined;
+			this.obj_model = model;
 
 			/**
 			 * Holds functions that are awaiting the data to be loaded. A simple
@@ -135,7 +137,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 							(('key' in tbl.c) ? tbl.c.key : tbl.c.id),
 							(('type' in tbl.c) ? tbl.c.type : tbl.c.id)
 						)
-						.filter(tbl.c.id.cmp(self.obj.id))
+						.filter(tbl.c.id.cmp(self.obj_id))
 						.all(txn, function (rows) {
 							self.data = $.map(rows, function (row) {
 								var data = { val: row.val };
@@ -175,7 +177,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			 * Loads a reference or query type, data may come from botoweb or
 			 * from the local database.
 			 */
-			this.load = function (fnc) {
+			this.load = function (fnc, opt) {
 				if (fnc) {
 					this.onload.push(fnc);
 
@@ -187,27 +189,27 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				var self = this;
 				var async = false;
 
-				this.obj.follow(this.meta.name, function (objs, a, b) {
-					self.data = [];
+				botoweb.Object.follow(this.obj_model, this.obj_id, this.meta.name, function (objs) {
+					var data = [];
 
 					if (objs.length) {
 						$.each(objs, function () {
-							self.data.push({ val: this, id: this.id });
+							data.push({ val: this, id: this.id });
 						});
 					}
 					// null signifies that we tried to load the value and it
 					// does not exist
 					else
-						self.data.push({ val: null });
+						data.push({ val: null });
 
 					// onload contains callbacks which are waiting on this data
 					if (self.onload && self.onload.length) {
-						$.each(self.onload, function() { this(self.data); });
+						$.each(self.onload, function() { this(data, self); });
 
 						// The onload functions are no longer needed
 						self.onload = [];
 					}
-				});
+				}, null, opt);
 
 				async = true;
 			};
@@ -247,9 +249,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	if (is_list) {
 		var load = this.load;
 
-		this.load = function (fnc) {
+		this.load = function (fnc, opt) {
 			if (!model.local) {
-				return load.call(this, fnc);
+				return load.call(this, fnc, opt);
 			}
 
 			// The count of list or complexType items is cached. If it is
@@ -275,7 +277,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 						tbl.c.key,       // may not exist
 						tbl.c.val__type  // may not exist
 					)
-					.filter(tbl.c.id.cmp(self.obj.id))
+					.filter(tbl.c.id.cmp(self.obj_id))
 					.all(txn, function (rows) {
 						self.data = $.map(rows, function (row) {
 							var data = { val: undefined };
@@ -295,7 +297,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 						// Call the original load fnc
 						if (load)
-							load.call(self);
+							load.call(self, null, opt);
 						else
 							$.each(self.onload, function() { this(self.data, true); });
 					});
@@ -307,7 +309,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	 * Provides the value of the property either to a callback function or as a
 	 * direct return value.
 	 */
-	this.val = function (fnc) {
+	this.val = function (fnc, opt) {
 		if (fnc) {
 			// Either the data need not be loaded or it has already been loaded
 			// VERY IMPORTANT: If the object does not have a value for this
@@ -315,7 +317,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			// when the value has not yet been loaded. If val is null or
 			// anything else, this statement will evaluate to true.
 			if (this.data && (this.data.length == 0 || this.data[0].val !== undefined))
-				return fnc(this.data);
+				return fnc(this.data, this);
 
 			// Don't try to load anything on a model property which has no data
 			if (!('data' in this))
@@ -323,9 +325,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 			// Load the data as defined by its type
 			if ('load' in this)
-				this.load(fnc);
+				this.load(fnc, opt);
 			else
-				return fnc(this.data);
+				return fnc(this.data, this);
 		}
 
 		// VERY IMPORTANT: This may be undefined which means that the value has

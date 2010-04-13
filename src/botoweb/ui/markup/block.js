@@ -13,6 +13,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 	this.node = node;
 	this.obj = opt.obj;
+	this.obj_id = opt.obj_id;
 	this.model = opt.model;
 	this.parent = opt.parent;
 	this.onready = [];
@@ -33,6 +34,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 	if (this.obj && !this.model)
 		this.model = this.obj.model;
 
+	if (!this.obj_id && this.obj)
+		this.obj_id = this.obj.id;
+
 	this.skip_markup = opt.skip_markup || {};
 	this.nested_sel = opt.nested_sel;
 
@@ -48,7 +52,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 			if (new_page)
 				return;
 
-			if (self.obj && loc.data.id == self.obj.id) {
+			if (self.obj_id && loc.data.id == self.obj_id) {
 				self.opt = loc.data;
 
 				if (!self.waiting)
@@ -84,11 +88,11 @@ botoweb.ui.markup.Block = function (node, opt) {
 			data[field.prop.meta.name] = val;
 		}
 
-		if (this.obj && this.state != 'clone') {
+		if (this.obj_id && this.state != 'clone') {
 			if (this.opt.root)
-				this.obj.update(data, function () { $ui.page.refresh(); });
+				botoweb.Object.update(this.model, this.obj_id, data, function () { $ui.page.refresh(); });
 			else
-				this.obj.update(data, function (obj) {
+				botoweb.Object.update(this.model, this.obj_id, data, function (obj) {
 					$ui.overlay.hide();
 					self.saved = true;
 					if (fnc)
@@ -96,7 +100,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 				});
 		}
 		else {
-			this.model.save(data, function (obj) {
+			botoweb.Object.save(this.model, this.obj_id, data, function (obj) {
 				self.saved = true;
 
 				$ui.overlay.hide();
@@ -136,8 +140,11 @@ botoweb.ui.markup.Block = function (node, opt) {
 	}
 
 
-
 	this.done = function () {
+		// Release the reference to the object. Anything which needs this block's
+		// object must load it based on model and obj_id
+		this.obj = null;
+
 		$.each(this.onready, function () { this(self) });
 		this.onready = [];
 		this.saved = false;
@@ -205,10 +212,13 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 	if (this.model && !this.obj && opt.id) {
 		this.model.get(opt.id, function (obj) {
-			self.obj = obj;
+			if (obj) {
+				self.obj_id = obj.id;
+				self.obj = obj;
+			}
 
 			self.init();
-		});
+		}, this.opt);
 	}
 	else
 		this.init();

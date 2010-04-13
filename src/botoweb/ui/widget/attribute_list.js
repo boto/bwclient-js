@@ -8,7 +8,7 @@
  *
  * @param node where to insert the icons.
  */
-botoweb.ui.widget.AttributeList = function(node, model, obj) {
+botoweb.ui.widget.AttributeList = function(node, model) {
 	var self = this;
 
 	self.node = $(node).addClass('widget-attribute_list clear').attr(botoweb.ui.markup.prop.widget, '');

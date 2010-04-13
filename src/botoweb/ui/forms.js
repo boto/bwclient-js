@@ -48,7 +48,8 @@ $forms.Field = function (prop, opt) {
 
 	if (prop) {
 		this.prop = prop;
-		this.obj = prop.obj;
+		this.obj_id = prop.obj_id;
+		this.obj_model = prop.obj_model;
 		this.model = prop.meta.model;
 
 		this.node.addClass('prop_type_' + prop.meta.type + ' prop_name_' + prop.meta.name);
@@ -308,7 +309,7 @@ $forms.Field = function (prop, opt) {
 
 							$ui.overlay.show();
 
-							self.obj.update(data, function (obj) {
+							botoweb.Object.update(self.obj_model, self.obj_id, data, function (obj) {
 								// Error, hide the overlay and let them edit again
 								if (!obj) {
 									$ui.overlay.hide();
@@ -335,6 +336,9 @@ $forms.Field = function (prop, opt) {
 
 								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
 									setTimeout(update, 1000);
+
+								// drop the reference
+								obj = null;
 							});
 							return false;
 						}),
@@ -399,7 +403,7 @@ $forms.Field = function (prop, opt) {
 		if (this.atomic) {
 			var data = {};
 			data[this.prop.name] = this.val();
-			this.obj.update(data);
+			botoweb.Model.update(this.model, this.obj_id, data);
 		}
 
 		// Reset the property to view mode
@@ -752,19 +756,7 @@ $forms.File = function () {
 			}, 10);
 
 			$($forms).bind('save_complete.' + this.id, function (e, obj, fnc) {
-				/* Uploadify will not work until Flash supports Basic Auth
-				field.uploadifySettings('script', $util.url_join(botoweb.env.base_url, self.model.href, self.obj.id, self.prop.meta.name));
-				field.uploadifySettings('onError', function (e,q,f,error) {
-					alert(error.info)
-				});
-				field.uploadifySettings('onComplete', function () {
-					if (fnc)
-						fnc();
-				});
-				field.uploadifyUpload();
-				*/
-
-				upload._settings.action = $util.url_join($ui.page.location.base_href, botoweb.env.base_url, self.model.href, self.obj.id, self.prop.meta.name);
+				upload._settings.action = $util.url_join($ui.page.location.base_href, botoweb.env.base_url, self.model.href, self.obj_id, self.prop.meta.name);
 				upload._settings.onComplete = function () {
 					selections.find('.ui-icon')
 						.removeClass('ui-icon-clock')
@@ -782,6 +774,9 @@ $forms.File = function () {
 					.unbind();
 
 				upload.submit();
+
+				// Clear reference
+				obj = null;
 
 				return false;
 			});
@@ -864,11 +859,11 @@ $forms.Picklist = function () {
 						// The parent object's ID is generated client-side so
 						// that nested objects which must reference the parent
 						// can do so even if the parent has not yet been created
-						if (!self.opt.block.obj) {
-							self.opt.block.obj = new self.opt.model.instance();
+						if (!self.opt.block.obj_id) {
+							self.opt.block.obj_id = botoweb.Object.uuid();
 						}
 
-						return [{val: self.opt.block.obj.id, id: self.opt.block.obj.id, type: self.opt.block.obj.model.name}];
+						return [{val: self.opt.block.obj_id, id: self.opt.block.obj_id, type: self.opt.block.model.name}];
 					};
 
 					ref_field.node.attr('id', block.fields.length + '_' + block.id)
@@ -892,13 +887,13 @@ $forms.Picklist = function () {
 				block.node
 			).data('get_val', function () {
 				if (!block.saved) {
-					if (!block.obj)
-						block.obj = new block.model.instance();
+					if (!block.obj_id)
+						block.obj_id = botoweb.util.uuid();
 
 					block.save();
 				}
 
-				return [block.obj.id];
+				return [block.obj_id];
 			});
 		}
 
@@ -1017,6 +1012,9 @@ $forms.Picklist = function () {
 			}
 
 			cancel_search(true);
+
+			// Clear reference
+			obj = null;
 		}
 
 		function do_search() {
