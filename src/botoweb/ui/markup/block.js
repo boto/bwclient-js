@@ -21,6 +21,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.fields = [];
 	this.nested = [];
 	this.waiting = 0;
+	this.no_obj = true;
 	this.opt = opt;
 	this.state = opt.state || 'view';
 	this.saved = false;
@@ -76,8 +77,6 @@ botoweb.ui.markup.Block = function (node, opt) {
 		if (this.saved)
 			return;
 
-		$ui.overlay.show();
-
 		var data = {};
 
 		for (var i in this.fields) {
@@ -89,21 +88,34 @@ botoweb.ui.markup.Block = function (node, opt) {
 		}
 
 		if (this.obj_id && this.state != 'clone') {
-			if (this.opt.root)
-				botoweb.Object.update(this.model, this.obj_id, data, function () { $ui.page.refresh(); });
-			else
-				botoweb.Object.update(this.model, this.obj_id, data, function (obj) {
-					$ui.overlay.hide();
+			var onsave;
+
+			if (this.opt.root) {
+				onsave = function () {
+					$ui.page.refresh();
+					if (fnc)
+						fnc();
+				};
+			}
+			else {
+				onsave = function (obj) {
 					self.saved = true;
 					if (fnc)
 						fnc();
-				});
+				};
+			}
+
+			if (this.no_obj) {
+				var obj = new this.model.instance(undefined, this.obj_id);
+				obj.update(data, onsave);
+			}
+			else {
+				botoweb.Object.update(this.model, this.obj_id, data, onsave);
+			}
 		}
 		else {
-			botoweb.Object.save(this.model, this.obj_id, data, function (obj) {
+			this.model.save(data, function (obj) {
 				self.saved = true;
-
-				$ui.overlay.hide();
 
 				if (fnc)
 					fnc(obj);
@@ -184,6 +196,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 			if (fnc(self) === false)
 				self.skip_markup[str] = 1;
 		}
+
+		if (this.obj)
+			this.no_obj = false;
 
 		// Do not allow nested blocks to interfere
 		parse('nested', $markup.remove_nested);
