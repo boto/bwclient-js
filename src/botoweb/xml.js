@@ -190,7 +190,7 @@ botoweb.xml = {
 			if (!(name in model.prop_map) && name != 'id')
 				return;
 
-			var model_prop = model.prop_map[name];
+			var model_prop = model.prop_map[name] || {meta: {}};
 			var node = $(doc.createElement(name));
 			node.attr('type', model_prop.meta.item_type || 'string');
 
