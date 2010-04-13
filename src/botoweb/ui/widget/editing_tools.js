@@ -116,7 +116,10 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 
 	if (self.block) {
 		function onsave () {
-			self.block.save();
+			botoweb.ui.overlay.show();
+			self.block.save(function () {
+				botoweb.ui.overlay.hide();
+			});
 		}
 
 		function oncancel () {
