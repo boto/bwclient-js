@@ -123,7 +123,13 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 		}
 
 		function oncancel () {
-			document.location.href = document.location.href.replace(/&action=[^&]*/, '');
+			// Editing an object?
+			if (botoweb.ui.page.location.data.id)
+				document.location.href = document.location.href.replace(/&action=[^&]*/, '');
+
+			// Or creating something new
+			else
+				history.back();
 		}
 
 		function cleanup () {
