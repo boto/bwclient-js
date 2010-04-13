@@ -82,7 +82,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	};
 
 	this.format_val = function (data) {
-		if ('val' in data && data.val !== null)
+		if ('val' in data && data.val !== null && data.val !== undefined)
 			return data.val.toString();
 	};
 
@@ -204,10 +204,17 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 					// onload contains callbacks which are waiting on this data
 					if (self.onload && self.onload.length) {
-						$.each(self.onload, function() { this(data, self); });
+						var fncs = self.onload;
 
-						// The onload functions are no longer needed
+						// The onload functions are no longer needed but must
+						// be cleared BEFORE beginning to iterate the existing
+						// fncs. Otherwise, some which load while these callbacks
+						// are executing will never run.
 						self.onload = [];
+
+						$.each(fncs, function() {
+							this(data, self);
+						});
 					}
 				}, null, opt);
 
