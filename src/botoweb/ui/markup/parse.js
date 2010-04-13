@@ -280,17 +280,6 @@
 						});
 					}
 
-					else if (block.obj && prop.is_type('dateTime')) {
-						var ts = block.obj.data[val].val();
-						var html = '';
-
-						if (ts && ts.length)
-							html += '<span class="hidden">' + ts[0].val + '</span>';
-
-						// Insert raw timestamp for sorting
-						this.html(html + block.obj.data[val].toString());
-					}
-
 					else if (block.obj && val in block.obj.data) {
 						this.html(block.obj.data[val].toString() || '');
 					}
