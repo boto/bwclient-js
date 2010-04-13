@@ -242,6 +242,8 @@
 							block.waiting++;
 							var async = false;
 
+							node.hide();
+
 							block.obj.data[val].val(function (data) {
 								if (data.length && (data.length > 1 || data[0].val)) {
 									if (node.is('li')) {
@@ -265,8 +267,6 @@
 								if (async && !block.waiting)
 									block.done();
 							}, block.opt);
-
-							node.hide();
 
 							async = true;
 						}
