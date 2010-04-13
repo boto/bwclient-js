@@ -97,7 +97,9 @@ botoweb.ui.page = new function() {
 	this.init = function () {
 		check();
 
-		setInterval(check, 250);
+		setInterval(function () {
+			check()
+		}, 250);
 		this.init = function() {};
 	};
 

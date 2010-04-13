@@ -190,6 +190,10 @@ $util.sort_props = function(a,b) {
 	return (a.name || a).toString().toLowerCase() > (b.name || b).toString().toLowerCase() ? 1 : -1;
 };
 
+$util.uuid = function () {
+	return Math.uuidFast().toLowerCase();
+};
+
 /**
  * Some RegExps which are used enough to warrant being cached.
  */

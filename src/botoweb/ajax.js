@@ -30,7 +30,6 @@ botoweb.ajax = {
 
 			var cfg = {
 				success: function(data, status, xhr){
-					var xhr = botoweb.ajax.manager.getXHR(ajaxID);
 					for(cbnum in cachedRequests[ajaxID]){
 						cachedRequests[ajaxID][cbnum](data, xhr);
 					}

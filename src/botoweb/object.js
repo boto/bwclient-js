@@ -19,6 +19,7 @@ botoweb.Object = function(id, model, data, opt) {
 	self.id = id;
 	self.model = model;
 	self.data = data || {};
+	self.cached = !opt.no_cache;
 
 	if (typeof self.model == 'string')
 		self.model = botoweb.env.models[self.model];
@@ -28,6 +29,7 @@ botoweb.Object = function(id, model, data, opt) {
 	// way, it will not be garbage collected. However, if an object is not
 	// cached in this way, it still may not be garbage collected.
 	if (!opt.no_cache) {
+		console.warn('Caching ' + this.model.name + ' ' + this.id);
 		self.model.objs[this.id] = this;
 	}
 
@@ -232,7 +234,7 @@ botoweb.Object = function(id, model, data, opt) {
 		});
 	};
 
-	this.val = function(prop, fnc) {
+	this.val = function(prop, fnc, opt) {
 		var prop = this.data[prop];
 
 		if (typeof prop == 'undefined')
@@ -241,7 +243,7 @@ botoweb.Object = function(id, model, data, opt) {
 		if (prop.data.length && prop.data[0].val === undefined)
 			return fnc([]);
 
-		prop.val(fnc);
+		prop.val(fnc, opt);
 	};
 
 	this.del = function(fnc) {
@@ -276,7 +278,7 @@ $.each(['follow', 'update', 'save', 'load', 'val', 'del'], function (i, fnc_name
 				obj[fnc_name].apply(obj, args);
 
 			obj = null;
-		});
+		}, { no_cache: !self.cached });
 	};
 });
 

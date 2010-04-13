@@ -124,7 +124,7 @@ botoweb.Model = function (name, href, methods, props) {
 	}
 
 	this.instance = function (data) {
-		botoweb.Object.call(this, Math.uuidFast().toLowerCase(), self, data);
+		botoweb.Object.call(this, botoweb.util.uuid(), self, data);
 		this.unsaved = true;
 	};
 
@@ -139,7 +139,7 @@ botoweb.Model = function (name, href, methods, props) {
 			return this.query_ldb({id: id}, fnc, opt);
 		}
 
-		botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, this.href), id, fnc, opt.alert);
+		botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, this.href), id, fnc, opt);
 	}
 
 	this.save = function(data, fnc){
