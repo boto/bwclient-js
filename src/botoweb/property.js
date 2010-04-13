@@ -108,7 +108,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		if (wantarray)
 			return values;
 
-		return values.join(', ');
+		return values.join(opt.separator || ', ');
 	};
 
 	switch (type) {
@@ -160,6 +160,11 @@ botoweb.Property = function(name, type, perm, model, opt) {
 						});
 				});
 			};
+
+			this.format_val = function (val, opt) {
+				opt.separator = '<br />';
+				return val.key + ' &rarr; ' + (val.val || 'none');
+			}
 			break;
 
 		case 'reference':

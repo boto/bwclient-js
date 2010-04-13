@@ -336,9 +336,6 @@ $forms.Field = function (prop, opt) {
 
 								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
 									setTimeout(update, 1000);
-
-								// drop the reference
-								obj = null;
 							});
 							return false;
 						}),
@@ -615,7 +612,7 @@ $forms.Dropdown = function () {
 			else if (!('default_choice' in self.opt))
 				field.append($('<option/>'));
 
-			$.each(self.prop.meta.choices, function () {
+			$.each((self.prop.meta.choices || self.opt.choices), function () {
 				if (this.name || this.value)
 					field.append($('<option/>').text(this.name || this.value).val(this.value));
 			});
@@ -738,18 +735,6 @@ $forms.File = function () {
 				}
 			});
 
-			/* Uploadify will not work until Flash supports Basic Auth
-			field.uploadify({
-				uploader: '/swf/uploadify.swf',
-				cancelImg: '/images/cancel.png',
-				buttonImg: '/images/add_file.png',
-				width: 75,
-				height: 18,
-				method: 'POST',
-				scriptData: { name: this.prop.meta.name }
-			});
-			*/
-
 			setTimeout(function () {
 				button.siblings('br.clear').remove();
 				selections.before($('<br class="clear"/>'));
@@ -774,9 +759,6 @@ $forms.File = function () {
 					.unbind();
 
 				upload.submit();
-
-				// Clear reference
-				obj = null;
 
 				return false;
 			});
@@ -811,11 +793,56 @@ $forms.File = function () {
 };
 
 $forms.Mapping = function () {
-	$forms.Field.apply(this, arguments);
+	$forms.Dropdown.apply(this, arguments);
 
-	//this.build_field = function () {
+	var self = this;
 
-	//};
+	if (this.opt.choices.length == 0) {
+		var choices = $.map(this.model.props, function (prop) {
+			return {
+				name: prop.meta.label,
+				value: prop.meta.name
+			};
+		});
+
+		choices.push({
+			name: 'ID',
+			value: 'id'
+		});
+
+		choices.sort(botoweb.util.sort_props);
+	}
+
+	this.add_choices(choices);
+
+	this.decorate_field = function (field) {
+		var index = field.attr('id').replace(/_.*/, '') * 1;
+
+		field.before(
+			$('<strong></strong>')
+				.text(this.prop.data[index].key)
+		).before($('<span> maps to</span>'));
+	};
+
+	/**
+	 * Returns the value represented by the field selections for the purpose of
+	 * saving that value to botoweb.
+	 *
+	 * @return A single value, an Array of values, or null.
+	 */
+	this.val = function () {
+		var val = [];
+
+		// Preserve field order according to the DOM
+		this.node.find('.edit_field').each(function () {
+			var sel = $(this).val();
+			var index = this.id.replace(/_.*/, '') * 1;
+
+			val.push({key: self.prop.data[index].key, val: sel, type: 'string'});
+		});
+
+		return val;
+	};
 };
 
 $forms.Picklist = function () {
@@ -1012,9 +1039,6 @@ $forms.Picklist = function () {
 			}
 
 			cancel_search(true);
-
-			// Clear reference
-			obj = null;
 		}
 
 		function do_search() {

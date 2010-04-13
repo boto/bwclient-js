@@ -199,7 +199,7 @@ botoweb.xml = {
 			if (model_prop)
 				type = model_prop.meta.type;
 
-			($xml.to_xml[type] || $xml.to_xml.def)(val, node, obj, model_prop);
+			($xml.to_xml[type] || $xml.to_xml.def)(val, node, obj, doc);
 		});
 
 		return doc;
@@ -214,12 +214,14 @@ botoweb.xml = {
 				node.clone().text($util.normalize_string(this.id || this.val || '')).appendTo(parent);
 			});
 		},
-		complexType: function (val, node, parent) {
+		complexType: function (val, node, parent, doc) {
+			node.attr('type', 'dict');
 			$.each(val, function () {
-				$('<mapping/>').attr({
+				$(doc.createElement('mapping')).attr({
 					name: $util.normalize_string(this.key),
 					type: 'string'
-				}).text($util.normalize_string(this.val)).appendTo(node);
+				})
+				.text($util.normalize_string(this.val)).appendTo(node);
 			});
 			node.appendTo(parent);
 		},

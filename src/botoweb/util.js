@@ -171,6 +171,8 @@ $util.html_format = function (str) {
  * @param {String} str The string to normalize.
  */
 $util.normalize_string = function (str) {
+	if (!str) return '';
+
 	$.each({
 		curly_quote: '"',
 		curly_apostrophe: "'",
