@@ -22,7 +22,8 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 		},
 		aaSorting: [],
 		sDom: '<"fg-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix"flT<"clear">p>t<"fg-toolbar ui-widget-header ui-corner-bl ui-corner-br ui-helper-clearfix"ip>',
-		sPaginationType: 'full_numbers'
+		sPaginationType: 'full_numbers',
+		"bAutoWidth": false
 	});
 
 	var self = this;
