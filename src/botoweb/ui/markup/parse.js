@@ -85,7 +85,8 @@
 				var b = new $markup.Block(this, {
 					obj: block.obj,
 					model: model,
-					editable: true
+					editable: true,
+					no_cache: block.no_cache
 				});
 
 				if (data) {
@@ -200,7 +201,12 @@
 
 						function descend (obj) {
 							if (obj && obj.id) {
-								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), { obj: obj, editable: ((editable) ? 'true' : 'false'), parent: block });
+								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), {
+									obj: obj,
+									editable: ((editable) ? 'true' : 'false'),
+									parent: block,
+									no_cache: block.no_cache
+								});
 								block.children.push(b);
 
 								node.append(b.node.contents());
@@ -222,7 +228,7 @@
 
 								if (async && !block.waiting)
 									block.done();
-							});
+							}, block.opt);
 
 							async = true;
 						}
@@ -258,7 +264,7 @@
 
 								if (async && !block.waiting)
 									block.done();
-							});
+							}, block.opt);
 
 							node.hide();
 
@@ -293,7 +299,8 @@
 						var opt = {
 							node: this,
 							block: block,
-							model: block.model
+							model: block.model,
+							editable: false
 						};
 
 						if (prop.is_type('reference','query') && contents.find($markup.sel.attribute + ',' + $markup.sel.attribute_list).length) {

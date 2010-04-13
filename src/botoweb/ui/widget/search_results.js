@@ -66,7 +66,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			c++;
 
 			if (self.data_table) {
-				block.node.find('td:first').append($('<!-- BWOBJ ' + block.model.name + '/' + block.obj.id + ' -->'));
+				block.node.find('td:first').append($('<!-- BWOBJ ' + block.model.name + '/' + block.obj_id + ' -->'));
 				self.data_table.append(block.node);
 
 				// Update the progress bar no more than 100 times
@@ -82,17 +82,15 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 				if (self.data_table)
 					self.data_table.stop();
 			}
-			else {
-				if (self.num_results == 50 && self.data_table)
-					self.data_table.data_table.fnDraw();
-
-				if (c >= results.length / 2 && !sent_next_query) {
-					self.want_page = page + 1;
-					sent_next_query = true;
-					if (next_page)
-						next_page();
-				}
+			else if (c >= results.length / 2 && !sent_next_query) {
+				self.want_page = page + 1;
+				sent_next_query = true;
+				if (next_page)
+					next_page();
 			}
+
+			if (self.num_results == 50 && self.data_table)
+				self.data_table.data_table.fnDraw();
 		}
 
 		$.each(results, function () {
@@ -100,14 +98,16 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 				self.guide_block = new botoweb.ui.markup.Block(self.template.clone(), {
 					obj: this,
 					onready: add_row,
-					editable: false
+					editable: false,
+					no_cache: true
 				});
 			}
 			else {
 				self.guide_block.clone(self.template.clone(), {
 					obj: this,
 					onready: add_row,
-					editable: false
+					editable: false,
+					no_cache: true
 				});
 			}
 		});
