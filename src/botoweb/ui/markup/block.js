@@ -149,6 +149,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 		this.onready = [];
 		this.saved = false;
 
+		this.node.removeClass(this.state);
+
 		if (this.opt.action == 'edit' && this.state != 'edit') {
 			this.state = 'edit';
 			$(this).triggerHandler('edit');
@@ -163,6 +165,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 			$(this).triggerHandler('cancel_' + this.state);
 			this.state = 'view';
 		}
+
+		this.node.addClass(this.state);
 	}
 
 	this.init = function () {
