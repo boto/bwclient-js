@@ -1172,8 +1172,10 @@ $forms.Picklist = function () {
 
 		this.prop.val(function (objs) {
 			$.each(objs, function () {
-				vals++;
-				add_selection(this.val);
+				if (this.val) {
+					vals++;
+					add_selection(this.val);
+				}
 			});
 		});
 
