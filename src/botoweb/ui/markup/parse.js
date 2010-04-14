@@ -293,6 +293,9 @@
 						};
 
 						if (prop.is_type('reference','query') && contents.find($markup.sel.attribute + ',' + $markup.sel.attribute_list).length) {
+							// Ensure the template is nested in a single parent
+							contents = $('<div/>').append(contents);
+
 							opt.template = contents;
 						}
 
