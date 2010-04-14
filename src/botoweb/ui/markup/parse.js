@@ -384,17 +384,38 @@
 				if (block.obj)
 					view_href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?id=' + escape(block.obj.id);
 
-				var d = '';
-
-				if (data) {
-					data = $util.interpolate(unescape(data), (block.obj || block.model))
-					d = '&data=' + escape(data);
-				}
+				if (data)
+					data = $util.interpolate(data, (block.obj || block.model))
 
 				switch (val) {
 					case 'update':
 					case 'edit':
-						set_href(view_href + '&action=edit' + d);
+						// edit with data immediately updates the object with
+						// the given data
+						if (data) {
+							node.click(function (e) {
+								try {
+									eval('data = ' + data);
+
+									for (var key in data) {
+										data[key] = [{ val: data[key] }];
+									}
+
+									botoweb.ui.overlay.show();
+
+									botoweb.Object.update(block.model, block.obj_id, data, function () {
+										botoweb.ui.overlay.hide();
+										botoweb.ui.page.refresh()
+									});
+								} catch (e) {alert(e.message)}
+
+								e.preventDefault();
+								return false;
+							});
+							return;
+						}
+
+						set_href(view_href + '&action=edit');
 						break;
 
 					case 'clone':
@@ -409,6 +430,14 @@
 
 						if (!model)
 							model = block.model;
+
+						var d = '';
+
+						// create with data sets the data as defaults in the
+						// editor
+						if (data) {
+							d = '&data=' + escape(data);
+						}
 
 						if (model.name in botoweb.env.cfg.templates.editor)
 							set_href('#' + botoweb.env.cfg.templates.editor[model.name] + '?action=edit' + d);
