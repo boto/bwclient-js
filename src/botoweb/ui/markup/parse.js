@@ -83,7 +83,6 @@
 				this.removeAttr(prop);
 
 				var b = new $markup.Block(this, {
-					obj: block.obj,
 					model: model,
 					editable: true,
 					no_cache: block.no_cache
@@ -348,8 +347,69 @@
 
 				// It is safest not to make a history entry for deletes, just
 				// attach a click event.
-				if (val == 'delete')
+				if (val == 'delete') {
+					this.click(function () {
+						block.model.get(block.obj_id, function (obj) {
+							var dialog = $('<div/>')
+								.html(
+									'Are you sure you want to delete the following ' + block.model.name + '?'
+									+ '<h3>' + obj.toString() + '</h3>'
+								)
+								.dialog({
+									resizable: true,
+									modal: true,
+									title: 'Please confirm',
+									buttons: {
+										'Delete item': function() {
+											var dialog = $(this);
+											botoweb.ui.overlay.show();
+
+											obj.del(function () {
+												delete block.model.objs[block.obj_id];
+
+												function updated () {
+													$(botoweb.ldb.sync).unbind('end', updated);
+
+													var recent_page = '';
+													$.each(botoweb.ui.page.history, function () {
+														if (this.data.id != block.obj_id) {
+															recent_page = this;
+															return false;
+														}
+													});
+
+													botoweb.ui.overlay.hide();
+
+													dialog.dialog('close')
+
+													if (recent_page.full)
+														document.location.href = recent_page.full;
+													else
+														history.back();
+												}
+
+												function update() {
+													$(botoweb.ldb.sync).bind('end', updated);
+
+													botoweb.ldb.sync.update();
+												}
+
+												setTimeout(update, 1000);
+											});
+											return false;
+										},
+										'Cancel': function() {
+											$(this).dialog('close');
+										}
+									}
+								});
+
+							dialog.parent('.ui-dialog').find('button:last').addClass('ui-priority-secondary');
+						});
+					});
+
 					return;
+				}
 
 				// Without an object, the only supported link type is create
 				if (val != 'create' && !block.obj)
