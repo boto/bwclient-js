@@ -192,7 +192,7 @@
 								.attr(prop, follow_props));
 						}
 
-						if (this.find($markup.sel.attribute).length == 0) {
+						if (this.find($markup.sel.attribute + ', ' + $markup.sel.attribute_list).length == 0) {
 							this.append('<a bwAttribute="name" bwLink="view"/>');
 						}
 
