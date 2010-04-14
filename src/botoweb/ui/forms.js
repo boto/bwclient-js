@@ -1168,9 +1168,23 @@ $forms.Picklist = function () {
 			})
 		}*/
 
+		var vals = 0;
+
 		this.prop.val(function (objs) {
-			$.each(objs, function () { add_selection(this.val); });
+			$.each(objs, function () {
+				vals++;
+				add_selection(this.val);
+			});
 		});
+
+		/**
+		// Add a blank editing template if there are no existing selections.
+		if (!vals && self.fields.length == 0 && self.opt.template) {
+			setTimeout(function () {
+				self.add_field(null, { use_template: true });
+			}, 50);
+		}
+		*/
 
 		field.data('get_val', function () {
 			var val = [];
