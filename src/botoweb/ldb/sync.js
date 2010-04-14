@@ -393,7 +393,11 @@ botoweb.ldb.sync = {
 					}
 				});
 
-				self.task_processed += results.length;
+				// This method may be called without task data to update
+				// specific records. If so, we don't want to change any counts
+				// for the current sync.
+				if (total_count)
+					self.task_processed += results.length;
 
 				// The following lines use setTimeout to call the function. This
 				// allows the call stack to be cleared to prevent a rather bad

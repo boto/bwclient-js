@@ -105,8 +105,6 @@ botoweb.Object = function(id, model, data, opt) {
 				filters, prop.meta.name + ' > *[id]', fnc, opt
 			);
 		}
-
-		values = null;
 	}
 
 	this.update = function (data, fnc) {
@@ -276,8 +274,6 @@ $.each(['follow', 'update', 'save', 'load', 'val', 'del'], function (i, fnc_name
 		model.get(id, function (obj) {
 			if (obj)
 				obj[fnc_name].apply(obj, args);
-
-			obj = null;
 		}, { no_cache: !self.cached });
 	};
 });
