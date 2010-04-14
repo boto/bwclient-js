@@ -173,12 +173,10 @@
 						return;
 					}
 
-					var editable;
+					var editable = this.parents($markup.sel.editable + ':first').attr($markup.prop.editable);
 
-					if (block.opt.editable !== undefined)
-						editable = block.opt.editable
-					else
-						editable = this.parents($markup.sel.editable + ':first').attr($markup.prop.editable);
+					if (editable === undefined)
+						editable = block.opt.editable;
 
 					editable = (editable == 'false' || editable === false) ? false : true;
 
@@ -203,7 +201,7 @@
 							if (obj && obj.id) {
 								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), {
 									obj: obj,
-									editable: ((editable) ? 'true' : 'false'),
+									editable: editable,
 									parent: block,
 									no_cache: block.no_cache
 								});
@@ -292,7 +290,13 @@
 							editable: false
 						};
 
-						if (prop.is_type('reference','query') && contents.find($markup.sel.attribute + ',' + $markup.sel.attribute_list).length) {
+						// In order to have a template, a propert must be either
+						// a reference or query, and it must have at least one
+						// editable attribute or attrbuteList.
+						if (prop.is_type('reference','query') &&
+							contents.find($markup.sel.attribute + ',' + $markup.sel.attribute_list)
+							.not('*[' + $markup.prop.editable + '=false]').length
+						) {
 							// Ensure the template is nested in a single parent
 							contents = $('<div/>').append(contents);
 
