@@ -82,7 +82,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 				if (self.data_table)
 					self.data_table.stop();
 			}
-			else if (c >= results.length / 2 && !sent_next_query) {
+			else if (c >= results.length * 9 / 10 && !sent_next_query) {
 				self.want_page = page + 1;
 				sent_next_query = true;
 				if (next_page)
