@@ -887,7 +887,7 @@ $forms.Picklist = function () {
 						// that nested objects which must reference the parent
 						// can do so even if the parent has not yet been created
 						if (!self.opt.block.obj_id) {
-							self.opt.block.obj_id = botoweb.Object.uuid();
+							self.opt.block.obj_id = botoweb.util.uuid();
 						}
 
 						return [{val: self.opt.block.obj_id, id: self.opt.block.obj_id, type: self.opt.block.model.name}];
