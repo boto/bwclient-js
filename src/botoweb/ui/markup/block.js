@@ -90,20 +90,18 @@ botoweb.ui.markup.Block = function (node, opt) {
 		if (this.obj_id && this.state != 'clone') {
 			var onsave;
 
-			if (this.opt.root) {
-				onsave = function () {
-					$ui.page.refresh();
-					if (fnc)
-						fnc();
-				};
-			}
-			else {
-				onsave = function (obj) {
-					self.saved = true;
-					if (fnc)
-						fnc();
-				};
-			}
+			function onsave (obj) {
+				self.saved = true;
+				if (fnc)
+					fnc();
+
+				if (self.opt.root) {
+					if (self.no_obj)
+						document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
+					else
+						$ui.page.refresh();
+				}
+			};
 
 			if (this.no_obj) {
 				var obj = new this.model.instance(undefined, this.obj_id);
