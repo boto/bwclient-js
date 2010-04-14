@@ -123,9 +123,23 @@ $util.interpolate = function (str, data) {
 	if (!str) return str;
 	if (!data) data = {};
 
-	return str.replace(/\{\{\s*(\w+)\s*\}\}/g, function (m, key) {
-		return data[key] || '';
-	});
+	var replacement;
+
+	if (data instanceof botoweb.Object) {
+		replacement = function (m, key) {
+			if (key in data.data)
+				return data.data[key].toString() || '';
+
+			return data[key] || '';
+		};
+	}
+	else {
+		replacement = function (m, key) {
+			return data[key] || '';
+		};
+	}
+
+	return str.replace(/\{\{\s*(\w+)\s*\}\}/g, replacement);
 };
 
 /**
