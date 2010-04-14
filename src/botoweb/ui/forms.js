@@ -319,11 +319,6 @@ $forms.Field = function (prop, opt) {
 								function updated () {
 									$($ldb.sync).unbind('end', updated);
 									self.cancel();
-
-									if (!self.opt.block.opt.no_refresh)
-										$ui.page.refresh();
-
-									$ui.overlay.hide();
 								}
 
 								function update() {
@@ -336,6 +331,11 @@ $forms.Field = function (prop, opt) {
 
 								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
 									setTimeout(update, 1000);
+
+								$ui.overlay.hide();
+
+								if (!self.opt.block.opt.no_refresh)
+									$ui.page.refresh();
 							});
 							return false;
 						}),
