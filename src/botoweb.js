@@ -196,7 +196,7 @@ var botoweb = {
 			url: url,
 			processData: false,
 			data: doc
-		}
+		};
 
 		if(method){
 			opts.type = method;
@@ -209,6 +209,7 @@ var botoweb = {
 				if (!data)
 					return fnc();
 
+				// Parse new XML, ensure that it isn't loaded from cache
 				var obj = botoweb.xml.to_obj($(data).children().first(), { no_cache: true });
 
 				// Update cache regardless of whether the object was cached before
@@ -217,7 +218,18 @@ var botoweb = {
 				// any subsequent attempt to use the new object.
 				obj.model.objs[obj.id] = obj;
 
-				fnc(obj);
+				// Update database immediately. Usually a sync following the
+				// update is good enough, but if another sync is already running
+				// the update may spend some time in the update queue. This
+				// ensures that the update is applied and allows pages to
+				// refresh immediately.
+				if (obj.model.local) {
+					botoweb.ldb.sync.process([obj], null, null, function () {
+						fnc(obj);
+					});
+				}
+				else
+					fnc(obj);
 			};
 			opts.error = function (data) {
 				var info = $(data.responseText);
