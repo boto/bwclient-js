@@ -290,16 +290,17 @@
 							editable: false
 						};
 
+
+						// Ensure the template is nested in a single parent
+						contents = $('<div/>').append(contents);
+
 						// In order to have a template, a propert must be either
 						// a reference or query, and it must have at least one
 						// editable attribute or attrbuteList.
 						if (prop.is_type('reference','query') &&
-							contents.find($markup.sel.attribute + ',' + $markup.sel.attribute_list)
-							.not('*[' + $markup.prop.editable + '=false]').length
+							(contents.find($markup.sel.attribute_list).length ||
+							contents.find($markup.sel.attribute).length > 1)
 						) {
-							// Ensure the template is nested in a single parent
-							contents = $('<div/>').append(contents);
-
 							opt.template = contents;
 						}
 
