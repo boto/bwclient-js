@@ -21,6 +21,7 @@ botoweb.ui.markup = new function () {
 		'input_type':     'bwInputType',
 		'link':           'bwLink',
 		'model':          'bwModel',
+		'searchable':     'bwSearchable',
 		'template':       'bwTemplate',
 		'trigger':        'bwTrigger',
 		'widget':         'bwWidget'
@@ -46,6 +47,7 @@ botoweb.ui.markup = new function () {
 		'model':          '*[bwModel]',
 		'object':         'article, .bwObject',
 		'relation':       '*[bwWidget=relations]',
+		'searchable':     '*[bwSearchable]',
 		'search':         '*[bwWidget=search]',
 		'search_results': '*[bwWidget=searchResults]',
 		'section':        'section',

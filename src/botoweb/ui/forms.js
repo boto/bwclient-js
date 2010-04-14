@@ -932,6 +932,15 @@ $forms.Picklist = function () {
 			new_field = true;
 		}
 
+		// Picklists may be marked as not searchable which means that the user
+		// cannot search for new items to add to the list.
+		if (this.opt.node) {
+			var searchable = this.opt.node.attr($ui.markup.prop.searchable);
+
+			if (searchable == 'false')
+				field.find('.search, .selections').hide();
+		}
+
 		var selections = field.find('.selections:first');
 		var search = field.find('.search:first');
 		var search_results = $ui.nodes.search_results;
