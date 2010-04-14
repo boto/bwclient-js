@@ -97,10 +97,15 @@ botoweb.ui.markup.Block = function (node, opt) {
 					fnc();
 
 				if (self.opt.root) {
-					if (self.no_obj)
-						document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
-					else
-						$ui.page.refresh();
+					function update () {
+						if (self.no_obj)
+							document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
+						else
+							$ui.page.refresh();
+					};
+
+					if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
+						update();
 				}
 			};
 

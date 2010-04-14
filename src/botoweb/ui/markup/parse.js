@@ -110,8 +110,16 @@
 					.click(function (e) {
 						e.preventDefault();
 
-						b.save(block.opt.onsave || function () {
-							botoweb.ui.page.refresh();
+						b.save(function (obj) {
+							function update () {
+								if (block.opt.onsave)
+									block.opt.onsave();
+								else
+									botoweb.ui.page.refresh();
+							}
+
+							if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
+								update();
 						});
 
 						return false;
