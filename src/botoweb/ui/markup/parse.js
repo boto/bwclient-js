@@ -287,7 +287,8 @@
 							node: this,
 							block: block,
 							model: block.model,
-							editable: false
+							editable: false,
+							def: block.def[prop.meta.name]
 						};
 
 
@@ -383,18 +384,17 @@
 				if (block.obj)
 					view_href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?id=' + escape(block.obj.id);
 
+				var d = '';
+
+				if (data) {
+					data = $util.interpolate(unescape(data), (block.obj || block.model))
+					d = '&data=' + escape(data);
+				}
+
 				switch (val) {
 					case 'update':
 					case 'edit':
-						if (data) {
-							this.bind('click', function () {
-								// TODO save editing info
-
-								return false;
-							});
-						}
-						else
-							set_href(view_href + '&action=edit');
+						set_href(view_href + '&action=edit' + d);
 						break;
 
 					case 'clone':
@@ -402,10 +402,18 @@
 						break;
 
 					case 'create':
-						if (block.model.name in botoweb.env.cfg.templates.editor)
-							set_href('#' + botoweb.env.cfg.templates.editor[block.model.name] + '?action=edit');
+						var model = node.attr($markup.prop.model);
+
+						if (model)
+							model = botoweb.env.models[model];
+
+						if (!model)
+							model = block.model;
+
+						if (model.name in botoweb.env.cfg.templates.editor)
+							set_href('#' + botoweb.env.cfg.templates.editor[model.name] + '?action=edit' + d);
 						else
-							set_href('#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?action=edit');
+							set_href('#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, model) + '?action=edit' + d);
 						break;
 
 					case 'attr':

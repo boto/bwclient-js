@@ -23,6 +23,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.waiting = 0;
 	this.no_obj = true;
 	this.opt = opt;
+	this.def = {};
 	this.state = opt.state || 'view';
 	this.saved = false;
 
@@ -197,6 +198,12 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 		if (this.obj)
 			this.no_obj = false;
+
+		if (this.opt.data) {
+			try {
+				eval('this.def = ' + unescape(this.opt.data));
+			} catch (e) {}
+		}
 
 		// Do not allow nested blocks to interfere
 		parse('nested', $markup.remove_nested);

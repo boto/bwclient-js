@@ -26,9 +26,14 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 	actions = actions.split(/[, ]+/);
 
 	for (i in actions.reverse()) {
+		if (!actions[i])
+			continue;
+
 		var button;
 
-		switch (actions[i]) {
+		var action = actions[i].replace(/\(.*/, '');
+
+		switch (action) {
 			case 'create':
 				if ('post' in this.model.methods)
 					button = botoweb.ui.button('Create ' + this.model.name, { icon: 'ui-icon-plus' });
