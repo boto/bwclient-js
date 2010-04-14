@@ -1177,6 +1177,15 @@ $forms.Picklist = function () {
 			});
 		});
 
+		if (!vals && self.opt.def) {
+			vals++;
+			add_selection(self.opt.def);
+		}
+
+		if (!vals && self.prop.meta.def) {
+			add_selection(self.prop.meta.def);
+		}
+
 		/**
 		// Add a blank editing template if there are no existing selections.
 		if (!vals && self.fields.length == 0 && self.opt.template) {
