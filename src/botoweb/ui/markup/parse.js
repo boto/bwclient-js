@@ -594,7 +594,7 @@
 
 				this.removeAttr(prop);
 
-				val = this.attr($markup.prop.attributes);
+				val = this.attr($markup.prop.attribute);
 
 				var results = new botoweb.ui.widget.SearchResults(this, block.model);
 
