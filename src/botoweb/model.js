@@ -166,8 +166,14 @@ botoweb.Model = function (name, href, methods, props) {
 						fnc(x);
 				}, { trash: true });
 			}
-			else if (fnc)
-				fnc(x);
+			// Non-local data will not update immediately. 1 second is an
+			// arbitrary wait time but seems to be long enough that the
+			// backreference in SDB will have updated by the time we run the fnc
+			else if (fnc) {
+				setTimeout(function () {
+					fnc(x);
+				}, 1000);
+			}
 
 		});
 	}

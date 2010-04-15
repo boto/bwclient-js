@@ -146,7 +146,7 @@ var botoweb = {
 				fnc(botoweb.xml.to_obj($(data).children().first(), opt));
 			else
 				fnc();
-		}, fnc);
+		}, (opt.error || fnc));
 	},
 
 	count: function(url, query, fnc){
@@ -228,6 +228,9 @@ var botoweb = {
 						fnc(obj);
 					});
 				}
+				// Non-local data will not update immediately. If the callback
+				// needs to refresh the page to see updated data it should wait
+				// about 1s before doing so.
 				else
 					fnc(obj);
 			};

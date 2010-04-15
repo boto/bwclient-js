@@ -98,10 +98,13 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 				if (self.opt.root) {
 					function update () {
-						if (self.no_obj)
-							document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
-						else
-							$ui.page.refresh();
+						// Data may not be updated immediately
+						setTimeout(function () {
+							if (self.no_obj)
+								document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
+							else
+								$ui.page.refresh();
+						}, 1000);
 					};
 
 					if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
@@ -244,6 +247,12 @@ botoweb.ui.markup.Block = function (node, opt) {
 			if (obj) {
 				self.obj_id = obj.id;
 				self.obj = obj;
+			}
+			else if (this.opt.root) {
+				botoweb.ui.alert('The ' + self.model.name + ' that you attempted to access cannot be found. Click OK to return to the page you were last visiting.', 'No record of this item', function () {
+					history.back();
+				});
+				return;
 			}
 
 			self.init();

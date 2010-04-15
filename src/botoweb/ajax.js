@@ -28,6 +28,8 @@ botoweb.ajax = {
 		} else {
 			cachedRequests[ajaxID] = [callback];
 
+			var count_404 = 0;
+
 			var cfg = {
 				success: function(data, status, xhr){
 					for(cbnum in cachedRequests[ajaxID]){
@@ -36,15 +38,32 @@ botoweb.ajax = {
 					delete cachedRequests[ajaxID];
 				},
 				error: function(data) {
+					console.error('HTTP ERROR: ' + data.status + ' ' + data.statusText + '\n' + url + '\n', data);
 					if (data.status == 408) {
 						setTimeout(function() {
-							// TODO investigate whether this results in a memory leak
 							botoweb.ajax.manager.add(cfg);
 						}, 250);
 					}
+					else if (data.status == 404) {
+						if (count_404 >= 3) {
+							// Send error as 2nd argument to avoid confusing it
+							// with the obj XML
+							if (error)
+								error(null, data);
+							return;
+						}
+
+						setTimeout(function() {
+							botoweb.ajax.manager.add(cfg);
+						}, 1000 + count_404 * 1000);
+
+						count_404++;
+					}
 					else if (error) {
 						delete cachedRequests[ajaxID];
-						error();
+						// Send error as 2nd argument to avoid confusing it
+						// with the obj XML
+						error(null, data);
 					}
 				},
 				url: url
