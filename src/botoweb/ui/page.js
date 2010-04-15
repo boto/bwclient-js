@@ -7,7 +7,11 @@
 
 botoweb.ui.page = new function() {
 	this.history = [];
+	this.cache = {};
+	this.handler_cache = {};
 	this.preserve_cache = false;
+
+	var self = this;
 
 	/**
 	 * Fetches the page from the cache if it is available, otherwise fetches
@@ -26,6 +30,27 @@ botoweb.ui.page = new function() {
 	 */
 	this.load = function (loc, fnc) {
 		var html;
+
+		// Load the page from cache, unless it is a refresh
+		if (loc.full in this.cache) {
+			detach_events();
+			destroy();
+
+			$('#botoweb.page').append(this.cache[loc.full]);
+
+			if (loc.full in this.handler_cache) {
+				$.each(this.handler_cache[loc.full], function () {
+					$(self).bind(this.type, this.handler);
+				});
+			}
+
+			$('#botoweb.page').children().first().triggerHandler('reload')
+
+			$(self).triggerHandler('load');
+
+			return;
+		}
+
 
 		if (typeof loc == 'string') {
 			html = retrieve(loc);
@@ -122,7 +147,9 @@ botoweb.ui.page = new function() {
 	 * @private
 	 */
 	function destroy () {
-		$('#botoweb.page').empty();
+		if (self.history.length > 1) {
+			self.cache[self.history[1].full] = $('#botoweb.page').children().detach();
+		}
 	};
 
 	/**
@@ -136,7 +163,22 @@ botoweb.ui.page = new function() {
 		var self = botoweb.ui.page;
 
 		console.log('PAGE: unload');
-		$(self).triggerHandler('unload');
+		$(self).triggerHandler('destroy');
+
+		// Cache handlers before unbinding them all
+		if (self.history.length > 1 && !(self.history[1].full in self.handler_cache)) {
+			var handler_list = [];
+
+			$.each($(self).data('events'), function (i, handlers) {
+				$.each(handlers, function () {
+					if (!this.namespace) {
+						handler_list.push({ type: this.type, handler: this.handler });
+					}
+				});
+			});
+
+			self.handler_cache[self.history[1].full] = handler_list;
+		}
 
 		// Unbind anything not in a namespace
 		$(self).unbind('.');
@@ -253,8 +295,20 @@ botoweb.ui.page = new function() {
 
 			self.history.unshift(loc);
 
-			if (self.history.length > 10)
-				self.history.pop();
+			if (self.history.length > 20) {
+				var old_loc = self.history.pop();
+
+				// Are there any other pages in the history with the same URL?
+				var dupes = $.grep(self.history, function (l) {
+					return l.full == old_loc.full;
+				}).length;
+
+				// If not, delete this page's cache.
+				if (dupes == 0) {
+					delete self.cache[old_loc.full];
+					delete self.handler_cache[old_loc.full];
+				}
+			}
 
 			if (new_page)
 				self.load(loc);

@@ -25,7 +25,11 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 	self.stopped = false;
 	self.guide_block = null;
 
+	self.next_page;
+
 	self.update = function(results, page, count, next_page, search_id) {
+		self.next_page = next_page;
+
 		if (!results || results.length == 0)
 			return;
 		if(!self.model)
@@ -81,12 +85,15 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			if (self.num_results >= count || done) {
 				if (self.data_table)
 					self.data_table.stop();
+
+				self.next_page = null;
 			}
-			else if (c >= results.length * 9 / 10 && !sent_next_query) {
+			else if (c >= results.length && !sent_next_query) {
 				self.want_page = page + 1;
 				sent_next_query = true;
-				if (next_page)
+				if (next_page) {
 					next_page();
+				}
 			}
 
 			if (self.num_results == 50 && self.data_table)
@@ -115,6 +122,16 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 
 	self.stop = function() {
 		self.stopped = true;
+	}
+
+	self.resume = function() {
+		self.stopped = false;
+
+		if (self.data_table)
+			self.data_table.stopped = false;
+
+		if (self.next_page)
+			self.next_page();
 	}
 
 	self.reset = function() {
@@ -159,5 +176,15 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 		}, 10);
 	}
 
-	$(botoweb.ui.page).bind('unload', function () { self.stop() });
+	function init () {
+		$(botoweb.ui.page)
+			.unbind('load', init)
+			.bind('destroy', function () {
+				self.stop()
+			})
+
+		$('#botoweb.page').children().first().bind('reload', function () { self.resume() });
+	}
+
+	$(botoweb.ui.page).bind('load', init);
 };
