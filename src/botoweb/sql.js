@@ -202,13 +202,13 @@ botoweb.sql = {
 		 * @param {Function} fnc Called when the results are retrieved, gets
 		 * (transaction, results) as arguments.
 		 */
-		this.page = function (txn, fnc, page) {
+		this.page = function (txn, fnc, page, opt) {
 			if (!page)
 				page = 0;
 
 			this.limit(100, 100 * page);
 
-			txn.executeSql(this, this.bind_params, this.simplify_results(fnc, page), function (txn, e) {
+			txn.executeSql(this, this.bind_params, this.simplify_results(fnc, page, opt), function (txn, e) {
 				console.error(e);
 			});
 		};
@@ -243,7 +243,7 @@ botoweb.sql = {
 		 * array representing the results as the first argument. Actual
 		 * SQLResultSet object is passed as second param in case it is needed.
 		 */
-		this.simplify_results = function (fnc, page) {
+		this.simplify_results = function (fnc, page, opt) {
 			var tbl = this.columns[0];
 			var query = this;
 
@@ -293,7 +293,8 @@ botoweb.sql = {
 							row[0] = new botoweb.Object(
 								row.id,
 								tbl.model.name,
-								data
+								data,
+								opt
 							);
 						}
 					}

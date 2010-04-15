@@ -61,7 +61,7 @@ botoweb.Model = function (name, href, methods, props) {
 						}
 
 						return fnc(data, page, total_results, next_page);
-					}, page++);
+					}, page++, opt);
 				}
 
 				if (txn)
@@ -159,8 +159,16 @@ botoweb.Model = function (name, href, methods, props) {
 	this.del = function(id, fnc){
 		return botoweb.del(botoweb.util.url_join(botoweb.env.base_url, this.href, id), function(x) {
 			delete self.objs[id];
-			if (fnc)
+
+			if (self.local) {
+				botoweb.ldb.sync.process([new this.instance(null, id)], null, null, function () {
+					if (fnc)
+						fnc(x);
+				}, { trash: true });
+			}
+			else if (fnc)
 				fnc(x);
+
 		});
 	}
 
