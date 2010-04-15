@@ -373,36 +373,28 @@
 											botoweb.ui.overlay.show();
 
 											obj.del(function () {
-												delete block.model.objs[block.obj_id];
+												var recent_page = '';
+												var steps = 0;
+												$.each(botoweb.ui.page.history, function () {
+													if (this.data.id != block.obj_id) {
+														recent_page = this;
+														return false;
+													}
+													steps++;
+												});
 
-												function updated () {
-													$(botoweb.ldb.sync).unbind('end', updated);
+												botoweb.ui.overlay.hide();
 
-													var recent_page = '';
-													$.each(botoweb.ui.page.history, function () {
-														if (this.data.id != block.obj_id) {
-															recent_page = this;
-															return false;
-														}
-													});
+												dialog.dialog('close')
 
-													botoweb.ui.overlay.hide();
+												if (steps == 0)
+													botoweb.ui.page.refresh(true);
+												else if (recent_page.full)
+													document.location.href = recent_page.full;
+												else
+													history.back();
 
-													dialog.dialog('close')
-
-													if (recent_page.full)
-														document.location.href = recent_page.full;
-													else
-														history.back();
-												}
-
-												function update() {
-													$(botoweb.ldb.sync).bind('end', updated);
-
-													botoweb.ldb.sync.update();
-												}
-
-												setTimeout(update, 1000);
+												setTimeout(botoweb.ldb.sync.update, 1000);
 											});
 											return false;
 										},
