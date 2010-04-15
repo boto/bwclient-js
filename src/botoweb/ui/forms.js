@@ -741,7 +741,7 @@ $forms.File = function () {
 			}, 10);
 
 			$($forms).bind('save_complete.' + this.id, function (e, obj, fnc) {
-				upload._settings.action = $util.url_join($ui.page.location.base_href, botoweb.env.base_url, self.model.href, self.obj_id, self.prop.meta.name);
+				upload._settings.action = $util.url_join($ui.page.location.base_href, botoweb.env.base_url, self.model.href, obj.id, self.prop.meta.name);
 				upload._settings.onComplete = function () {
 					selections.find('.ui-icon')
 						.removeClass('ui-icon-clock')
