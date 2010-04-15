@@ -231,11 +231,7 @@ var botoweb = {
 				else
 					fnc(obj);
 			};
-			opts.error = function (data) {
-				var info = $(data.responseText);
-
-				botoweb.ui.alert('The following error occurred while saving changes:<p><strong>' + info.find('description').html() + '</strong><br />' + info.find('message').html() + '</p>', 'Please check form values', fnc);
-			}
+			opts.error = botoweb.handle_error;
 		}
 		$.ajax(opts);
 	},
@@ -244,8 +240,15 @@ var botoweb = {
 		$.ajax({
 			type: "DELETE",
 			url: url,
-			complete: fnc
+			success: fnc,
+			error: botoweb.handle_error
 		});
+	},
+
+	handle_error: function (data) {
+		var info = $(data.responseText);
+
+		botoweb.ui.alert('The following error occurred while saving changes:<p><strong>' + info.find('description').html() + '</strong><br />' + info.find('message').html() + '</p>', 'Please check form values', fnc);
 	},
 
 	/**
