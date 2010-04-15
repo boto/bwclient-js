@@ -28,7 +28,7 @@ botoweb.Object = function(id, model, data, opt) {
 	// XML or requesting it by ID from botoweb. If an object is cached in this
 	// way, it will not be garbage collected. However, if an object is not
 	// cached in this way, it still may not be garbage collected.
-	if (!opt.no_cache) {
+	if (!opt.no_cache && !botoweb.env.cfg.disable_cache) {
 		console.warn('Caching ' + this.model.name + ' ' + this.id);
 		self.model.objs[this.id] = this;
 	}
