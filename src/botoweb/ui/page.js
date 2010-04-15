@@ -28,11 +28,12 @@ botoweb.ui.page = new function() {
 	 * botoweb.ui.page.location.
 	 * @param {Function} fnc A callback function to run when the page is loaded.
 	 */
-	this.load = function (loc, fnc) {
+	this.load = function (loc, fnc, opt) {
+		opt = opt || {};
 		var html;
 
 		// Load the page from cache, unless it is a refresh
-		if (loc.full in this.cache) {
+		if (!opt.refresh && loc.full in this.cache) {
 			detach_events();
 			destroy();
 
@@ -150,6 +151,8 @@ botoweb.ui.page = new function() {
 		if (self.history.length > 1) {
 			self.cache[self.history[1].full] = $('#botoweb.page').children().detach();
 		}
+		else
+			$('#botoweb.page').empty();
 	};
 
 	/**
@@ -327,9 +330,9 @@ botoweb.ui.page = new function() {
 	 * Does a soft refresh by reloading the current URL without refreshing the
 	 * browser.
 	 */
-	this.refresh = function () {
-		self.preserve_cache = true;
-		this.load(this.location, show_page);
+	this.refresh = function (no_cache) {
+		self.preserve_cache = !no_cache;
+		this.load(this.location, show_page, { refresh: 1 });
 	}
 
 	this.location = this.get_location();

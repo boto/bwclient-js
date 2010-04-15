@@ -330,7 +330,7 @@ $forms.Field = function (prop, opt) {
 								$(self.opt.block).triggerHandler('save_complete', [obj, update]);
 
 								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
-									setTimeout(update, 1000);
+									update();
 
 								$ui.overlay.hide();
 
