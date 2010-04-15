@@ -113,15 +113,9 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 			self.model_names.push(m.name);
 		});
 
-		// TODO Set our user object
-		/*
-		$(xml).find("User").each(function(){
-			var obj = botoweb.parseObject(this);
-			if(obj.length > 0){
-				self.user = obj;
-			}
-		});
-		*/
+		// Do not allow the user object to be cached - it is a minimal form of
+		// the actual User object so we need to be able
+		self.user = botoweb.xml.to_obj(xml.find('Index > User:first'), { no_cache: true });
 
 		// Find the time offset between the server and client computer
 		var server_date = Date.parse(xhr.getResponseHeader('Date'));
