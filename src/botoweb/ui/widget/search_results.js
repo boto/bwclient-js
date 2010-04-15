@@ -60,9 +60,6 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			done = true;
 
 		function add_row(block) {
-			if (self.stopped)
-				return;
-
 			if (search_id != self.search_id)
 				return;
 
@@ -82,13 +79,13 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 				self.node.append(block.node);
 			}
 
-			if (self.num_results >= count || done) {
+			if (self.num_results >= count || done && c >= results.length) {
 				if (self.data_table)
 					self.data_table.stop();
 
 				self.next_page = null;
 			}
-			else if (c >= results.length && !sent_next_query) {
+			else if (c >= results.length && !sent_next_query && !self.stopped) {
 				self.want_page = page + 1;
 				sent_next_query = true;
 				if (next_page) {
