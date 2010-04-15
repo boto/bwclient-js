@@ -267,22 +267,28 @@ var botoweb = {
 		new botoweb.Environment(href, function(env) {
 			console.log('API initialization complete');
 
-			botoweb.ldb.name = env.cfg.db.name;
-			botoweb.ldb.title = env.cfg.db.title;
-			botoweb.ldb.size_mb = env.cfg.db.size_mb;
-			botoweb.ldb.version = env.version;
+			if(botoweb.ldb){
+				botoweb.ldb.name = env.cfg.db.name;
+				botoweb.ldb.title = env.cfg.db.title;
+				botoweb.ldb.size_mb = env.cfg.db.size_mb;
+				botoweb.ldb.version = env.version;
 
-			// Prepare the database according to the environment settings
-			botoweb.ldb.prepare(function (db) {
-				console.log('Data initialization complete, begin synchronizing');
-				botoweb.ui.init();
-				if (fnc)
+				// Prepare the database according to the environment settings
+				botoweb.ldb.prepare(function (db) {
+					console.log('Data initialization complete, begin synchronizing');
+					botoweb.ui.init();
+					if (fnc)
+						fnc();
+					botoweb.ldb.sync.update();
+
+					// Update the local database every 2 minutes
+					setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);
+				}, console.error);
+			} else {
+				if(fnc){
 					fnc();
-				botoweb.ldb.sync.update();
-
-				// Update the local database every 2 minutes
-				setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);
-			}, console.error);
+				}
+			}
 		}, opt);
 	}
 };
