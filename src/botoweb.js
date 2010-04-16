@@ -72,7 +72,9 @@ var botoweb = {
 			ts = new Date().valueOf();
 		}
 
-		return botoweb.ajax.get(url, process);
+			return botoweb.ajax.get(url, process, function () {
+				fnc([], 0, 0);
+			});
 	},
 
 	//
