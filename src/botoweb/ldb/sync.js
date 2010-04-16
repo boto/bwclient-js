@@ -145,13 +145,12 @@ botoweb.ldb.sync = {
 
 		console.log("=====> " + model.name + " <=====");
 		console.log("Refresh: " + refresh);
-
+/*
 		if (refresh) {
 			model.all(processor, options);
 		}
 		else {
 			botoweb.ldb.dbh.transaction(function (txn) {
-				alert('SELECT MAX(prop_sys_modstamp) AS last_update FROM ' + botoweb.ldb.model_to_table(model));
 				txn.executeSql(
 					'SELECT MAX(prop_sys_modstamp) AS last_update FROM ' + botoweb.ldb.model_to_table(model),
 					function (txn, results) {
@@ -172,13 +171,13 @@ botoweb.ldb.sync = {
 				);
 			});
 		}
-/*
+*/
 		if (!refresh && localStorage['last_update_' + model.name]) {
 			model.query([['sys_modstamp', '>', localStorage['last_update_' + model.name]]], processor, options);
 		} else {
 			model.all(processor, options);
 		}
-*/
+
 		// Although we may fetch multiple pages of results, these results are a
 		// snapshot of the current state, so the update time is now, not when
 		// the query ends.

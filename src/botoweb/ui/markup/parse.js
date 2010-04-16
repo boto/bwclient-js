@@ -466,7 +466,7 @@
 										botoweb.ui.overlay.hide();
 										botoweb.ui.page.refresh()
 									});
-								} catch (e) {alert(e.message)}
+								} catch (e) { }
 
 								e.preventDefault();
 								return false;
