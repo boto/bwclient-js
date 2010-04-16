@@ -192,7 +192,13 @@ botoweb.xml = {
 
 			var model_prop = model.prop_map[name] || {meta: {}};
 			var node = $(doc.createElement(name));
-			node.attr('type', model_prop.meta.item_type || 'string');
+
+			if (model_prop.is_type('integer')) {
+				alert(model_prop.meta.type);
+				node.attr('type', model_prop.meta.type);
+			}
+			else
+				node.attr('type', model_prop.meta.item_type || 'string');
 
 			var type = 'def';
 
@@ -208,8 +214,15 @@ botoweb.xml = {
 	to_xml: {
 		def: function (val, node, parent) {
 			$.each(val, function () {
-				if (this.type)
+				if (this.type) {
 					node.attr('type', this.type);
+				}
+
+				// Default integers to 0. NOTE: this makes it impossible to
+				// determine whether the user typed 0 or left the field blank.
+				if (this.type == 'integer' && !this.val) {
+					this.val = '0';
+				}
 
 				node.clone().text($util.normalize_string(this.id || this.val || '')).appendTo(parent);
 			});

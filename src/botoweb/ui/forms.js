@@ -453,7 +453,12 @@ $forms.Field = function (prop, opt) {
 			var field = self.fields[this.id.replace('_' + self.id, '') * 1];
 
 			if (field) {
-				val.push({val: self.format(field.data('get_val')()), type: self.opt.type});
+				var t = self.prop.meta.type;
+
+				if (t != 'integer')
+					t = self.opt.type;
+
+				val.push({val: self.format(field.data('get_val')()), type: t});
 			}
 		});
 
