@@ -65,6 +65,9 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 			botoweb.ui.overlay.show();
 			self.block.save(function () {
 				botoweb.ui.overlay.hide();
+
+				if (self.block.opt.root)
+					document.location.href = document.location.href.replace(/&action=[^&]*/, '');
 			});
 		}
 

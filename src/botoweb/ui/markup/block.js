@@ -107,7 +107,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 						}, 1000);
 					};
 
-					if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
+					if ($(botoweb.ui.forms).triggerHandler('save_complete', [obj, update]) !== false)
 						update();
 				}
 			};

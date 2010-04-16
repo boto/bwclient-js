@@ -284,7 +284,7 @@
 						});
 					}
 
-					else if (block.obj && val in block.obj.data) {
+					else if (block.obj) {
 						this.html(block.obj.data[val].toString() || '');
 					}
 
