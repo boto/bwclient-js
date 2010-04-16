@@ -185,6 +185,8 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			 * from the local database.
 			 */
 			this.load = function (fnc, opt) {
+				opt = opt || {};
+
 				if (fnc) {
 					this.onload.push(fnc);
 

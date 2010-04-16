@@ -248,7 +248,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 				self.obj_id = obj.id;
 				self.obj = obj;
 			}
-			else if (this.opt.root) {
+			else if (self.opt.root) {
 				botoweb.ui.alert('The ' + self.model.name + ' that you attempted to access cannot be found. Click OK to return to the page you were last visiting.', 'No record of this item', function () {
 					history.back();
 				});
