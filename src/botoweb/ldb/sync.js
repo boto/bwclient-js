@@ -110,8 +110,6 @@ botoweb.ldb.sync = {
 			return;
 		}
 
-		localStorage.setItem('sync_model', model.name);
-
 		// Clear the table for a full refresh to ensure that deleted items are
 		// deleted locally as well.
 		if (refresh) {
@@ -297,6 +295,10 @@ botoweb.ldb.sync = {
 					model: self.update_model
 				}]);
 			}
+		}
+
+		if (results.length) {
+			localStorage.setItem('sync_model', model.name);
 		}
 
 		var result_id = self.task_processed;
