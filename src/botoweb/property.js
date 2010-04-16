@@ -257,6 +257,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 						return 'Yes';
 					case '0':
 						return 'No';
+
+					default:
+						return 'No';
 				}
 				return '';
 			};

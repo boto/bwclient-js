@@ -193,12 +193,7 @@ botoweb.xml = {
 			var model_prop = model.prop_map[name] || {meta: {}};
 			var node = $(doc.createElement(name));
 
-			if (model_prop.is_type('integer')) {
-				alert(model_prop.meta.type);
-				node.attr('type', model_prop.meta.type);
-			}
-			else
-				node.attr('type', model_prop.meta.item_type || 'string');
+			node.attr('type', model_prop.meta.item_type || 'string');
 
 			var type = 'def';
 
