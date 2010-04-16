@@ -38,7 +38,9 @@ botoweb.ajax = {
 					delete cachedRequests[ajaxID];
 				},
 				error: function(data) {
-					console.error('HTTP ERROR: ' + data.status + ' ' + data.statusText + '\n' + url + '\n', data);
+					if (data.status >= 400)
+						console.error('HTTP ERROR: ' + data.status + ' ' + data.statusText + '\n' + url + '\n', data);
+
 					if (data.status == 408) {
 						setTimeout(function() {
 							botoweb.ajax.manager.add(cfg);

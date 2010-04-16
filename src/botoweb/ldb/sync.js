@@ -147,16 +147,18 @@ botoweb.ldb.sync = {
 		console.log("Refresh: " + refresh);
 
 		if (refresh) {
-			model.all(processor, options);
+			model.find({sort_by: 'sys_modstamp'}, processor, options);
 		}
 
 		// Some models are not local because they do not store any data (i.e.
 		// a Trash object or a base class from which other objects canbe queried)
 		else if (!model.local) {
 			if (localStorage['last_update_' + model.name]) {
-				model.query([['sys_modstamp', '>', localStorage['last_update_' + model.name]]], processor, options);
+				console.log("last_update: " + localStorage['last_update_' + model.name]);
+
+				model.query([['sys_modstamp', '>=', localStorage['last_update_' + model.name]], ['sys_modstamp', 'sort', 'asc']], processor, options);
 			} else {
-				model.all(processor, options);
+				model.find({sort_by: 'sys_modstamp'}, processor, options);
 			}
 		}
 
@@ -173,13 +175,13 @@ botoweb.ldb.sync = {
 							var last_update = results.rows.item(0).last_update;
 							console.log("last_update: " + last_update);
 
-							model.query([['sys_modstamp', '>', last_update]], processor, options);
+							model.query([['sys_modstamp', '>=', last_update], ['sys_modstamp', 'sort', 'asc']], processor, options);
 						}
 						else
-							model.all(processor, options);
+							model.find({sort_by: 'sys_modstamp'}, processor, options);
 					},
 					function () {
-						model.all(processor, options);
+						model.find({sort_by: 'sys_modstamp'}, processor, options);
 					}
 				);
 			});
