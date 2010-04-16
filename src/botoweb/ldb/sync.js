@@ -145,7 +145,33 @@ botoweb.ldb.sync = {
 
 		console.log("=====> " + model.name + " <=====");
 		console.log("Refresh: " + refresh);
-		console.log("last_update: " + localStorage['last_update_' + model.name]);
+/*
+		if (refresh) {
+			model.all(processor, options);
+		}
+		else {
+			botoweb.ldb.dbh.transaction(function (txn) {
+				txn.executeSql(
+					'SELECT MAX(prop_sys_modstamp) AS last_update FROM ' + botoweb.ldb.model_to_table(model),
+					function (txn, results) {
+						console.warn(results);
+						if (results.rows.length) {
+							var last_update = results.rows.item(0).last_update;
+							console.log("last_update: " + last_update);
+
+							model.query([['sys_modstamp', '>', last_update]], processor, options);
+						}
+						else
+							model.all(processor, options);
+					},
+					function () {
+						console.warn('bad');
+						model.all(processor, options);
+					}
+				);
+			});
+		}
+*/
 		if (!refresh && localStorage['last_update_' + model.name]) {
 			model.query([['sys_modstamp', '>', localStorage['last_update_' + model.name]]], processor, options);
 		} else {

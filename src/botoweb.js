@@ -250,7 +250,9 @@ var botoweb = {
 				else
 					fnc(obj);
 			};
-			opts.error = botoweb.handle_error;
+			opts.error = function (e) {
+				botoweb.handle_error(e, fnc);
+			}
 		}
 		$.ajax(opts);
 	},
@@ -260,11 +262,13 @@ var botoweb = {
 			type: "DELETE",
 			url: url,
 			success: fnc,
-			error: botoweb.handle_error
+			error: function (e) {
+				botoweb.handle_error(e, fnc);
+			}
 		});
 	},
 
-	handle_error: function (data) {
+	handle_error: function (data, fnc) {
 		var info = $(data.responseText);
 
 		botoweb.ui.alert('The following error occurred while saving changes:<p><strong>' + info.find('description').html() + '</strong><br />' + info.find('message').html() + '</p>', 'Please check form values', fnc);
