@@ -157,10 +157,9 @@
 				$markup.find(block.node, 'attribute', function(val, prop) {
 					still_matches = matches = true;
 
-					val = /^([^.]*)\.?(.*)$/.exec(val);
-
-					var follow_props = val[2];
-					val = val[1];
+					var follow_props = val.split('.');
+					val = follow_props.shift();
+					follow_props = follow_props.join('.');
 
 					this.removeAttr(prop);
 					this.attr('_' + prop, val);
@@ -233,7 +232,7 @@
 
 								if (async && !block.waiting)
 									block.done();
-							}, block.opt);
+							}, $.extend({ obj: block.obj }, block.opt));
 
 							async = true;
 						}

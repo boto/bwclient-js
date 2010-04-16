@@ -64,12 +64,14 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 		this.meta = model_prop.meta;
 
-		$.each(['is_type','val','load','toString','to_sql','format_val'], function () {
-			if (this in model_prop)
-				self[this] = model_prop[this];
-		});
+		self.val = model_prop.val;
+		self.is_type = model_prop.is_type;
+		self.load = model_prop.load;
+		self.toString = model_prop.toString;
+		self.to_sql = model_prop.to_sql;
+		self.format_val = model_prop.format_val;
 
-		if ('load' in this) {
+		if (this.load) {
 			this.obj_id = undefined;
 			this.obj_model = model;
 
@@ -194,7 +196,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				var self = this;
 				var async = false;
 
-				botoweb.Object.follow(this.obj_model, this.obj_id, this.meta.name, function (objs) {
+				function process (objs) {
 					var data = [];
 
 					if (objs.length) {
@@ -221,7 +223,12 @@ botoweb.Property = function(name, type, perm, model, opt) {
 							this(data, self);
 						});
 					}
-				}, null, opt);
+				}
+
+				if (opt.obj)
+					opt.obj.follow(this.meta.name, process, null, opt);
+				else
+					botoweb.Object.follow(this.obj_model, this.obj_id, this.meta.name, process, null, opt);
 
 				async = true;
 			};
@@ -336,7 +343,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				return fnc([]);
 
 			// Load the data as defined by its type
-			if ('load' in this)
+			if (this.load)
 				this.load(fnc, opt);
 			else
 				return fnc(this.data, this);

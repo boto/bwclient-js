@@ -34,13 +34,11 @@ botoweb.Object = function(id, model, data, opt) {
 	}
 
 	$.each(self.model.props, function () {
-		if (!(this.meta.name in self.data))
+		if (!(self.data[this.meta.name]))
 			self.data[this.meta.name] = new this.instance();
-	});
 
-	$.each(self.data, function (i, prop) {
-		prop.obj_id = self.id;
-		prop.obj_model = self.model;
+		self.data[this.meta.name].obj_id = self.id;
+		self.data[this.meta.name].obj_model = self.model;
 	});
 
 	self.follow = function(prop_name, fnc, filters, opt) {

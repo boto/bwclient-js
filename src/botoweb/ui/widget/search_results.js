@@ -22,13 +22,22 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 	self.opts = opts || { };
 	self.num_results = 0;
 	self.search_id = 0;
+	self.outstanding_pages = 0;
 	self.stopped = false;
 	self.guide_block = null;
+
+	// Stores a running average of the time required to process each page of
+	// results for use in balancing the markup parsing and query
+	self.process_time = 0;
 
 	self.next_page;
 
 	self.update = function(results, page, count, next_page, search_id) {
+		var ts = new Date().valueOf();
+
 		self.next_page = next_page;
+
+		self.outstanding_pages++;
 
 		if (!results || results.length == 0)
 			return;
@@ -53,6 +62,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 
 		var c = 0;
 		var sent_next_query = false;
+		var next_page_timeout;
 		var done = false;
 
 		// Do not allow another page to be loaded if we are at the requested limit
@@ -86,21 +96,51 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 				self.next_page = null;
 			}
 			else if (c >= results.length && !sent_next_query && !self.stopped) {
+				clearTimeout(next_page_timeout);
+
+				console.warn('Running normal query');
+
 				self.want_page = page + 1;
 				sent_next_query = true;
-				if (next_page) {
+				if (next_page)
 					next_page();
-				}
+			}
+
+			if (c >= results.length) {
+				self.outstanding_pages--;
+
+				var t = new Date().valueOf();
+				console.log('Completed markup parsing in ' + (t - ts) + 'ms');
+
+				// NOTE: page starts at 0, not 1 so we have to add 1
+				self.process_time = self.process_time * page / (page + 1) + (t - ts) / (page + 1);
+
+				ts = t;
 			}
 
 			if (self.num_results == 50 && self.data_table)
 				self.data_table.data_table.fnDraw();
 		}
 
-		$.each(results, function () {
+		// The first two pages are used to analyze how long each result set
+		// requires to parse markup. Afterwards, queries will be sent for new
+		// pages in advance
+		if (page >= 2) {
+			next_page_timeout = setTimeout(function () {
+				if (!sent_next_query && !self.stopped && !done && next_page && self.outstanding_pages < 2) {
+					console.warn('Running accelerated query at ' + Math.round(self.process_time * .75) + 'ms');
+					self.want_page = page + 1;
+					sent_next_query = true;
+					if (next_page)
+						next_page();
+				}
+			}, Math.round(self.process_time * .5));
+		}
+
+		$.each(results, function (i, obj) {
 			if (!self.guide_block) {
 				self.guide_block = new botoweb.ui.markup.Block(self.template.clone(), {
-					obj: this,
+					obj: obj,
 					onready: add_row,
 					editable: false,
 					no_cache: true
@@ -108,7 +148,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			}
 			else {
 				self.guide_block.clone(self.template.clone(), {
-					obj: this,
+					obj: obj,
 					onready: add_row,
 					editable: false,
 					no_cache: true
@@ -135,6 +175,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 		self.stopped = false;
 
 		self.num_results = 0;
+		self.process_time = 0;
 		self.search_id++;
 
 		if (self.data_table)

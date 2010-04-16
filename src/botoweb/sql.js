@@ -208,6 +208,8 @@ botoweb.sql = {
 
 			this.limit(100, 100 * page);
 
+			botoweb.env.time = new Date().valueOf();
+
 			txn.executeSql(this, this.bind_params, this.simplify_results(fnc, page, opt), function (txn, e) {
 				console.error(e);
 			});
@@ -252,6 +254,12 @@ botoweb.sql = {
 					return fnc([], results, txn);
 				}
 
+				if (results.rows.length > 20) {
+					var t = new Date().valueOf();
+					console.log('Completed local DB query in ' + (t - botoweb.env.time) + 'ms');
+					botoweb.env.time = t;
+				}
+
 				var rows = [];
 
 				// TODO support querying more than one object
@@ -261,34 +269,47 @@ botoweb.sql = {
 					&& !tbl.parent
 					&& tbl.model;
 
+				var row_meta;
+
+				if (make_obj) {
+					row_meta = $.map(tbl.model.props, function (prop) {
+						return {
+							prop: prop,
+							col: botoweb.ldb.prop_to_column(prop),
+							is_list: prop.is_type('list', 'complexType'),
+							is_ref: prop.is_type('reference')
+						}
+					});
+				}
+
 				for (var i = 0; i < results.rows.length; i++) {
 					var row = results.rows.item(i);
 
 					// Construct an Object for the row.
 					if (make_obj) {
-						if (row.id in tbl.model.objs) {
+						if (tbl.model.objs[row.id]) {
 							row[0] = tbl.model.objs[row.id];
 						}
 						else {
 							var data = {};
 
-							$.each(tbl.model.props, function (i, prop) {
-								var col = botoweb.ldb.prop_to_column(prop);
+							for (var c in row_meta) {
+								var prop = row_meta[c];
 
-								if (col in row) {
+								if (row[prop.col] !== undefined) {
 									var prop_data = null;
 
-									if (prop.is_type('list', 'complexType'))
-										prop_data = { count: (row[col] || null), val: undefined };
-									else if (prop.is_type('reference')) {
-										prop_data = { count: 1, id: (row[col] || null), type: row[col + '__type'], val: undefined };
+									if (prop.is_list)
+										prop_data = { count: (row[prop.col] || null), val: undefined };
+									else if (prop.is_ref) {
+										prop_data = { count: 1, id: (row[prop.col] || null), type: row[prop.col + '__type'], val: undefined };
 									}
 									else
-										prop_data = { val: (row[col] || null) };
+										prop_data = { val: (row[prop.col] || null) };
 
-									data[prop.meta.name] = new prop.instance([prop_data]);
+									data[prop.prop.meta.name] = new prop.prop.instance([prop_data]);
 								}
-							});
+							}
 
 							row[0] = new botoweb.Object(
 								row.id,
@@ -302,11 +323,19 @@ botoweb.sql = {
 					rows.push(row);
 				}
 
+				if (results.rows.length > 20) {
+					var t = new Date().valueOf();
+					console.log('Completed object building in ' + (t - botoweb.env.time) + 'ms');
+					botoweb.env.time = t;
+				}
+
 				if (typeof page != 'undefined') {
 					function next_page() {
-						botoweb.ldb.dbh.transaction(function (txn) {
-							query.page(txn, fnc, page + 1);
-						});
+						setTimeout(function () {
+							botoweb.ldb.dbh.transaction(function (txn) {
+								query.page(txn, fnc, page + 1);
+							});
+						}, 50);
 					}
 
 					if (fnc(rows, page, results, txn, next_page))

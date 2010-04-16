@@ -32,10 +32,15 @@ var botoweb = {
 		if ($.isArray(model_names))
 			model_names = model_names.join(', ');
 
+		var ts = new Date().valueOf();
+
 		var page = 0;
 		var process = function(xml, xhr){
 			xml = $(xml);
 			var data = [];
+
+			var t = new Date().valueOf();
+			console.log('Completed botoweb find in ' + (t - ts) + 'ms');
 
 			xml.find(model_names).each(function () {
 				var obj = botoweb.xml.to_obj(this, opt);
@@ -63,6 +68,8 @@ var botoweb = {
 			// Get the next page if the callback returns true
 			if (fnc && fnc(data, page++, count, next_page) && next_page)
 				next_page();
+
+			ts = new Date().valueOf();
 		}
 
 		return botoweb.ajax.get(url, process);
@@ -96,8 +103,13 @@ var botoweb = {
 
 		url += "?query=[" + escape(parts.join(",") + "]");
 
+		var ts = new Date().valueOf();
+
 		var page = 0;
 		var process = function(xml, xhr){
+			var t = new Date().valueOf();
+			console.log('Completed botoweb query in ' + (t - ts) + 'ms');
+
 			var data = [];
 			$(xml).find(obj_name).each(function(){
 				var obj = botoweb.xml.to_obj(this, opt);
@@ -126,6 +138,8 @@ var botoweb = {
 			// Get the next page
 			if (fnc(data, page++, count, next_page) && next_page)
 				next_page()
+
+			ts = new Date().valueOf();
 		}
 
 		return botoweb.ajax.get(url, process, function () {
