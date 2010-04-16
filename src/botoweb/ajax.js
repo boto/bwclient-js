@@ -41,10 +41,13 @@ botoweb.ajax = {
 					if (data.status >= 400)
 						console.error('HTTP ERROR: ' + data.status + ' ' + data.statusText + '\n' + url + '\n', data);
 
+					var timeout;
+
 					if (data.status == 408) {
-						setTimeout(function() {
-							botoweb.ajax.manager.add(cfg);
-						}, 250);
+						timeout = 250;
+					}
+					else if (data.status == 503) {
+						timeout = 2000;
 					}
 					else if (data.status == 404) {
 						if (count_404 >= 3) {
@@ -55,9 +58,7 @@ botoweb.ajax = {
 							return;
 						}
 
-						setTimeout(function() {
-							botoweb.ajax.manager.add(cfg);
-						}, 1000 + count_404 * 1000);
+						timeout = 1000 + count_404 * 1000;
 
 						count_404++;
 					}
@@ -66,7 +67,12 @@ botoweb.ajax = {
 						// Send error as 2nd argument to avoid confusing it
 						// with the obj XML
 						error(null, data);
+						return;
 					}
+
+					setTimeout(function() {
+						botoweb.ajax.manager.add(cfg);
+					}, timeout);
 				},
 				url: url
 			};
