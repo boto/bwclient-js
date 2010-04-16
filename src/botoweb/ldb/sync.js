@@ -145,17 +145,31 @@ botoweb.ldb.sync = {
 
 		console.log("=====> " + model.name + " <=====");
 		console.log("Refresh: " + refresh);
-/*
+
 		if (refresh) {
 			model.all(processor, options);
 		}
+
+		// Some models are not local because they do not store any data (i.e.
+		// a Trash object or a base class from which other objects canbe queried)
+		else if (!model.local) {
+			if (localStorage['last_update_' + model.name]) {
+				model.query([['sys_modstamp', '>', localStorage['last_update_' + model.name]]], processor, options);
+			} else {
+				model.all(processor, options);
+			}
+		}
+
+		// The localStorage is unreliable for some reason, this checks the
+		// actual data for the most recently updated item rather than the most
+		// recent update.
 		else {
 			botoweb.ldb.dbh.transaction(function (txn) {
 				txn.executeSql(
 					'SELECT MAX(prop_sys_modstamp) AS last_update FROM ' + botoweb.ldb.model_to_table(model),
+					[],
 					function (txn, results) {
-						console.warn(results);
-						if (results.rows.length) {
+						if (results.rows.length && results.rows.item(0).last_update) {
 							var last_update = results.rows.item(0).last_update;
 							console.log("last_update: " + last_update);
 
@@ -165,17 +179,10 @@ botoweb.ldb.sync = {
 							model.all(processor, options);
 					},
 					function () {
-						console.warn('bad');
 						model.all(processor, options);
 					}
 				);
 			});
-		}
-*/
-		if (!refresh && localStorage['last_update_' + model.name]) {
-			model.query([['sys_modstamp', '>', localStorage['last_update_' + model.name]]], processor, options);
-		} else {
-			model.all(processor, options);
 		}
 
 		// Although we may fetch multiple pages of results, these results are a
