@@ -298,7 +298,7 @@ botoweb.ldb.sync = {
 		}
 
 		if (results.length) {
-			localStorage.setItem('sync_model', model.name);
+			localStorage.setItem('sync_model', self.update_model.name);
 		}
 
 		var result_id = self.task_processed;
