@@ -362,8 +362,18 @@ $forms.Field = function (prop, opt) {
 				.prependTo(this.node);
 		}
 
-		if (this.opt.node)
+		if (this.opt.node) {
 			this.opt.node.hide();
+
+			// Lists often have multiple copies of the same node, so we need to
+			// hide not only the target, but also its siblings which have the
+			// same bwAttribute property.
+			this.opt.node.siblings(
+				$ui.markup.sel._attribute.replace(']',
+					'=' + this.prop.meta.name + ']'
+				)
+			).hide();
+		}
 
 		this.node.show();
 
@@ -1173,24 +1183,31 @@ $forms.Picklist = function () {
 			})
 		}*/
 
-		var vals = 0;
+		function handle_val (objs) {
+			var vals = 0;
 
-		this.prop.val(function (objs) {
 			$.each(objs, function () {
 				if (this.val) {
 					vals++;
 					add_selection(this.val);
 				}
 			});
-		});
 
-		if (!vals && self.opt.def) {
-			vals++;
-			add_selection(self.opt.def);
+			if (!vals && self.opt.def) {
+				vals++;
+				add_selection(self.opt.def);
+			}
+
+			if (!vals && self.prop.meta.def) {
+				add_selection(self.prop.meta.def);
+			}
 		}
 
-		if (!vals && self.prop.meta.def) {
-			add_selection(self.prop.meta.def);
+		if (this.opt.block && this.opt.block.obj) {
+			this.opt.block.obj.val(this.prop.meta.name, handle_val);
+		}
+		else {
+			botoweb.Object.val(this.obj_model, this.obj_id, this.prop.meta.name, handle_val);
 		}
 
 		/**
