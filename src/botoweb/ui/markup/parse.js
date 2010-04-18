@@ -253,7 +253,7 @@
 									if (node.is('li')) {
 										var items = block.obj.data[val].toString(true);
 										$.each(items, function () {
-											node.after(node.clone().html('' + this));
+											node.after(node.clone().html('' + this).show());
 										});
 									}
 									else {

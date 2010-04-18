@@ -278,6 +278,15 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				return load.call(this, fnc, opt);
 			}
 
+			// The list may have already been queried in which case the list
+			// count has been replaced by actual data.
+			if (this.data[0].count === undefined) {
+				if (load)
+					return load.call(this, fnc, opt);
+				else
+					return fnc(this.data, true);
+			}
+
 			// The count of list or complexType items is cached. If it is
 			// zero (null) we don't need to load anything.
 			if (!this.data[0].count) {
@@ -335,6 +344,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	 */
 	this.val = function (fnc, opt) {
 		if (fnc) {
+			// Don't try to load anything on a model property which has no data
+			if (!('data' in this))
+				return fnc([]);
+
 			// Either the data need not be loaded or it has already been loaded
 			// VERY IMPORTANT: If the object does not have a value for this
 			// property, the val property will be null. undefined is used ONLY
@@ -342,10 +355,6 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			// anything else, this statement will evaluate to true.
 			if (this.data && (this.data.length == 0 || this.data[0].val !== undefined))
 				return fnc(this.data, this);
-
-			// Don't try to load anything on a model property which has no data
-			if (!('data' in this))
-				return fnc([]);
 
 			// Load the data as defined by its type
 			if (this.load)

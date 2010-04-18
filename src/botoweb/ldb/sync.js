@@ -145,7 +145,10 @@ botoweb.ldb.sync = {
 		console.log("Refresh: " + refresh);
 
 		if (refresh) {
-			model.find({sort_by: 'sys_modstamp'}, processor, options);
+			if ('sys_modstamp' in model.prop_map)
+				model.find({sort_by: 'sys_modstamp'}, processor, options);
+			else
+				model.all(processor, options);
 		}
 
 		// Some models are not local because they do not store any data (i.e.
@@ -156,7 +159,10 @@ botoweb.ldb.sync = {
 
 				model.query([['sys_modstamp', '>=', localStorage['last_update_' + model.name]], ['sys_modstamp', 'sort', 'asc']], processor, options);
 			} else {
-				model.find({sort_by: 'sys_modstamp'}, processor, options);
+				if ('sys_modstamp' in model.prop_map)
+					model.find({sort_by: 'sys_modstamp'}, processor, options);
+				else
+					model.all(processor, options);
 			}
 		}
 
@@ -297,9 +303,9 @@ botoweb.ldb.sync = {
 			}
 		}
 
-		//if (results.length) {
-		//	localStorage.setItem('sync_model', model.name);
-		//}
+		if (results.length) {
+			localStorage.setItem('sync_model', self.update_model.name);
+		}
 
 		var result_id = self.task_processed;
 		console.log("Process: " + result_id);
