@@ -236,9 +236,6 @@ botoweb.Object = function(id, model, data, opt) {
 		if (typeof prop == 'undefined')
 			return;
 
-		if (prop.data.length && prop.data[0].val === undefined)
-			return fnc([]);
-
 		prop.val(fnc, opt);
 	};
 
