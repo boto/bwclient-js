@@ -58,7 +58,12 @@ botoweb.ldb = {
 				attempts = 0;
 
 			if (attempts > 10) {
-				alert("Your browser refuses to create or load our local database, some features may not be enabled");
+				msg = "Your browser refuses to create our local DB\n";
+				msg += "\nName: " + botoweb.ldb.name;
+				msg += "\nVersion: " + version;
+				msg += "\nTitle: " + botoweb.ldb.title;
+				msg += "\nSize: " + est_size;
+				error(msg);
 				return;
 			}
 

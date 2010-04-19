@@ -303,7 +303,12 @@ var botoweb = {
 
 					// Update the local database every 2 minutes
 					setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);
-				}, console.error);
+				}, function(msg){
+					alert(msg);
+					botoweb.ui.init();
+					if (fnc)
+						fnc();
+				});
 			} else {
 				if(fnc){
 					fnc();
