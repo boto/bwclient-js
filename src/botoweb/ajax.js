@@ -69,6 +69,9 @@ botoweb.ajax = {
 						error(null, data);
 						return;
 					}
+					else {
+						return;
+					}
 
 					setTimeout(function() {
 						botoweb.ajax.manager.add(cfg);
