@@ -1203,16 +1203,23 @@ $forms.Picklist = function () {
 			}
 		}
 
-		// Calling this immediately results in anm unknown conflict with other things 
-		// that call .val on this property, so we delay a few ms.
-		setTimeout(function () {
-			if (self.opt.block && self.opt.block.obj) {
-				self.opt.block.obj.val(self.prop.meta.name, handle_val);
-			}
-			else {
-				botoweb.Object.val(self.obj_model, self.obj_id, self.prop.meta.name, handle_val);
-			}
-		}, 50);
+		if (self.obj_id) {
+			// Calling this immediately results in anm unknown conflict with other things
+			// that call .val on this property, so we delay a few ms.
+			setTimeout(function () {
+				if (self.opt.block && self.opt.block.obj) {
+					self.opt.block.obj.val(self.prop.meta.name, handle_val);
+				}
+				else {
+					botoweb.Object.val(self.obj_model, self.obj_id, self.prop.meta.name, handle_val);
+				}
+			}, 50);
+		}
+		// Still add defaults when this is not an object property. The val
+		// callbacks will not work because there is no object to call them on.
+		else {
+			handle_val([]);
+		}
 
 		/**
 		// Add a blank editing template if there are no existing selections.
