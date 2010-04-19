@@ -1203,12 +1203,16 @@ $forms.Picklist = function () {
 			}
 		}
 
-		if (this.opt.block && this.opt.block.obj) {
-			this.opt.block.obj.val(this.prop.meta.name, handle_val);
-		}
-		else {
-			botoweb.Object.val(this.obj_model, this.obj_id, this.prop.meta.name, handle_val);
-		}
+		// Calling this immediately results in anm unknown conflict with other things 
+		// that call .val on this property, so we delay a few ms.
+		setTimeout(function () {
+			if (self.opt.block && self.opt.block.obj) {
+				self.opt.block.obj.val(self.prop.meta.name, handle_val);
+			}
+			else {
+				botoweb.Object.val(self.obj_model, self.obj_id, self.prop.meta.name, handle_val);
+			}
+		}, 50);
 
 		/**
 		// Add a blank editing template if there are no existing selections.
