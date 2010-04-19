@@ -35,6 +35,7 @@ botoweb.ui.markup = new function () {
 		'attribute':      '*[bwAttribute]',
 		'_attribute':     '*[_bwAttribute]',
 		'attribute_list': '*[bwWidget=attributeList]',
+		'auth':           '.auth',
 		'breadcrumbs':    '*[bwWidget=breadcrumbs]',
 		'class_name':     '*[bwClass]',
 		'condition':      '*[bwCondition]',
