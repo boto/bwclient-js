@@ -56,9 +56,9 @@ botoweb.ui.page = new function() {
 		if (typeof loc == 'string') {
 			html = retrieve(loc);
 
-			var l = this.location;
-			l.hash_href = loc;
-			loc = l;
+			// Make a copy of the location object to avoid modifying the central
+			// location object.
+			loc = $.extend({}, this.location, { hash_href: loc });
 		}
 		else
 			html = retrieve(loc.hash_href);

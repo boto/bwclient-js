@@ -213,6 +213,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 			} catch (e) {}
 		}
 
+		// First remove any markup that the user is not allowed to view
+		parse('auth', $markup.parse.auth);
+
 		// Do not allow nested blocks to interfere
 		parse('nested', $markup.remove_nested);
 

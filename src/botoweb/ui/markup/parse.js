@@ -48,6 +48,40 @@
 		},
 
 		/**
+		 * Remove content which the user is not allowed to view
+		 */
+		auth: function (block) {
+			var matches = false;
+
+			$markup.find(block.node, 'auth', function (val, prop) {
+				matches = true;
+				var authorized = true;
+				var node = $(this);
+
+				if (node.hasClass('deny-all')) {
+					authorized = false;
+					$(botoweb.env.user.data.auth_groups.toString(true)).each(function() {
+						if (node.hasClass('allow-' + this))
+							authorized = true;
+					});
+				}
+				else {
+					$(botoweb.env.user.data.auth_groups.toString(true)).each(function() {
+						if (node.hasClass('deny-' + this))
+							authorized = false;
+					});
+				}
+
+				if (!authorized)
+					node.remove();
+				else
+					node.removeClass('auth');
+			});
+
+			return matches;
+		},
+
+		/**
 		 * Parses forms which are enhanced with botoweb markup.
 		 */
 		action: function (block) {
@@ -174,7 +208,7 @@
 					// prevent anything inside from being parsed according to
 					// the current object when it was intended for a referenced
 					// object
-					if (!(val in block.model.prop_map)) {
+					if (!(val in block.model.prop_map) || !block.model.prop_map[val].meta.read) {
 						this.empty();
 						return;
 					}
