@@ -308,7 +308,6 @@ botoweb.ldb.sync = {
 		}
 
 		var result_id = self.task_processed;
-		console.log("Process: " + result_id);
 
 		// Just used a lot of CPU to parse the XML, pause for a short time
 		// before Local DB processing to allow foreground processing.
@@ -439,8 +438,10 @@ botoweb.ldb.sync = {
 				// This method may be called without task data to update
 				// specific records. If so, we don't want to change any counts
 				// for the current sync.
-				if (total_count)
+				if (total_count){
 					self.task_processed += results.length;
+					console.log("Processed: " + self.task_processed);
+				}
 
 				// The following lines use setTimeout to call the function. This
 				// allows the call stack to be cleared to prevent a rather bad
@@ -449,7 +450,7 @@ botoweb.ldb.sync = {
 
 				// When we finish, grab the next page of results
 				if (next_page) {
-					next_page();
+					setTimeout(next_page, 250);
 				}
 				// Otherwise run the next queued update
 				else{
