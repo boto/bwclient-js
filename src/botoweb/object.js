@@ -105,7 +105,7 @@ botoweb.Object = function(id, model, data, opt) {
 		}
 	}
 
-	this.update = function (data, fnc) {
+	this.update = function (data, fnc, force) {
 		var changed = {};
 		var changed_any = false;
 
@@ -137,6 +137,12 @@ botoweb.Object = function(id, model, data, opt) {
 					}
 				});
 
+				return;
+			}
+
+			if (force) {
+				changed[name] = val;
+				changed_any = true;
 				return;
 			}
 

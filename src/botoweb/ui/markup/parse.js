@@ -496,10 +496,13 @@
 
 									botoweb.ui.overlay.show();
 
+									// Force update data (will send XML for all
+									// provided data regardless of whether it
+									// matches the current value or not).
 									botoweb.Object.update(block.model, block.obj_id, data, function () {
 										botoweb.ui.overlay.hide();
 										botoweb.ui.page.refresh()
-									});
+									}, true);
 								} catch (e) { }
 
 								e.preventDefault();
