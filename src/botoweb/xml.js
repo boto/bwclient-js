@@ -117,6 +117,10 @@ botoweb.xml = {
 		var data = {};
 
 		if (!opt.minimal_parse) {
+			if(!model){
+				console.error("Model not found: " + xml.get(0).tagName);
+				return;
+			}
 			$.each(model.props, function() {
 				// May match more than one!
 				var tags = xml.find('> ' + this.meta.name);

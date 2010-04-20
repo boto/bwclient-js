@@ -108,6 +108,7 @@ botoweb.Object = function(id, model, data, opt) {
 	this.update = function (data, fnc, force) {
 		var changed = {};
 		var changed_any = false;
+		var is_new = this.unsaved || !this.id;
 
 		$.each(data, function (name, val) {
 			var model_prop = self.model.prop_map[name];
@@ -174,7 +175,7 @@ botoweb.Object = function(id, model, data, opt) {
 				});
 			}
 
-			if (diff) {
+			if (diff || is_new) {
 				if (val.length == 0)
 					val.push({});
 
@@ -183,10 +184,8 @@ botoweb.Object = function(id, model, data, opt) {
 			}
 		});
 
-		if (changed_any) {
+		if (changed_any || is_new) {
 			this.clear_reference_data();
-
-			var is_new = this.unsaved || !this.id;
 
 			if (is_new)
 				changed['id'] = [{val:self.id, type:'string'}];
