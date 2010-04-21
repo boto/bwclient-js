@@ -33,6 +33,10 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 
 		time_delta: 0,
 
+		// The number of pages of results to fetch into a searchResults widget
+		// before pausing, use bwLimit="none" to override.
+		search_result_pages: 0,
+
 		templates: {
 			home: 'index.html',
 			model: '{{ name }}.html',

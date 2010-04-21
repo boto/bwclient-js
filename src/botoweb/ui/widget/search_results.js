@@ -26,6 +26,12 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 	self.stopped = false;
 	self.guide_block = null;
 
+	if (!self.limit_pages) {
+		self.limit_pages = botoweb.env.cfg.search_result_pages;
+	}
+
+	self.limit_pages = self.limit_pages || 'none';
+
 	// Stores a running average of the time required to process each page of
 	// results for use in balancing the markup parsing and query
 	self.process_time = 0;
@@ -193,6 +199,12 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 			self.data_table.reset();
 
 		self.limit_pages = self.node.attr("bwLimit");
+
+		if (!self.limit_pages) {
+			self.limit_pages = botoweb.env.cfg.search_results_pages;
+		}
+
+		self.limit_pages = self.limit_pages || 'none';
 
 		// Stop any existing searches
 		//botoweb.ajax.stop_by_url(self.model.href);
