@@ -189,17 +189,19 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 		//botoweb.ajax.stop_by_url(self.model.href);
 	}
 
-	if (self.def == 'all') {
-		self.model.all(function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; }, { no_cache: true });
-	}
-	else if (self.def) {
-		// Evaluate JSON search filters
-		eval('self.def = ' + self.def);
+	if (self.opt.no_query) {
+		if (self.def == 'all') {
+			self.model.all(function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; }, { no_cache: true });
+		}
+		else if (self.def) {
+			// Evaluate JSON search filters
+			eval('self.def = ' + self.def);
 
-		if ($.isArray(self.def))
-			self.model.query(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; }, { no_cache: true });
-		else
-			self.model.find(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; }, { no_cache: true });
+			if ($.isArray(self.def))
+				self.model.query(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; }, { no_cache: true });
+			else
+				self.model.find(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; }, { no_cache: true });
+		}
 	}
 
 	var dt_opt = {

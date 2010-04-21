@@ -632,7 +632,10 @@
 
 				val = this.attr($markup.prop.attribute);
 
-				var results = new botoweb.ui.widget.SearchResults(this, block.model);
+				var results = new botoweb.ui.widget.SearchResults(this, block.model, {
+					// Don't let the search widget do its own query
+					no_query: true
+				});
 
 				block.obj.follow(val, results.update, null, { no_cache: true });
 			});
