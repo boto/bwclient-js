@@ -63,11 +63,11 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 		var c = 0;
 		var sent_next_query = false;
 		var next_page_timeout;
-		var done = false;
+		var hit_limit = false;
 
 		// Do not allow another page to be loaded if we are at the requested limit
 		if (self.limit_pages != 'none' && self.limit_pages * 1 - 1 <= page)
-			done = true;
+			hit_limit = true;
 
 		function add_row(block) {
 			if (search_id != self.search_id)
@@ -89,11 +89,18 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 				self.node.append(block.node);
 			}
 
-			if (self.num_results >= count || done && c >= results.length) {
-				if (self.data_table)
-					self.data_table.stop();
+			if (self.num_results >= count || hit_limit && c >= results.length) {
+				if (self.data_table) {
+					if (hit_limit && self.num_results < count) {
+						self.limit_pages = 'none';
+						self.data_table.toggle_pause();
+					}
+					else
+						self.data_table.stop();
+				}
 
-				self.next_page = null;
+				if (!hit_limit || self.num_results >= count)
+					self.next_page = null;
 			}
 			else if (c >= results.length && !sent_next_query && !self.stopped) {
 				clearTimeout(next_page_timeout);
@@ -127,7 +134,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 		// pages in advance
 		if (page >= 2) {
 			next_page_timeout = setTimeout(function () {
-				if (!sent_next_query && !self.stopped && !done && next_page && self.outstanding_pages < 2) {
+				if (!sent_next_query && !self.stopped && !hit_limit && next_page && self.outstanding_pages < 2) {
 					console.warn('Running accelerated query at ' + Math.round(self.process_time * .75) + 'ms');
 					self.want_page = page + 1;
 					sent_next_query = true;
@@ -185,11 +192,13 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 		if (self.data_table)
 			self.data_table.reset();
 
+		self.limit_pages = self.node.attr("bwLimit");
+
 		// Stop any existing searches
 		//botoweb.ajax.stop_by_url(self.model.href);
 	}
 
-	if (self.opt.no_query) {
+	if (!self.opt.no_query) {
 		if (self.def == 'all') {
 			self.model.all(function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; }, { no_cache: true });
 		}

@@ -125,18 +125,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 			this.button_stop = botoweb.ui.button('', { icon: 'ui-icon-pause', corners: [1,0,0,1] })
 				.addClass('pause_search')
 				.click(function () {
-					$(this).find('span')
-						.toggleClass('ui-icon-play ui-icon-pause');
-
-					// Just toggled, so the button was originally pause
-					if ($(this).find('span.ui-icon-play').length) {
-						self.stop(true);
-						self.opt.search_results.stop();
-					}
-					else {
-						self.resume();
-						self.opt.search_results.resume();
-					}
+					self.toggle_pause();
 				})
 				.prependTo(this.progressbar);
 		}
@@ -162,6 +151,21 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 		this.paused = pause_button;
 
 		this.data_table.fnDraw(false);
+	}
+
+	this.toggle_pause = function () {
+		this.button_stop.find('span')
+			.toggleClass('ui-icon-play ui-icon-pause');
+
+		// Just toggled, so the button was originally pause
+		if (this.button_stop.find('span.ui-icon-play').length) {
+			this.stop(true);
+			this.opt.search_results.stop();
+		}
+		else {
+			this.resume();
+			this.opt.search_results.resume();
+		}
 	}
 
 	this.resume = function () {
