@@ -307,7 +307,9 @@ $forms.Field = function (prop, opt) {
 				$('<p/>').append(
 					$ui.button('Save', '', true)
 						.addClass('small')
-						.click(function () {
+						.click(function (e) {
+							$ui.overlay.show();
+
 							var val = self.val();
 
 							if (val.length == 0)
@@ -316,15 +318,8 @@ $forms.Field = function (prop, opt) {
 							var data = {};
 							data[self.prop.meta.name] = val;
 
-							$ui.overlay.show();
-
-							botoweb.Object.update(self.obj_model, self.obj_id, data, function (obj) {
-								// Error, hide the overlay and let them edit again
-								if (!obj) {
-									$ui.overlay.hide();
-									return;
-								}
-
+							// Refreshes the page when the save is successful
+							function data_changed (obj) {
 								function updated () {
 									$($ldb.sync).unbind('end', updated);
 									self.cancel();
@@ -345,7 +340,31 @@ $forms.Field = function (prop, opt) {
 
 								if (!self.opt.block.opt.no_refresh)
 									$ui.page.refresh();
+							}
+
+							botoweb.Object.update(self.obj_model, self.obj_id, data, function (obj) {
+								// Error, hide the overlay and let them edit again
+								if ($('#bw-alert').length)
+									$ui.overlay.hide();
+
+								// If no object is returned this may be a special case
+								else if (!obj) {
+									// A referenced property may have been changed
+									// so we will just wait awhile.
+									// TODO some way to determine when everything is saved
+									if (self.prop.is_type('query', 'reference'))
+										setTimeout(data_changed, 1000);
+
+									// Nothing was changed
+									else
+										$ui.overlay.hide();
+								}
+								// Normal case, object was updated
+								else
+									data_changed(obj);
 							});
+
+							e.preventDefault();
 							return false;
 						}),
 					$ui.button('Cancel', '', false)
