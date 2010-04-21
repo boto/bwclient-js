@@ -12,7 +12,7 @@ var sort_regex = new RegExp('\\s*<[^>]*>\\s*|[^\\w\\s\\d]+|\\b(the|a|an)\\s+', '
  *
  * @param node the node containing the search parameters.
  */
-botoweb.ui.widget.DataTable = function(table, opts) {
+botoweb.ui.widget.DataTable = function(table, opt) {
 	this.data_table = table.dataTable({
 		bJQueryUI: true,
 		oLanguage: {
@@ -29,7 +29,7 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 	var self = this;
 	table.data('data_table', self);
 
-	this.opts = opts || {};
+	this.opt = opt || {};
 	this.pending = [];
 
 	var settings = this.data_table.fnSettings();
@@ -115,13 +115,26 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 			this.progressbar.progressbar({ value: percent });
 		}
 
-		if (this.opts.stop && !this.button_stop) {
+		if (!this.button_stop && this.opt.search_results) {
 			var self = this;
 
-			this.button_stop = $('<div/>')
-				.css('display', 'inline-block')
-				.addClass('ac')
-				.appendTo(this.status);
+			this.progressbar.add(this.progressbar.children()).removeClass('ui-corner-all ui-corner-left')
+				.addClass('ui-corner-tr ui-corner-br');
+
+			this.button_stop = botoweb.ui.button('', { icon: 'ui-icon-pause', corners: [1,0,0,1] })
+				.addClass('pause_search')
+				.click(function () {
+					if ($(this).find('span.ui-icon-pause').length) {
+						self.stop(true);
+						self.opt.search_results.stop();
+					}
+					else
+						self.opt.search_results.resume();
+
+					$(this).find('span')
+						.toggleClass('ui-icon-play ui-icon-pause');
+				})
+				.prependTo(this.progressbar);
 		}
 
 		this.progressbar.progressbar('option', 'value', percent);
@@ -131,18 +144,18 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 			this.stop();
 	}
 
-	this.stop = function() {
+	this.stop = function(save_status) {
 		if (self.pending.length) {
 			this.data_table.fnAddData(self.pending, false);
 			self.pending = [];
 		}
 
-		if (this.button_stop) {
+		if (this.button_stop && !save_status) {
 			this.button_stop = null;
 			this.status.empty();
-
-			this.data_table.fnDraw(false);
 		}
+
+		this.data_table.fnDraw(false);
 	}
 
 	this.add_events = function() {
@@ -214,7 +227,7 @@ botoweb.ui.widget.DataTable = function(table, opts) {
 		});
 
 		if (item.length == settings.aoColumns.length)
-			this.data_table.fnUpdate(item, row, null, !this.opts.no_redraw);
+			this.data_table.fnUpdate(item, row, null, !this.opt.no_redraw);
 	}
 
 	this.del = function(row) {
@@ -271,7 +284,7 @@ $('div.dataTables_wrapper td').live('dblclick', function (e) {
 
 			var index = node.index();
 
-			var template = data_table.opts.template.find('td:eq(' + index + ')');
+			var template = data_table.opt.template.find('td:eq(' + index + ')');
 
 			// Only fix the columns widths once
 			if (table.css('table-layout') != 'fixed') {

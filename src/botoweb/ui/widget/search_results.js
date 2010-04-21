@@ -8,7 +8,7 @@
  *
  * @param node the node containing the search result template.
  */
-botoweb.ui.widget.SearchResults = function(node, model, opts) {
+botoweb.ui.widget.SearchResults = function(node, model, opt) {
 	var self = this;
 
 	self.node = $(node);
@@ -19,7 +19,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 	self.node.empty();
 	self.def = self.node.attr(botoweb.ui.markup.prop.def);
 	self.limit_pages = self.node.attr("bwLimit");
-	self.opts = opts || { };
+	self.opt = opt || { };
 	self.num_results = 0;
 	self.search_id = 0;
 	self.outstanding_pages = 0;
@@ -52,12 +52,12 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 		if (self.data_table) {
 			if (count) {
 				if (count > 50)
-					self.opts.min_memory = true;
+					self.opt.min_memory = true;
 				else
-					self.opts.min_memory = false;
+					self.opt.min_memory = false;
 			}
 
-			self.data_table.opts.no_redraw = self.opts.min_memory;
+			self.data_table.opt.no_redraw = self.opt.min_memory;
 		}
 
 		var c = 0;
@@ -198,19 +198,20 @@ botoweb.ui.widget.SearchResults = function(node, model, opts) {
 			self.model.find(self.def, function(results, page, count, next_page) { self.update(results, page, count, next_page, 0); return false; }, { no_cache: true });
 	}
 
-	var dt_opts = {
+	var dt_opt = {
 		stop: true,
-		template: self.template
+		template: self.template,
+		search_results: this
 	};
 
 	if (self.node.is('tr, tbody')) {
 		setTimeout(function() {
-			self.data_table = new botoweb.ui.widget.DataTable(self.node.parent('table'), dt_opts);
+			self.data_table = new botoweb.ui.widget.DataTable(self.node.parent('table'), dt_opt);
 		}, 10);
 	}
 	else if (self.node.is('table')) {
 		setTimeout(function() {
-			self.data_table = new botoweb.ui.widget.DataTable(self.node, dt_opts);
+			self.data_table = new botoweb.ui.widget.DataTable(self.node, dt_opt);
 		}, 10);
 	}
 
