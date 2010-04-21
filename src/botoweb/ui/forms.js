@@ -100,7 +100,16 @@ $forms.Field = function (prop, opt) {
 			return false;
 		}
 
-		if (this.node.parent().find('.property').length == 1)
+		// In an attributeList, each property is in a row class. This check is
+		// important for lists where their immediate parent may just be a <ul>.
+		// We want to attach the event to the deepest parent that only contains
+		// this property.
+		if (this.node.parents('.row').find('.property').length == 1)
+			this.node.parents('.row').dblclick(edit)
+
+		// Otherwise check the immediate parent, useful for attributes not in an
+		// attributeList
+		else if (this.node.parent().find('.property').length == 1)
 			this.node.parent().dblclick(edit)
 
 		this.opt.node.dblclick(edit);
@@ -425,8 +434,21 @@ $forms.Field = function (prop, opt) {
 	 */
 	this.cancel = function () {
 		this.node.hide();
-		if (this.opt.node)
-			this.opt.node.show();
+		if (this.opt.node) {
+			// The first element of a list is the template and should remain
+			// hidden.
+			if (!this.prop.is_type('list') || !this.opt.node.is(':empty'))
+				this.opt.node.show();
+
+			// Lists often have multiple copies of the same node, so we need to
+			// show not only the target, but also its siblings which have the
+			// same bwAttribute property.
+			this.opt.node.siblings(
+				$ui.markup.sel._attribute.replace(']',
+					'=' + this.prop.meta.name + ']'
+				)
+			).show();
+		}
 		this.editing = false;
 		this.node.empty();
 		this.fields = [];
