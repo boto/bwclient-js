@@ -16,6 +16,7 @@ botoweb.ui = {
 	overlay: {
 		node: null,
 		show: function () {
+			$('body').css('height', 'auto');
 			botoweb.ui.overlay.node
 			.css({
 				width: $('body').width(),
@@ -35,6 +36,7 @@ botoweb.ui = {
 	 */
 	alert: function(msg, title, callback) {
 		$('<div/>')
+			.attr('id', 'bw-alert')
 			.html(msg)
 			.dialog({
 				modal: true,
@@ -42,7 +44,11 @@ botoweb.ui = {
 				title: title || 'Alert',
 				zIndex: 99999,
 				buttons: {
-					Ok: function() { $(this).dialog('close'); if (callback) callback(); }
+					Ok: function() {
+						$(this).dialog('close');
+						$(this).remove();
+						if (callback) callback();
+					}
 				}
 			})
 			.dialog('show')
