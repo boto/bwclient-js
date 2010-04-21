@@ -121,11 +121,13 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 		// the actual User object so we need to be able
 		self.user = botoweb.xml.to_obj(xml.find('Index > User:first'), { no_cache: true });
 
-		// Find the time offset between the server and client computer
-		var server_date = Date.parse(xhr.getResponseHeader('Date'));
-		var client_date = new Date().valueOf();
+		try {
+			// Find the time offset between the server and client computer
+			var server_date = Date.parse(xhr.getResponseHeader('Date'));
+			var client_date = new Date().valueOf();
 
-		self.cfg.time_delta = server_date - client_date;
+			self.cfg.time_delta = server_date - client_date;
+		} catch (e) {}
 
 		if(fnc){ fnc(self); }
 	});
