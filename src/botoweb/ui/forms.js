@@ -691,15 +691,7 @@ $forms.Bool = function () {
 		if (value)
 			value = value.val;
 
-		var field = $('<div><div class="al"><input type="radio" value="1"/> Yes &nbsp; <input type="radio" value="0"/> No &nbsp; </div></div>');
-
-		field.append(
-			$ui.button('Clear')
-				.addClass('small')
-				.click(function () {
-					field.find('input').attr('checked', false);
-				})
-		);
+		var field = $('<div><div class="al"><input type="radio" value="True"/> Yes &nbsp; <input type="radio" value="False"/> No &nbsp; </div></div>');
 
 		// If the field supports choices this will add them
 		this.reset_choices(field);
@@ -710,17 +702,13 @@ $forms.Bool = function () {
 			name: 'field_' + Math.round(Math.random() * 10000)
 		});
 
-		if (value !== null)
-			field.find('input[value=' + value + ']').attr('checked', true);
+		if (value == 'True')
+			field.find('input[value=True]').attr('checked', true);
+		else
+			field.find('input[value=False]').attr('checked', true);
 
 		field.data('get_val', function () {
-			var val = field.find(':checked').val()
-
-			if (val == '1')
-				return true;
-
-			if (val == '0')
-				return false;
+			return field.find(':checked').val()
 		});
 
 		return field;
@@ -737,9 +725,7 @@ $forms.Bool = function () {
 
 		// Preserve field order according to the DOM
 		this.node.find('.edit_field').each(function () {
-			var selected = $(this).find(':checked');
-
-			val.push({val: selected.val(), type: 'boolean'});
+			val.push({val: $(this).data('get_val')(), type: 'boolean'});
 		});
 
 		return val;

@@ -152,18 +152,6 @@ botoweb.xml = {
 					});
 				}
 
-				else if (this.is_type('boolean')) {
-					d = tags.map(function(i, tag) {
-						switch ($(tag).text()) {
-							case 'True':
-								return { val: '1' };
-							case 'False':
-								return { val: '0' };
-						}
-						return { val: null };
-					});
-				}
-
 				else {
 					d = tags.map(function(i, tag) {
 						return { val: $(tag).text() };
@@ -236,20 +224,6 @@ botoweb.xml = {
 				.text($util.normalize_string(this.val)).appendTo(node);
 			});
 			node.appendTo(parent);
-		},
-		boolean: function (val, node, parent) {
-			node.attr('type', 'boolean');
-
-			$.each(val, function () {
-				var v = '';
-
-				if (this.val == 1)
-					v = 'True';
-				else if (this.val == 0)
-					v = 'False';
-
-				node.clone().text(v).appendTo(parent);
-			});
 		},
 		dateTime: function (val, node, parent) {
 			node.attr('type', 'dateTime');

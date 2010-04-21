@@ -251,14 +251,16 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			};
 			break;
 		case 'boolean':
-			this.format_val = function (data) {
+			this.format_val = function (data, opt) {
 				switch (data.val) {
 					case '1':
+					case 'True':
+						if (opt.sql)
+							return 'True';
 						return 'Yes';
-					case '0':
-						return 'No';
-
 					default:
+						if (opt.sql)
+							return 'False';
 						return 'No';
 				}
 				return '';
