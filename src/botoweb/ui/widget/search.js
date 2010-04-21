@@ -35,9 +35,11 @@ botoweb.ui.widget.Search = function(node) {
 
 			self.props.push(prop);
 
-			var field = botoweb.ui.forms.prop_field(prop);
+			var field = botoweb.ui.forms.prop_field(prop, {
+				def: ''
+			});
 
-			field.add_field();
+			field.edit();
 
 			self.header.append(
 				$('<label class="clear"/>')
@@ -65,14 +67,24 @@ botoweb.ui.widget.Search = function(node) {
 			query = self.def.slice();
 
 		$.each(self.fields, function(i, field) {
-			$.each(field.fields, function () {
-				var val = $(this).val();
+			var val = field.val();
 
-				if ($.isArray(val))
-					query.push([field.prop.meta.name, 'like', $.map(val, function(v) { return '%' + v + '%'; })]);
-				else if (val)
-					query.push([field.prop.meta.name, 'like', '%' + val + '%']);
-			});
+			var op = '=';
+			var wrap = '';
+
+			// Anything with choices has to use the = op regardless of type
+			if (field.prop.meta.choices && field.prop.meta.choices.length) { }
+
+			// Strings use like comparison
+			else if (field.prop.is_type('str', 'string', 'blob')) {
+				op = 'like';
+				wrap = '%';
+			}
+
+			if (val.length > 1)
+				query.push([field.prop.meta.name, op, $.map(val, function(v) { return wrap + v.val + wrap; })]);
+			else if (val.length && val[0].val)
+				query.push([field.prop.meta.name, op, wrap + val[0].val + wrap]);
 		});
 
 		self.results.reset();
@@ -85,7 +97,7 @@ botoweb.ui.widget.Search = function(node) {
 			}
 
 			return false;
-		});
+		}, { no_cache: true });
 	};
 
 	self.header.append(
