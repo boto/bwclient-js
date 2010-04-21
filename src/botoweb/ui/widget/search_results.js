@@ -162,10 +162,14 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 	}
 
 	self.resume = function() {
-		self.stopped = false;
+		if (self.data_table) {
+			if (self.data_table.paused)
+				return;
 
-		if (self.data_table)
 			self.data_table.stopped = false;
+		}
+
+		self.stopped = false;
 
 		if (self.next_page)
 			self.next_page();
