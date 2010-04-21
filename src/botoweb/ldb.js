@@ -84,21 +84,63 @@ botoweb.ldb = {
 					// a duplicate property.
 					var set = {};
 
+					var column_definitions = $.map(model.props, function (prop) {
+						if (prop.meta.name in set)
+							return;
+
+						set[prop.meta.name] = 1;
+
+						var defn = botoweb.ldb.prop_to_column_defn(prop);
+
+						if (prop.is_type('reference') && !prop.is_type('list'))
+							return [defn, botoweb.ldb.prop_to_column(prop) + '__type TEXT'];
+
+						return defn;
+					});
+
+					column_definitions.unshift('id TEXT UNIQUE');
+
 					txn.executeSql(
 						'CREATE TABLE IF NOT EXISTS ' + botoweb.ldb.model_to_table(model) +
-						' (id TEXT UNIQUE, ' + $.map(model.props, function (prop) {
-							if (prop.meta.name in set)
+						' (' + column_definitions.join(', ') + ')'
+					);
+
+					// Check the table schema for changes. If anything has changed
+					// we need to reset and re-sync the table.
+					txn.executeSql(
+						'SELECT sql FROM sqlite_master WHERE type = ? AND tbl_name = ?',
+						['table', botoweb.ldb.model_to_table(model)],
+						function (txn, results) {
+							if (!results.rows.length)
 								return;
 
-							set[prop.meta.name] = 1;
+							// Full CREATE TABLE... definition
+							var schema = results.rows.item(0).sql;
 
-							var defn = botoweb.ldb.prop_to_column_defn(prop);
+							schema = schema.split('(')[1];
+							var new_columns = schema.split(', ');
 
-							if (prop.is_type('reference') && !prop.is_type('list'))
-								return [defn, botoweb.ldb.prop_to_column(prop) + '__type TEXT'];
+							var diff = false;
 
-							return defn;
-						}).join(', ') + ')'
+							if (new_columns.length != column_definitions.length)
+								diff = true;
+							else {
+								$.each(column_definitions, function (i, defn) {
+									// Compare the column names and stop checking
+									// if one does not match
+									if (defn.replace(/ .*$/, '') != new_columns[i].replace(/ .*$/, '')) {
+										diff = true;
+										return false;
+									}
+								});
+							}
+
+							if (diff) {
+								console.warn('Local DB schema for ' + model.name + ' is outdated, data will be reset.');
+								model.local = false;
+								botoweb.ldb.sync.reset(model.name);
+							}
+						}
 					);
 				}, error);
 
