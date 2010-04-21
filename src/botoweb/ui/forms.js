@@ -411,7 +411,7 @@ $forms.Field = function (prop, opt) {
 	this.set_default = function () {
 		$.each(this.fields, function () {
 			if (!$(this).val().length)
-				$(this).val(self.opt.def || self.prop.meta.def);
+				$(this).val(('def' in self.opt) ? self.opt.def : self.prop.meta.def);
 		});
 	}
 
@@ -424,7 +424,7 @@ $forms.Field = function (prop, opt) {
 			});
 		}
 		else {
-			self.add_field(self.opt.def || self.prop.meta.def);
+			self.add_field(('def' in self.opt) ? self.opt.def : self.prop.meta.def);
 		}
 	};
 
@@ -707,7 +707,7 @@ $forms.Bool = function () {
 		else if (value == 'False')
 			field.find('input[value=False]').attr('checked', true);
 		else
-			field.find('input[value=' + (self.opt.def || self.prop.meta.def || 'False') + ']').attr('checked', true);
+			field.find('input[value=' + (('def' in self.opt)('def' in self.opt) ? self.opt.def : self.prop.meta.def || 'False') + ']').attr('checked', true);
 
 		field.data('get_val', function () {
 			return field.find(':checked').val()
@@ -1222,7 +1222,7 @@ $forms.Picklist = function () {
 				}
 			});
 
-			if (!vals && self.opt.def) {
+			if (!vals && 'def' in self.opt) {
 				vals++;
 				add_selection(self.opt.def);
 			}
