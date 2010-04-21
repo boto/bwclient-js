@@ -105,7 +105,23 @@ botoweb.sql = {
 
 			// Convert each filter into a column comparison expression
 			$.each(filters, function() {
-				if (this[0] in tbl.c)
+				if (!(this[0] in tbl.c))
+					return;
+
+				// Join and search against the reference table if this row has one
+				if (this[0] + '_ref' in tbl.c) {
+					var ref = tbl.c[this[0] + '_ref'];
+					var val = tbl.c[this[0] + '_ref'].values;
+
+					// The search query
+					query.filter(val.cmp(this[2], this[1]));
+
+					// Restrict the join and group the results to ensure only
+					// one row per root object
+					query.filter(ref.cmp(tbl.c.id));
+					query.group_by(tbl.c.id);
+				}
+				else
 					query.filter(tbl.c[this[0]].cmp(this[2], this[1]));
 			});
 
@@ -423,6 +439,8 @@ botoweb.sql = {
 
 			if (this.max_results)
 				sql += '\nLIMIT ' + this.start + ', ' + this.max_results;
+
+			console.warn(sql);
 
 			return sql;
 		};
