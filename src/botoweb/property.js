@@ -21,6 +21,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	this.onload = [];
 	this.obj_model = model;
 
+	if (opt.item_type == 'str')
+		opt.item_type = 'string';
+
 	// Lists are not treated as their own type since this adds an extra
 	// unnecessary level of complexity. Instead the meta.list property will be
 	// true if the property was defined as a list.
@@ -406,9 +409,6 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 	// Copy any optional data
 	$.extend(this.meta, opt);
-
-	if (this.meta.item_type == 'str')
-		this.meta.item_type = 'string';
 
 	if (this.is_type('query')) {
 		setTimeout(function () {
