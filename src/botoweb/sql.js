@@ -440,8 +440,6 @@ botoweb.sql = {
 			if (this.max_results)
 				sql += '\nLIMIT ' + this.start + ', ' + this.max_results;
 
-			console.warn(sql);
-
 			return sql;
 		};
 
