@@ -704,8 +704,10 @@ $forms.Bool = function () {
 
 		if (value == 'True')
 			field.find('input[value=True]').attr('checked', true);
-		else
+		else if (value == 'False')
 			field.find('input[value=False]').attr('checked', true);
+		else
+			field.find('input[value=' + (self.opt.def || self.prop.meta.def || 'False') + ']').attr('checked', true);
 
 		field.data('get_val', function () {
 			return field.find(':checked').val()
