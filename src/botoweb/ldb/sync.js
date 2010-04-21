@@ -244,6 +244,7 @@ botoweb.ldb.sync = {
 		delete localStorage.sync_model;
 
 		if (model_name) {
+			botoweb.env.models[model_name].local = false;
 			db.transaction(function (txn) {
 				botoweb.ldb.tables[model_name].__drop(txn);
 			});
@@ -252,6 +253,7 @@ botoweb.ldb.sync = {
 		}
 		else {
 			$.each(botoweb.ldb.tables, function(i, table) {
+				table.model.local = false;
 				db.transaction(function (txn) {
 					table.__drop(txn);
 				});
