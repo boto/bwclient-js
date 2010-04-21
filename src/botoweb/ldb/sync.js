@@ -267,7 +267,9 @@ botoweb.ldb.sync = {
 
 		botoweb.ldb.prepare(function() {
 			botoweb.ldb.sync.update();
-		}, console.error);
+		}, function (e) {
+			console.error(e);
+		});
 	},
 
 	/**
@@ -342,7 +344,9 @@ botoweb.ldb.sync = {
 								' WHERE id = ?',
 								[obj.id],
 								null,
-								console.error
+								function (txn, e) {
+									console.error(e);
+								}
 							);
 
 							if (opt.trash || !prop)
@@ -370,7 +374,9 @@ botoweb.ldb.sync = {
 									' VALUES ' + values,
 									bp,
 									null,
-									console.error
+									function (e) {
+										console.error(e);
+									}
 								);
 							});
 						}
@@ -413,7 +419,9 @@ botoweb.ldb.sync = {
 									}]);
 								}
 							},
-							botoweb.util.error
+							function (txn, e) {
+								console.error(e);
+							}
 						);
 					}
 					else {
@@ -430,7 +438,9 @@ botoweb.ldb.sync = {
 									}]);
 								}
 							},
-							console.error
+							function (txn, e) {
+								console.error(e);
+							}
 						);
 					}
 				});
