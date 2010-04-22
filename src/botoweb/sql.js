@@ -244,7 +244,10 @@ botoweb.sql = {
 			if (tbl instanceof botoweb.sql.Column)
 				tbl = tbl.table;
 
-			count_query = new botoweb.sql.Query(botoweb.sql.func('count', tbl.c.id));
+			// Count each id only once
+			count_query = new botoweb.sql.Query(new botoweb.sql.Expression([tbl.c.id], function() {
+				return 'COUNT(DISTINCT ' + this.columns.join(',') + ')';
+			}));
 
 			$.each(this.filters, function () {
 				count_query.filter(this);
