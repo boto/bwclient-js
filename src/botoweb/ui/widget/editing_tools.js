@@ -15,9 +15,15 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 		node = $('<ul />').appendTo(node);
 
 	this.node = $(node).addClass('widget-editing_tools');
-	this.model = block.model;
+	this.model = node.attr(botoweb.ui.markup.prop.model);
 	this.obj_id = block.obj_id;
 	this.block = block;
+
+	if (this.model)
+		this.model = botoweb.env.models[this.model];
+
+	if (!this.model)
+		this.model = block.model;
 
 	if (this.obj_id)
 		actions = actions || 'edit clone delete';
