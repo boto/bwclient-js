@@ -45,15 +45,20 @@ botoweb.ui.widget.AttributeList = function(node, model) {
 		return prop;
 	});
 
-	self.per_column = Math.ceil(self.properties.length / 2);
-	self.columns = [
-		$('<div/>')
-			.addClass('al p50')
-			.appendTo(self.node),
-		$('<div/>')
-			.addClass('al p50')
-			.appendTo(self.node)
-	];
+	self.num_columns = 2;
+
+	if (self.node.get(0).className.indexOf('columns_') >= 0)
+		self.num_columns = self.node.get(0).className.replace(/.*columns_(\d+).*/, '$1') * 1;
+
+	self.per_column = Math.ceil(self.properties.length / self.num_columns);
+
+	self.columns = [];
+
+	for (var i = 0; i < self.num_columns; i++) {
+		self.columns.push($('<div/>')
+			.addClass('al p' + Math.floor(100 / self.num_columns))
+			.appendTo(self.node));
+	}
 
 	$(self.properties).each(function(num, props) {
 		var c = self.columns[Math.floor(num / self.per_column)];
