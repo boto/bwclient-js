@@ -95,6 +95,8 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 				self.node.append(block.node);
 			}
 
+			$(block.node).trigger('ready');
+
 			if (self.num_results >= count || hit_limit && c >= results.length) {
 				if (self.data_table) {
 					if (hit_limit && self.num_results < count) {

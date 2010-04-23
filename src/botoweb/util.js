@@ -134,6 +134,12 @@ $util.interpolate = function (str, data) {
 		};
 	}
 	else {
+		if (data.meta_recent) {
+			// Consider "recent" as anything within the past 10 days.
+			var d = new Date().valueOf() - 1000 * 60 * 60 * 24 * 10;
+			data.timestamp_recent = $util.timestamp(new Date(d));
+		}
+
 		replacement = function (m, key) {
 			return data[key] || '';
 		};
