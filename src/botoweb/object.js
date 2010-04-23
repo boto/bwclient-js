@@ -271,6 +271,14 @@ $.each(['follow', 'update', 'save', 'load', 'val', 'del'], function (i, fnc_name
 		if (!model)
 			return;
 
+		// Test if we have been given an actual object - this is a nice shortcut
+		// for code which may or may not have a reference to an object, for
+		// example: botoweb.Object.val((block.obj || block.obj_id), block.model, ...)
+		if (id.id) {
+			id[fnc_name].apply(id, args);
+			return;
+		}
+
 		model.get(id, function (obj) {
 			if (obj)
 				obj[fnc_name].apply(obj, args);
