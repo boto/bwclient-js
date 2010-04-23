@@ -254,21 +254,30 @@
 						if (block.obj) {
 							block.waiting++;
 
-							var async = false;
+							var load_data = function () {
+								var async = false;
 
-							block.obj.data[val].val(function (data) {
-								$.each(data, function () {
-									if (this && this.val)
-										descend(this.val);
-								});
+								node.unbind('ready');
 
-								block.waiting--;
+								botoweb.Object.val(block.model, (block.obj || block.obj_id), val, function (data) {
+									$.each(data, function () {
+										if (this && this.val)
+											descend(this.val);
+									});
 
-								if (async && !block.waiting)
-									block.done();
-							}, $.extend({ obj: block.obj }, block.opt));
+									block.waiting--;
 
-							async = true;
+									if (async && !block.waiting)
+										block.done();
+								}, $.extend({ obj: block.obj }, block.opt));
+
+								async = true;
+							}
+
+							if (node.is('.delay_load'))
+								node.bind('ready', load_data);
+							else
+								load_data();
 						}
 						else {
 							descend();
@@ -311,11 +320,20 @@
 					}
 
 					else if (block.obj && prop.is_type('blob')) {
-						block.obj.load(val, function (data) {
-							if (!data) return;
+						var load_data = function () {
+							node.unbind('ready');
 
-							node.html(botoweb.util.html_format(data));
-						});
+							botoweb.Object.load(block.model, (block.obj || block.obj_id), val, function (data) {
+								if (!data) return;
+
+								node.html(botoweb.util.html_format(data));
+							});
+						}
+
+						if (this.is('.delay_load'))
+							this.bind('ready', load_data);
+						else
+							load_data();
 					}
 
 					else if (block.obj) {
@@ -389,7 +407,7 @@
 				// It is safest not to make a history entry for deletes, just
 				// attach a click event.
 				if (val == 'delete') {
-					this.click(function () {
+					this.click(function (e) {
 						block.model.get(block.obj_id, function (obj) {
 							var dialog = $('<div/>')
 								.html(
@@ -439,6 +457,9 @@
 
 							dialog.parent('.ui-dialog').find('button:last').addClass('ui-priority-secondary');
 						});
+
+						e.preventDefault();
+						return false;
 					});
 
 					return;
@@ -637,7 +658,25 @@
 					no_query: true
 				});
 
-				block.obj.follow(val, results.update, null, { no_cache: true });
+				var filters = this.attr($markup.prop.filter);
+
+				if (filters) {
+					try {
+						eval('filters = ' + filters);
+					} catch (e) {}
+				}
+
+				var node = this;
+
+				function load_data () {
+					node.unbind('ready');
+					botoweb.Object.follow(block.model, (block.obj || block.obj_id), val, results.update, filters, { no_cache: true });
+				}
+
+				if (this.is('.delay_load'))
+					this.bind('ready', load_data);
+				else
+					load_data();
 			});
 
 			return matches;
