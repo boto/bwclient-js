@@ -35,7 +35,7 @@ botoweb.ui.page = new function() {
 		// Load the page from cache, unless it is a refresh
 		if (!opt.refresh && loc.full in this.cache) {
 			detach_events();
-			destroy();
+			destroy(opt);
 
 			$('#botoweb.page').append(this.cache[loc.full]);
 
@@ -67,12 +67,12 @@ botoweb.ui.page = new function() {
 			fnc = show_page;
 
 		if (html)
-			fnc(html);
+			fnc(html, opt);
 		else {
 			var base = botoweb.env.cfg.static_host || loc.base_href;
 
 			$.get(botoweb.util.url_join(base, loc.hash_href), function (html) {
-				init_page(loc.hash_href, html, fnc);
+				init_page(loc.hash_href, html, fnc, opt);
 			});
 		}
 	};
@@ -147,8 +147,9 @@ botoweb.ui.page = new function() {
 	 *
 	 * @private
 	 */
-	function destroy () {
-		if (self.changed && self.history.length > 1 && !self.history[1].data.action) {
+	function destroy (opt) {
+		opt = opt || {};
+		if (opt.changed && self.history.length > 1 && !self.history[1].data.action) {
 			self.cache[self.history[1].full] = $('#botoweb.page').children().detach();
 		}
 		else
@@ -227,10 +228,10 @@ botoweb.ui.page = new function() {
 	 *
 	 * @param {String} html The HTML markup string.
 	 */
-	function init_page (url, html, fnc) {
+	function init_page (url, html, fnc, opt) {
 		botoweb.ui.markup.page_store(html, function (html) {
 			store(url, html);
-			fnc(html);
+			fnc(html, opt);
 		});
 	}
 
@@ -247,13 +248,13 @@ botoweb.ui.page = new function() {
 	 *
 	 * @param {String} html The HTML markup string.
 	 */
-	function show_page (html) {
-		detach_events();
+	function show_page (html, opt) {
+		detach_events(opt);
 		var self = botoweb.ui.page;
 		var old_loc = self.location;
 
 		botoweb.ui.markup.page_show(html, function (node) {
-			destroy();
+			destroy(opt);
 
 			$('#botoweb.page').append(node);
 
@@ -314,12 +315,10 @@ botoweb.ui.page = new function() {
 				}
 			}
 
-			self.changed = true;
-
-			if (new_page)
-				self.load(loc);
-
-			self.changed = false;
+			if (new_page) {
+				// Set changed flag to
+				self.load(loc, null, { changed: true });
+			}
 		}
 	}
 
