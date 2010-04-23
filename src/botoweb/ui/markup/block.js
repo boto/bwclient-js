@@ -20,6 +20,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.children = [];
 	this.fields = [];
 	this.nested = [];
+	this.ignored = [];
 	this.waiting = 0;
 	this.no_obj = true;
 	this.opt = opt;

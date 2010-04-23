@@ -44,6 +44,7 @@ botoweb.ui.markup = new function () {
 		'editing_tools':  '*[bwWidget=editingTools]',
 		'existing_only':  '*[bwExistingOnly]',
 		'header':         'header',
+		'ignore':         '*[bwWidget=ignore]',
 		'link':           'a[bwLink],button[bwLink]',
 		'model':          '*[bwModel]',
 		'object':         'article, .bwObject',
@@ -66,6 +67,7 @@ botoweb.ui.markup = new function () {
 	 * @private
 	 */
 	var nesting = [
+		this.sel.ignore,
 		this.sel.search_results,
 		this.sel.relation,
 		this.sel.action
@@ -197,6 +199,7 @@ botoweb.ui.markup = new function () {
 	this.remove_nested = function (block) {
 		var matches = false;
 		block.nested = [];
+		block.ignored = [];
 
 		var sel = block.nested_sel;
 
@@ -242,12 +245,16 @@ botoweb.ui.markup = new function () {
 
 				// Temporarily replace the nestable block.nodes empty divs
 				var tmp = $('<div/>');
-				block.nested.push([tmp, $(this).replaceWith(tmp)]);
+
+
+				if (s == botoweb.ui.markup.sel.ignore)
+					block.ignored.push([tmp, $(this).replaceWith(tmp)]);
+				else
+					block.nested.push([tmp, $(this).replaceWith(tmp)]);
 			});
 
-			if (sel_matches) {
+			if (sel_matches)
 				block.nested_sel.push(s);
-			}
 		});
 
 		return matches;
@@ -261,5 +268,15 @@ botoweb.ui.markup = new function () {
 			$(this[0]).replaceWith(this[1]);
 		});
 		block.nested = [];
+	};
+
+	/**
+	 * Add ignored structures back to the node after all parsing is complete.
+	 */
+	this.restore_ignored = function (block) {
+		$.each(block.ignored, function () {
+			$(this[0]).replaceWith(this[1]);
+		});
+		block.ignored = [];
 	};
 }();
