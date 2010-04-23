@@ -20,6 +20,7 @@ botoweb.ui.markup = new function () {
 		'filter':         'bwFilter',
 		'input_type':     'bwInputType',
 		'link':           'bwLink',
+		'limit':          'bwLimit',
 		'model':          'bwModel',
 		'searchable':     'bwSearchable',
 		'template':       'bwTemplate',
@@ -122,7 +123,18 @@ botoweb.ui.markup = new function () {
 			// Use botoweb.ui.page.load which will cache the template in
 			// localStorage for future requests.
 			botoweb.ui.page.load(tmpl.attr(this.prop.template), function (html) {
+				var data = tmpl.attr(self.prop.def);
+
+				if (data) {
+					try {
+						eval('data = ' + data);
+
+						html = botoweb.util.interpolate(html, data);
+					} catch (e) {}
+				}
+
 				html = remove_scripts(html);
+
 				tmpl.replaceWith(html);
 				self.page_store(node, fnc, scripts);
 			});
