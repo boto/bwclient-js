@@ -148,7 +148,7 @@ botoweb.ui.page = new function() {
 	 * @private
 	 */
 	function destroy () {
-		if (self.history.length > 1) {
+		if (self.changed && self.history.length > 1 && !self.history[1].data.action) {
 			self.cache[self.history[1].full] = $('#botoweb.page').children().detach();
 		}
 		else
@@ -250,6 +250,7 @@ botoweb.ui.page = new function() {
 	function show_page (html) {
 		detach_events();
 		var self = botoweb.ui.page;
+		var old_loc = self.location;
 
 		botoweb.ui.markup.page_show(html, function (node) {
 			destroy();
@@ -313,8 +314,12 @@ botoweb.ui.page = new function() {
 				}
 			}
 
+			self.changed = true;
+
 			if (new_page)
 				self.load(loc);
+
+			self.changed = false;
 		}
 	}
 
