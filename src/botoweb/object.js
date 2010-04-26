@@ -236,12 +236,13 @@ botoweb.Object = function(id, model, data, opt) {
 	};
 
 	this.val = function(prop, fnc, opt) {
+		opt = opt || {};
 		var prop = this.data[prop];
 
 		if (typeof prop == 'undefined')
 			return;
 
-		prop.val(fnc, opt);
+		prop.val(fnc, $.extend(opt, { obj: this }));
 	};
 
 	this.del = function(fnc) {
