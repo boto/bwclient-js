@@ -862,6 +862,9 @@ $forms.Mapping = function () {
 	this.decorate_field = function (field) {
 		var index = field.attr('id').replace(/_.*/, '') * 1;
 
+		if (!this.prop.data)
+			return;
+
 		field.before(
 			$('<strong></strong>')
 				.text(this.prop.data[index].key)
