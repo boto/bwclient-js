@@ -26,6 +26,9 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 	self.stopped = false;
 	self.guide_block = null;
 
+	if (self.def)
+		self.def = botoweb.util.interpolate(self.def);
+
 	if (!self.limit_pages) {
 		self.limit_pages = botoweb.env.cfg.search_result_pages;
 	}
@@ -154,16 +157,16 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 
 		$.each(results, function (i, obj) {
 			if (!self.guide_block) {
-				self.guide_block = new botoweb.ui.markup.Block(self.template.clone(), {
-					obj: obj,
+				self.guide_block = new botoweb.ui.markup.Block((obj.node || self.template.clone()), {
+					obj: (obj.obj || obj),
 					onready: add_row,
 					editable: false,
 					no_cache: true
 				});
 			}
 			else {
-				self.guide_block.clone(self.template.clone(), {
-					obj: obj,
+				self.guide_block.clone((obj.node || self.template.clone()), {
+					obj: (obj.obj || obj),
 					onready: add_row,
 					editable: false,
 					no_cache: true
