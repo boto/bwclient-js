@@ -346,7 +346,8 @@
 							block: block,
 							model: block.model,
 							editable: false,
-							def: block.def[prop.meta.name]
+							def: block.def[prop.meta.name],
+							input_type: this.attr($markup.prop.input_type)
 						};
 
 
@@ -391,7 +392,7 @@
 		link: function (block) {
 			var matches = false;
 
-			if (!block.model && !block.obj)
+			if (!block.model && !block.obj_id)
 				return;
 
 			$markup.find(block.node, 'link', function(val, prop) {
@@ -466,7 +467,7 @@
 				}
 
 				// Without an object, the only supported link type is create
-				if (val != 'create' && !block.obj)
+				if (val != 'create' && !block.obj_id)
 					return;
 
 				var set_href;
@@ -495,8 +496,8 @@
 
 				var view_href = '';
 
-				if (block.obj)
-					view_href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?id=' + escape(block.obj.id);
+				if (block.obj_id)
+					view_href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?id=' + escape(block.obj_id);
 
 				if (data)
 					data = $util.interpolate(data, (block.obj || block.model))

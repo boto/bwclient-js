@@ -30,6 +30,10 @@ $forms.prop_field = function (prop, opt) {
 		return new $forms.Password(prop, opt);
 	else if (prop.is_type('blob') || opt.input == 'file')
 		return new $forms.File(prop, opt);
+	else if (opt.input == 'PropertyMap')
+		return new $forms.PropertyMap(prop, opt);
+	else if (opt.input == 'ValueMap')
+		return new $forms.ValueMap(prop, opt);
 	else if (prop.is_type('complexType'))
 		return new $forms.Mapping(prop, opt);
 	else
@@ -836,28 +840,64 @@ $forms.File = function () {
 	}
 };
 
+/**
+ * Allows a user to map freeform text inputs
+ */
 $forms.Mapping = function () {
-	$forms.Dropdown.apply(this, arguments);
+	$forms.Field.apply(this, arguments);
+
+	// Allow the user to add mappings
+	this.opt.allow_multiple = true;
 
 	var self = this;
 
-	if (this.opt.choices.length == 0) {
-		var choices = $.map(this.model.props, function (prop) {
-			return {
-				name: prop.meta.label,
-				value: prop.meta.name
-			};
+	this.decorate_field = function (field) {
+		var index = field.attr('id').replace(/_.*/, '') * 1;
+		var key = '';
+
+		if (this.prop.data)
+			key = this.prop.data[index].key
+
+		field.css('width', '30% !important');
+
+		field.before(
+			$('<input type="text" class="clear key al p30"/>')
+				.val(key),
+			$('<span class="al">&nbsp;maps to&nbsp;</span>'));
+	};
+
+	/**
+	 * Returns the value represented by the field selections for the purpose of
+	 * saving that value to botoweb.
+	 *
+	 * @return A single value, an Array of values, or null.
+	 */
+	this.val = function () {
+		var val = [];
+
+		// Preserve field order according to the DOM
+		this.node.find('.edit_field').each(function () {
+			var sel = $(this).val();
+			var key = $(this).siblings('input.key').val();
+			var index = this.id.replace(/_.*/, '') * 1;
+
+			val.push({key: key, val: sel, type: 'string'});
 		});
 
-		choices.push({
-			name: 'ID',
-			value: 'id'
-		});
+		return val;
+	};
+};
 
-		choices.sort(botoweb.util.sort_props);
-	}
+/**
+ * Allows the users to map given keys to freeform values.
+ */
+$forms.ValueMap = function () {
+	if (this.parent)
+		this.parent.apply(this, arguments);
+	else
+		$forms.Field.apply(this, arguments);
 
-	this.add_choices(choices);
+	var self = this;
 
 	this.decorate_field = function (field) {
 		var index = field.attr('id').replace(/_.*/, '') * 1;
@@ -890,6 +930,34 @@ $forms.Mapping = function () {
 
 		return val;
 	};
+};
+
+/**
+ * Allows the users to map given keys to a dropdown with the model's properties.
+ */
+$forms.PropertyMap = function () {
+	this.parent = $forms.Dropdown;
+	$forms.Mapping.apply(this, arguments);
+
+	var self = this;
+
+	if (this.opt.choices.length == 0) {
+		var choices = $.map(this.model.props, function (prop) {
+			return {
+				name: prop.meta.label,
+				value: prop.meta.name
+			};
+		});
+
+		choices.push({
+			name: 'ID',
+			value: 'id'
+		});
+
+		choices.sort(botoweb.util.sort_props);
+	}
+
+	this.add_choices(choices);
 };
 
 $forms.Picklist = function () {
