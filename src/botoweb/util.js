@@ -125,12 +125,16 @@ $util.interpolate = function (str, data) {
 
 	var replacement;
 
+	data.__user__ = botoweb.env.user;
+
 	if (data instanceof botoweb.Object) {
 		replacement = function (m, key) {
 			if (key in data.data)
 				return data.data[key].toString() || '';
 
-			return data[key] || '';
+			eval('ret = data.' + key);
+
+			return ret || data[key] || '';
 		};
 	}
 	else {
@@ -141,11 +145,13 @@ $util.interpolate = function (str, data) {
 		}
 
 		replacement = function (m, key) {
-			return data[key] || '';
+			var ret;
+			eval('ret = data.' + key);
+			return ret || '';
 		};
 	}
 
-	return str.replace(/\{\{\s*(\w+)\s*\}\}/g, replacement);
+	return str.replace(/\{\{\s*(.*?)\s*\}\}/g, replacement);
 };
 
 /**
