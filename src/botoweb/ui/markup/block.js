@@ -92,7 +92,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 		if (this.obj_id && this.state != 'clone') {
 			var onsave;
 
-			function onsave (obj) {
+			var onsave = function (obj) {
 				self.saved = true;
 				if (fnc)
 					fnc();
@@ -125,12 +125,16 @@ botoweb.ui.markup.Block = function (node, opt) {
 			this.model.save(data, function (obj) {
 				self.saved = true;
 
-				if (fnc)
-					fnc(obj);
+				var onsave = function () {
+					if (fnc)
+						fnc(obj);
 
-				if (self.opt.root) {
-					document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
+					if (self.opt.root)
+						document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
 				}
+
+				if ($(botoweb.ui.forms).triggerHandler('save_complete', [obj, onsave]) !== false)
+					onsave();
 			});
 		}
 	}

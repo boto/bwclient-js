@@ -825,7 +825,9 @@ $forms.File = function () {
 					.addClass('ui-state-default')
 					.unbind();
 
-				upload.submit();
+				setTimeout(function () {
+					upload.submit()
+				}, 1000);
 
 				return false;
 			});
