@@ -89,7 +89,7 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 				return href;
 			},
 			picklist_result: function (text, obj) {
-				return '<div class="ar small">' + obj.model.name + '!</div>' + text;
+				return '<div class="ar small">' + obj.model.name + '</div>' + text;
 			}
 		}
 	}, cfg);
