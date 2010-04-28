@@ -755,7 +755,7 @@ $forms.File = function () {
 
 	var self = this;
 
-	if (this.opt.input.indexOf('file') >= 0) {
+	if (this.opt.input && this.opt.input.indexOf('file') >= 0) {
 		this.opt.html.attr.type = 'file';
 		this.opt.html.tagName = 'input';
 	}
@@ -1163,7 +1163,7 @@ $forms.Picklist = function () {
 						$('<div class="selection"/>')
 							.attr('id', obj.id)
 							.attr($ui.markup.prop.model, obj.model.name)
-							.text(' ' + obj.data.name.toString())
+							.html(' ' + botoweb.env.cfg.format.picklist_result(obj.data.name.toString(), obj))
 							.prepend(
 								$ui.button('', { icon: 'ui-icon-close', no_text: true, mini: true, primary: false })
 									.addClass('ui-state-error')
@@ -1173,9 +1173,6 @@ $forms.Picklist = function () {
 										if (template_field)
 											template_field.remove();
 									})
-							)
-							.append(
-								$('<span class="small"/>').text(' (' + obj.model.name + ')')
 							)
 					);
 				}
@@ -1223,7 +1220,7 @@ $forms.Picklist = function () {
 
 					$.each(items, function (i, data) {
 						result_node.append(
-							$ui.button('<div class="ar small">' + data.obj.model.name + '</div>' + data.text, { corners: [0,0,0,0] })
+							$ui.button(botoweb.env.cfg.format.picklist_result(data.text, data.obj), { corners: [0,0,0,0] })
 								.attr('id', data.obj.id)
 								.click(function () {
 									add_selection(data.obj);

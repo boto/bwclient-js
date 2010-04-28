@@ -307,7 +307,7 @@ botoweb.ldb.sync = {
 			}
 		}
 
-		if (results.length) {
+		if (results.length && self.update_model) {
 			localStorage.setItem('sync_model', self.update_model.name);
 		}
 

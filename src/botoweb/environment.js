@@ -87,6 +87,9 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 			external_href: function (href, prop, obj) {
 				this.attr('target', '_blank');
 				return href;
+			},
+			picklist_result: function (text, obj) {
+				return '<div class="ar small">' + obj.model.name + '!</div>' + text;
 			}
 		}
 	}, cfg);
