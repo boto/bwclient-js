@@ -132,7 +132,8 @@ botoweb.ldb.sync = {
 
 		var options = {
 			no_ldb: true,
-			no_cache: true
+			no_cache: true,
+			refresh: refresh
 		};
 		var processor = self.process;
 
@@ -302,13 +303,10 @@ botoweb.ldb.sync = {
 			if (self.task_total) {
 				$(self).trigger('begin', [{
 					num_updates: self.task_total,
-					model: self.update_model
+					model: self.update_model,
+					refresh: opt.refresh
 				}]);
 			}
-		}
-
-		if (results.length && self.update_model) {
-			localStorage.setItem('sync_model', self.update_model.name);
 		}
 
 		var result_id = self.task_processed;
@@ -316,6 +314,10 @@ botoweb.ldb.sync = {
 		// Just used a lot of CPU to parse the XML, pause for a short time
 		// before Local DB processing to allow foreground processing.
 		setTimeout(function () {
+			if (results.length && self.update_model) {
+				localStorage.setItem('sync_model', self.update_model.name);
+			}
+
 			botoweb.ldb.dbh.transaction(function (txn) {
 				$.each(results, function(i, obj) {
 					var db = botoweb.ldb.dbh;
