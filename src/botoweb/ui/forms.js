@@ -14,26 +14,38 @@ var $ldb = botoweb.ldb;
 $forms.prop_field = function (prop, opt) {
 	opt = opt || {};
 
-	if (prop.is_type('text') || opt.input == 'textarea' || prop.meta.maxlength > 1024)
-		return new $forms.Textarea(prop, opt);
+	if (opt.input) {
+		opt.input = opt.input.toLowerCase();
+		switch (opt.input) {
+			case 'textarea-only': return new $forms.Textarea(prop, opt);
+			case 'dropdown': return new $forms.Dropdown(prop, opt);
+			case 'text': return new $forms.Text(prop, opt);
+			case 'datetime': return new $forms.DateTime(prop, opt);
+			case 'boolean': return new $forms.Boolean(prop, opt);
+			case 'password': return new $forms.Password(prop, opt);
+			case 'textarea': case 'file': case 'file-only': return new $forms.File(prop, opt);
+			case 'propertymap': return new $forms.PropertyMap(prop, opt);
+			case 'valuemap': return new $forms.ValueMap(prop, opt);
+			case 'mapping': return new $forms.Mapping(prop, opt);
+		}
+	}
+
+	if (prop.is_type('text') || prop.meta.maxlength > 1024)
+		return new $forms.File(prop, opt); // will show textarea w/ upload toggle
 	else if (prop.meta.choices)
 		return new $forms.Dropdown(prop, opt);
-	else if (prop.is_type('string') || opt.input == 'text')
+	else if (prop.is_type('string'))
 		return new $forms.Text(prop, opt);
-	else if (prop.is_type('dateTime') || opt.input == 'dateTime')
+	else if (prop.is_type('dateTime'))
 		return new $forms.DateTime(prop, opt);
 	else if (prop.is_type('reference','query'))
 		return new $forms.Picklist(prop, opt);
 	else if (prop.is_type('boolean'))
 		return new $forms.Bool(prop, opt);
-	else if (prop.is_type('password') || opt.input == 'password')
+	else if (prop.is_type('password'))
 		return new $forms.Password(prop, opt);
-	else if (prop.is_type('blob') || opt.input == 'file')
+	else if (prop.is_type('blob'))
 		return new $forms.File(prop, opt);
-	else if (opt.input == 'PropertyMap')
-		return new $forms.PropertyMap(prop, opt);
-	else if (opt.input == 'ValueMap')
-		return new $forms.ValueMap(prop, opt);
 	else if (prop.is_type('complexType'))
 		return new $forms.Mapping(prop, opt);
 	else
@@ -743,7 +755,12 @@ $forms.File = function () {
 
 	var self = this;
 
-	this.opt.html.tagName = 'textarea';
+	if (this.opt.input.indexOf('file') >= 0) {
+		this.opt.html.attr.type = 'file';
+		this.opt.html.tagName = 'input';
+	}
+	else
+		this.opt.html.tagName = 'textarea';
 
 	this.decorate_field = function (field) {
 		if (this.opt.html.attr.type == 'file') {
@@ -752,12 +769,14 @@ $forms.File = function () {
 
 			field.replaceWith(button);
 
-			button.before(
-				$ui.button('Switch to Text Input', {icon: 'ui-icon-shuffle', primary: false})
-					.addClass('small')
-					.css('margin-bottom', '5px')
-					.click(function () { self.toggle() })
-			);
+			if (this.opt.input != 'file-only') {
+				button.before(
+					$ui.button('Switch to Text Input', {icon: 'ui-icon-shuffle', primary: false})
+						.addClass('small')
+						.css('margin-bottom', '5px')
+						.click(function () { self.toggle() })
+				);
+			}
 
 			var selections = $('<div class="selections clear"/>').insertAfter(button)
 				.css('margin-top', '5px');

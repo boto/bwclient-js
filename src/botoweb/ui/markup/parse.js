@@ -347,7 +347,7 @@
 							model: block.model,
 							editable: false,
 							def: block.def[prop.meta.name],
-							input_type: this.attr($markup.prop.input_type)
+							input: this.attr($markup.prop.input_type)
 						};
 
 
