@@ -27,7 +27,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 	self.guide_block = null;
 
 	if (self.def)
-		self.def = botoweb.util.interpolate(self.def);
+		self.def = botoweb.util.interpolate(self.def, ((self.opt.block) ? (self.opt.block.obj || self.opt.block.model) : self.model));
 
 	if (!self.limit_pages) {
 		self.limit_pages = botoweb.env.cfg.search_result_pages;

@@ -14,14 +14,16 @@ botoweb.ui.widget.Search = function(node, block) {
 	self.node = $(node).addClass('widget-search');
 	self.header = self.node.find(botoweb.ui.markup.sel.header);
 	self.model = botoweb.env.models[self.node.attr(botoweb.ui.markup.prop.model)];
-	self.results = new botoweb.ui.widget.SearchResults(self.node.find(botoweb.ui.markup.sel.search_results), self.model);
+	self.results = new botoweb.ui.widget.SearchResults(self.node.find(botoweb.ui.markup.sel.search_results), self.model, {
+		block: block
+	});
 	self.def = self.node.attr(botoweb.ui.markup.prop.def);
 	self.props = [];
 	self.fields = [];
 
 	// Evaluate JSON search defaults
 	if (self.def) {
-		self.def = botoweb.util.interpolate(self.def, (block.obj || block.model))
+		self.def = botoweb.util.interpolate(self.def, (block.obj || block.model));
 		eval('self.def = ' + self.def);
 	}
 
