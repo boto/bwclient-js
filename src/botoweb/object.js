@@ -196,7 +196,7 @@ botoweb.Object = function(id, model, data, opt) {
 			);
 		}
 		else {
-			fnc(this.obj);
+			fnc(this);
 		}
 	};
 
