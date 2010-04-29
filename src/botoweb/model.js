@@ -161,7 +161,7 @@ botoweb.Model = function (name, href, methods, props) {
 			delete self.objs[id];
 
 			if (self.local) {
-				botoweb.ldb.sync.process([new this.instance(null, id)], null, null, function () {
+				botoweb.ldb.sync.process([new self.instance(null, id)], null, null, function () {
 					if (fnc)
 						fnc(x);
 				}, { trash: true });
