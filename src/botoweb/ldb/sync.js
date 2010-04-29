@@ -41,11 +41,10 @@ botoweb.ldb.sync = {
 
 
 		// sync_model is set when a model is being synced. If the page is
-		// refreshed while the update is running, this ensures that the model is
-		// fully re-synced, otherwise it would be left partially loaded.
+		// refreshed while the update is running, this ensures that the sync
+		// continues right away
 		if (localStorage.sync_model) {
-			self.reset(localStorage.sync_model);
-			return;
+			self.update_queue.push(botoweb.env.models[localStorage.sync_model]);
 		}
 
 		self.find_local_models();
@@ -154,7 +153,7 @@ botoweb.ldb.sync = {
 
 		// Some models are not local because they do not store any data (i.e.
 		// a Trash object or a base class from which other objects canbe queried)
-		else if (!model.local) {
+		else if (!model.has_local_data) {
 			if (localStorage['last_update_' + model.name]) {
 				console.log("last_update: " + localStorage['last_update_' + model.name]);
 
@@ -215,8 +214,14 @@ botoweb.ldb.sync = {
 					// The table is local if it has results, as long as it is
 					// not currently synchronizing - that means it is an
 					// incomplete portion of the results.
-					if (results.rows.length && model.name != localStorage.sync_model)
-						model.local = true;
+					if (results.rows.length) {
+						// Model is not truly local if it is still syncing.
+						if (model.name != localStorage.sync_model)
+							model.local = true;
+
+						// But we still need to know if it had local data
+						model.has_local_data = true;
+					}
 
 					if (fnc && completed == botoweb.env.model_names.length)
 						fnc();
