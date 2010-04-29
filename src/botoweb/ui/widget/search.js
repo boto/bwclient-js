@@ -8,7 +8,7 @@
  *
  * @param node the node containing the search parameters.
  */
-botoweb.ui.widget.Search = function(node) {
+botoweb.ui.widget.Search = function(node, block) {
 	var self = this;
 
 	self.node = $(node).addClass('widget-search');
@@ -20,8 +20,10 @@ botoweb.ui.widget.Search = function(node) {
 	self.fields = [];
 
 	// Evaluate JSON search defaults
-	if (self.def)
+	if (self.def) {
+		self.def = botoweb.util.interpolate(self.def, (block.obj || block.model))
 		eval('self.def = ' + self.def);
+	}
 
 	// Find any properties matching the search parameters
 	$.each((self.node.attr(botoweb.ui.markup.prop.attributes) || 'all').split(','), function() {

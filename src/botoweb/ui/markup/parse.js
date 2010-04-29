@@ -722,7 +722,7 @@
 			$markup.find(block.node, 'search', function() {
 				matches = true;
 
-				new botoweb.ui.widget.Search(this);
+				new botoweb.ui.widget.Search(this, block);
 			});
 
 			return matches;
