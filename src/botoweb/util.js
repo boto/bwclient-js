@@ -203,10 +203,14 @@ $util.normalize_string = function (str) {
 		curly_quote: '"',
 		curly_apostrophe: "'",
 		dash: '-',
-		ellipse: '...'
+		ellipse: '...',
+		bad_whitespace: ' ',
+		linefeed: '\n',
 	}, function (type, replacement) {
 		str = str.replace($util.re[type], replacement);
 	});
+
+	str = str.replace($util.re.non_ascii, function (m) { return '&#' + m.charCodeAt(0) + ';' });
 
 	return str;
 };
@@ -229,7 +233,15 @@ $util.re = {
 	curly_quote: /[“”]/g,
 	curly_apostrophe: /[‘’]/g,
 	dash: /[‒–—―]/g,
-	ellipse: /…/g
+	ellipse: /…/g,
+	bad_whitespace: /[\t\v]+/g,
+	linefeed: /\r?\n|\r\n?/g,
+
+	// See ascii table, all characters between Space and ~ are good, other
+	// characters must be converted to HTML entities. \n and \t are the only
+	// characters below Space which may be valid input (assuming CR is converted
+	// to LF)
+	non_ascii: /([^\n\t -~])/g
 };
 
 })(jQuery);
