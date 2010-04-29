@@ -615,7 +615,7 @@
 							// Otherwise, link to the botoweb page which will
 							// display the content of the attribute
 							else
-								set_href(botoweb.util.url_join(botoweb.env.cfg.base_url, block.model.href, block.obj.id, data));
+								set_href(botoweb.util.url_join(botoweb.env.base_url, block.model.href, block.obj.id, data));
 						}
 						break;
 
