@@ -231,9 +231,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				}
 
 				if (opt.obj)
-					opt.obj.follow(this.meta.name, process, null, opt);
+					opt.obj.follow(this.meta.name, process, opt.filter, opt);
 				else
-					botoweb.Object.follow(this.obj_model, this.obj_id, this.meta.name, process, null, opt);
+					botoweb.Object.follow(this.obj_model, this.obj_id, this.meta.name, process, opt.filter, opt);
 
 				async = true;
 			};

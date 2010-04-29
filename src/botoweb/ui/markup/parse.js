@@ -259,6 +259,16 @@
 
 								node.unbind('ready');
 
+								var filter = node.attr($markup.prop.filter);
+
+								if (filter) {
+									try {
+										filter = $util.interpolate(filter, block.obj);
+										eval('filter = ' + filter);
+									}
+									catch (e) {}
+								}
+
 								botoweb.Object.val(block.model, (block.obj || block.obj_id), val, function (data) {
 									$.each(data, function () {
 										if (this && this.val)
@@ -269,7 +279,10 @@
 
 									if (async && !block.waiting)
 										block.done();
-								}, $.extend({ obj: block.obj }, block.opt));
+								}, $.extend({
+									obj: block.obj,
+									filter: filter
+								}, block.opt));
 
 								async = true;
 							}
