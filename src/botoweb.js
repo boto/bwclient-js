@@ -261,9 +261,15 @@ var botoweb = {
 		$.ajax({
 			type: "DELETE",
 			url: url,
-			success: fnc,
+			success: function () {
+				if (fnc)
+					fnc(true);
+			},
 			error: function (e) {
-				botoweb.handle_error(e, fnc);
+				botoweb.handle_error(e, function () {
+					if (fnc)
+						fnc(false);
+				});
 			}
 		});
 	},

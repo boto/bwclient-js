@@ -157,24 +157,28 @@ botoweb.Model = function (name, href, methods, props) {
 	// Delete this object
 	//
 	this.del = function(id, fnc){
-		return botoweb.del(botoweb.util.url_join(botoweb.env.base_url, this.href, id), function(x) {
-			delete self.objs[id];
+		return botoweb.del(botoweb.util.url_join(botoweb.env.base_url, this.href, id), function(success) {
+			if (success) {
+				delete self.objs[id];
 
-			if (self.local) {
-				botoweb.ldb.sync.process([new self.instance(null, id)], null, null, function () {
-					if (fnc)
-						fnc(x);
-				}, { trash: true });
-			}
-			// Non-local data will not update immediately. 1 second is an
-			// arbitrary wait time but seems to be long enough that the
-			// backreference in SDB will have updated by the time we run the fnc
-			else if (fnc) {
-				setTimeout(function () {
-					fnc(x);
-				}, 1000);
+				if (self.local) {
+					botoweb.ldb.sync.process([new self.instance(null, id)], null, null, function () {
+						if (fnc)
+							fnc(success);
+					}, { trash: true });
+				}
+				// Non-local data will not update immediately. 1 second is an
+				// arbitrary wait time but seems to be long enough that the
+				// backreference in SDB will have updated by the time we run the fnc
+				else if (fnc) {
+					setTimeout(function () {
+						fnc(success);
+					}, 1000);
+				}
 			}
 
+			if (fnc)
+				fnc(success);
 		});
 	}
 

@@ -437,29 +437,31 @@
 											var dialog = $(this);
 											botoweb.ui.overlay.show();
 
-											obj.del(function () {
-												var recent_page = '';
-												var steps = 0;
-												$.each(botoweb.ui.page.history, function () {
-													if (this.data.id != block.obj_id) {
-														recent_page = this;
-														return false;
-													}
-													steps++;
-												});
-
+											obj.del(function (success) {
 												botoweb.ui.overlay.hide();
 
 												dialog.dialog('close')
 
-												if (steps == 0)
-													botoweb.ui.page.refresh(true);
-												else if (recent_page.full)
-													document.location.href = recent_page.full;
-												else
-													history.back();
+												if (success) {
+													var recent_page = '';
+													var steps = 0;
+													$.each(botoweb.ui.page.history, function () {
+														if (this.data.id != block.obj_id) {
+															recent_page = this;
+															return false;
+														}
+														steps++;
+													});
 
-												setTimeout(botoweb.ldb.sync.update, 1000);
+													if (steps == 0)
+														botoweb.ui.page.refresh(true);
+													else if (recent_page.full)
+														document.location.href = recent_page.full;
+													else
+														history.back();
+
+													setTimeout(botoweb.ldb.sync.update, 1000);
+												}
 											});
 											return false;
 										},
