@@ -810,9 +810,13 @@ $forms.File = function () {
 			$($forms).bind('save_complete.' + this.id, function (e, obj, fnc) {
 				upload._settings.action = $util.url_join($ui.page.location.base_href, botoweb.env.base_url, self.model.href, obj.id, self.prop.meta.name);
 				upload._settings.onComplete = function () {
+					// Do not allow the handler to stick around
+					$($forms).unbind('save_complete.' + self.id);
+
 					selections.find('.ui-icon')
 						.removeClass('ui-icon-clock')
 						.addClass('ui-icon-check');
+
 					if (fnc)
 						fnc();
 				}
@@ -825,11 +829,13 @@ $forms.File = function () {
 					.addClass('ui-state-default')
 					.unbind();
 
-				setTimeout(function () {
-					upload.submit()
-				}, 1000);
+				if (upload._input && upload._input.value) {
+					setTimeout(function () {
+						upload.submit()
+					}, 1000);
 
-				return false;
+					return false;
+				}
 			});
 		}
 		else {
@@ -1263,8 +1269,15 @@ $forms.Picklist = function () {
 				search_box
 					.addClass('al')
 					.keyup(function (e) {
+						// Down arrow does a search
 						if (e.keyCode == 40 && !selecting)
 							do_search();
+
+						// Esc key hides the results
+						else if (e.keyCode == 27)
+							cancel_search();
+
+						// Otherwise wait for a 500ms pause in typing
 						else if (e.keyCode) {
 							clearTimeout(autosearch);
 
@@ -1287,7 +1300,10 @@ $forms.Picklist = function () {
 						autohide = setTimeout(cancel_search, 500);
 					}),
 				$ui.button('', { icon: 'ui-icon-search', no_text: true, corners: [0,1,1,0] })
-					.click(do_search)
+					.click(function () {
+						search_box.focus();
+						do_search();
+					})
 			);
 		}
 
