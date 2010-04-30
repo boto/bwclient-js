@@ -187,6 +187,10 @@ botoweb.ldb = {
 								'CREATE TABLE IF NOT EXISTS ' + table_name +
 								' (id TEXT, ' + cols.join(' TEXT, ') + ' TEXT)'
 							);
+							txn.executeSql(
+								'CREATE INDEX IF NOT EXISTS idx_' + table_name + '_id ON ' + table_name +
+								' (id)'
+							);
 						}, error);
 
 						var list_table = new botoweb.sql.Table(
@@ -212,6 +216,10 @@ botoweb.ldb = {
 							txn.executeSql(
 								'CREATE TABLE IF NOT EXISTS ' + table_name +
 								' (id TEXT, key TEXT, val TEXT)'
+							);
+							txn.executeSql(
+								'CREATE INDEX IF NOT EXISTS idx_id ON ' + table_name +
+								' (id)'
 							);
 						}, error);
 
