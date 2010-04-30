@@ -1190,7 +1190,7 @@ $forms.Picklist = function () {
 		}
 
 		function do_search() {
-			self.model.query([['name', 'like', '%' + search_box.val() + '%']], function (objs) {
+			self.model.query([['name', 'like', '%' + search_box.val() + '%'],['name','sort','asc']], function (objs) {
 				search_results.hide();
 				selecting = true;
 
@@ -1202,6 +1202,17 @@ $forms.Picklist = function () {
 
 				var result_node = search_results.find('.search_results').empty();
 				var items = [];
+
+				search_results
+					.unbind('mousedown mouseout')
+					.mousedown(function () {
+						setTimeout(function () {
+							clearTimeout(autohide);
+						}, 100);
+					})
+					.mouseout(function (e) {
+						search_box.focus();
+					});
 
 				if (objs.length == 0) {
 					result_node.html('<div class="jc"><strong>No results found</strong></div>');
@@ -1338,7 +1349,7 @@ $forms.Picklist = function () {
 		}
 
 		if (self.obj_id) {
-			// Calling this immediately results in anm unknown conflict with other things
+			// Calling this immediately results in an unknown conflict with other things
 			// that call .val on this property, so we delay a few ms.
 			setTimeout(function () {
 				if (self.opt.block && self.opt.block.obj) {
