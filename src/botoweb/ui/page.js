@@ -10,6 +10,7 @@ botoweb.ui.page = new function() {
 	this.cache = {};
 	this.handler_cache = {};
 	this.preserve_cache = false;
+	this.obj = null;
 
 	var self = this;
 
@@ -142,6 +143,14 @@ botoweb.ui.page = new function() {
 	};
 
 	/**
+	 * Clears any cached data for the given page based on its location.full.
+	 */
+	this.uncache = function (url) {
+		delete this.cache[url];
+		delete this.handler_cache[url];
+	};
+
+	/**
 	 * Tears down the current page and stops all active ajax requests. Unbinds
 	 * all botoweb.ui.page listeners except those namespaced as global.
 	 *
@@ -149,6 +158,7 @@ botoweb.ui.page = new function() {
 	 */
 	function destroy (opt) {
 		opt = opt || {};
+
 		if (opt.changed && self.history.length > 1 && !self.history[1].data.action) {
 			self.cache[self.history[1].full] = $('#botoweb.page').children().detach();
 		}
@@ -165,6 +175,8 @@ botoweb.ui.page = new function() {
 		botoweb.ajax.stop_all();
 
 		var self = botoweb.ui.page;
+
+		self.obj = null;
 
 		console.log('PAGE: unload');
 		$(self).triggerHandler('destroy');
@@ -285,6 +297,22 @@ botoweb.ui.page = new function() {
 				new_page = true;
 
 			self.location = loc;
+
+			// Remove all non-global events attached to the central forms obj
+			if ($(botoweb.ui.forms).data('events')) {
+				var to_remove = [];
+
+				$.each($(botoweb.ui.forms).data('events'), function () {
+					$.each(this, function () {
+						if (this.namespace != 'global')
+							to_remove.push(this)
+					});
+				});
+
+				$.each(to_remove, function () {
+					$(botoweb.ui.forms).unbind(this.type, this.handler);
+				});
+			}
 
 			// If a new page was loaded there probably will not be anything
 			// bound to the change event, but we trigger it anyway to support a
