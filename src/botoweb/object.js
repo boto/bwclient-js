@@ -105,7 +105,8 @@ botoweb.Object = function(id, model, data, opt) {
 		}
 	}
 
-	this.update = function (data, fnc, force) {
+	this.update = function (data, fnc, opt) {
+		opt = $.extend({ old_data: {} }, opt);
 		var changed = {};
 		var changed_any = false;
 		var is_new = this.unsaved || !this.id;
@@ -121,7 +122,7 @@ botoweb.Object = function(id, model, data, opt) {
 			// to remove the link.
 			if (model_prop.is_type('query')) {
 				var ids = {};
-				var old = self.data[name].data;
+				var old = opt.old_data[name] || self.data[name].data;
 
 				$.each(val, function () {
 					ids[this.val] = 1;
@@ -141,7 +142,7 @@ botoweb.Object = function(id, model, data, opt) {
 				return;
 			}
 
-			if (force) {
+			if (opt.force) {
 				changed[name] = val;
 				changed_any = true;
 				return;

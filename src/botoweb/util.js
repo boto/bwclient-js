@@ -126,6 +126,7 @@ $util.interpolate = function (str, data) {
 	var replacement;
 
 	data.__user__ = botoweb.env.user;
+	data.__obj__ = botoweb.ui.page.obj || {};
 
 	if (data instanceof botoweb.Object) {
 		replacement = function (m, key) {

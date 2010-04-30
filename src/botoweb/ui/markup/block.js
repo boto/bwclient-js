@@ -40,6 +40,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 	if (!this.obj_id && this.obj)
 		this.obj_id = this.obj.id;
 
+	if (this.obj && this.opt.root)
+		botoweb.ui.page.obj = this.obj;
+
 	this.skip_markup = opt.skip_markup || {};
 	this.nested_sel = opt.nested_sel;
 
@@ -80,9 +83,20 @@ botoweb.ui.markup.Block = function (node, opt) {
 			return;
 
 		var data = {};
+		var opt = {
+			// Query attributes may be filtered, if they are it is very important
+			// to not compare the filtered data against the unfiltered data in
+			// which case everything outside the filter would be unlinked, so
+			// instead we pass in the original data loaded into each query form.
+			old_data: {}
+		};
 
 		for (var i in this.fields) {
 			var field = this.fields[i];
+
+			if (field.old_data) {
+				opt.old_data[field.prop.meta.name] = field.old_data;
+			}
 
 			var val = field.val();
 
@@ -94,8 +108,6 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 			var onsave = function (obj) {
 				self.saved = true;
-				if (fnc)
-					fnc();
 
 				if (self.opt.root) {
 					function update () {
@@ -111,14 +123,17 @@ botoweb.ui.markup.Block = function (node, opt) {
 					if ($(botoweb.ui.forms).triggerHandler('save_complete', [obj, update]) !== false)
 						update();
 				}
+
+				if (fnc)
+					fnc();
 			};
 
 			if (this.no_obj) {
 				var obj = new this.model.instance(undefined, this.obj_id);
-				obj.update(data, onsave);
+				obj.update(data, onsave, opt);
 			}
 			else {
-				botoweb.Object.update(this.model, this.obj_id, data, onsave);
+				botoweb.Object.update(this.model, this.obj_id, data, onsave, opt);
 			}
 		}
 		else {
@@ -166,8 +181,11 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 	this.done = function () {
 		// Release the reference to the object. Anything which needs this block's
-		// object must load it based on model and obj_id
-		this.obj = null;
+		// object must load it based on model and obj_id. We keep the root
+		// object since it has occasion to be used constantly.
+		if (!this.opt.root) {
+			this.obj = null;
+		}
 
 		$.each(this.onready, function () { this(self) });
 		this.onready = [];
@@ -209,8 +227,12 @@ botoweb.ui.markup.Block = function (node, opt) {
 				self.skip_markup[str] = 1;
 		}
 
-		if (this.obj)
+		if (this.obj) {
 			this.no_obj = false;
+			if (this.opt.root) {
+				botoweb.ui.page.obj = this.obj;
+			}
+		}
 
 		if (this.opt.data) {
 			try {

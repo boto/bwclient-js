@@ -266,7 +266,7 @@
 										filter = $util.interpolate(filter, block.obj);
 										eval('filter = ' + filter);
 									}
-									catch (e) {}
+									catch (e) { console.error(e.message) }
 								}
 
 								botoweb.Object.val(block.model, (block.obj || block.obj_id), val, function (data) {
@@ -539,7 +539,7 @@
 									botoweb.Object.update(block.model, block.obj_id, data, function () {
 										botoweb.ui.overlay.hide();
 										botoweb.ui.page.refresh()
-									}, true);
+									}, { force: true });
 								} catch (e) { }
 
 								e.preventDefault();

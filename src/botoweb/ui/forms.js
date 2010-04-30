@@ -630,7 +630,7 @@ $forms.DateTime = function () {
 			setTimeout(function () {
 				field.css('width', self.node.width() - 30);
 				self.node.show();
-			}, 50);
+			}, 100);
 
 			field.addClass('al');
 
@@ -1081,6 +1081,15 @@ $forms.Picklist = function () {
 
 			if (searchable == 'false')
 				field.find('.search, .selections').hide();
+
+			this.filters = this.opt.node.attr($ui.markup.prop.filter);
+
+			if (this.filters) {
+				try {
+					this.filters = $util.interpolate(this.filters, this.opt.block.obj);
+					eval('this.filters = ' + this.filters);
+				} catch (e) { console.error('Filter parsing error: ' + this.filters) }
+			}
 		}
 
 		var selections = field.find('.selections:first');
@@ -1331,6 +1340,10 @@ $forms.Picklist = function () {
 		function handle_val (objs) {
 			var vals = 0;
 
+			if (objs.length) {
+				self.old_data = objs;
+			}
+
 			$.each(objs, function () {
 				if (this.val) {
 					vals++;
@@ -1353,10 +1366,10 @@ $forms.Picklist = function () {
 			// that call .val on this property, so we delay a few ms.
 			setTimeout(function () {
 				if (self.opt.block && self.opt.block.obj) {
-					self.opt.block.obj.val(self.prop.meta.name, handle_val);
+					self.opt.block.obj.val(self.prop.meta.name, handle_val, { filter: self.filters });
 				}
 				else {
-					botoweb.Object.val(self.obj_model, self.obj_id, self.prop.meta.name, handle_val);
+					botoweb.Object.val(self.obj_model, self.obj_id, self.prop.meta.name, handle_val, { filter: self.filters });
 				}
 			}, 50);
 		}
