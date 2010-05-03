@@ -37,7 +37,7 @@ $util.timestamp = function (d) {
 		if (data[7] && data[7].toUpperCase() == 'PM')
 			data[4] += 12;
 
-		d = new Date(data[3], data[1], data[2], data[4], data[5], data[6]);
+		d = new Date(data[3], data[1], data[2], data[4] || 0, data[5] || 0, data[6] || 0);
 	}
 
 	var timestamp = d.getUTCFullYear() + '-0' + (d.getUTCMonth() + 1) + '-0' + d.getUTCDate() + 'T0';
@@ -69,25 +69,26 @@ $util.from_timestamp = function (ts) {
 
 	// String to number
 	for (var i in t)
-		t[i] = t[i] * 1;
+		t[i] *= 1;
 
 	// If the time is exactly midnight, assume that this is a date with unspecified time
 	var has_time = (t[4] || t[5] || t[6]);
+	var date_time;
 
 	if (has_time)
-		self.date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3],t[4],t[5],t[6]));
+		date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3],t[4],t[5],t[6]));
 
 	// We use NOON if there is no time because this prevents seeing a different
 	// date after TZ conversion, as would happen if we used MIDNIGHT.
 	else
-		self.date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3], 12, 0, 0));
+		date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3], 12, 0, 0));
 
-	var time_str = '0' + (self.date_time.getMonth() + 1) + '/0' +
-		self.date_time.getDate() + '/' + self.date_time.getFullYear();
+	var time_str = '0' + (date_time.getMonth() + 1) + '/0' +
+		date_time.getDate() + '/' + date_time.getFullYear();
 
 	if (has_time) {
-		time_str += ' 0' + (self.date_time.getHours() % 12 || 12) + ':0' + self.date_time.getMinutes() + ' ' +
-			((self.date_time.getHours() < 12 || self.date_time.getHours() == 0) ? 'AM' : 'PM');
+		time_str += ' 0' + (date_time.getHours() % 12 || 12) + ':0' + date_time.getMinutes() + ' ' +
+			((date_time.getHours() < 12 || date_time.getHours() == 0) ? 'AM' : 'PM');
 	}
 
 	return time_str.replace(/(^|[ \/:])0(\d\d)/g, '$1$2');
