@@ -54,10 +54,21 @@ botoweb.Model = function (name, href, methods, props) {
 						var data = $.map(results, function (row) { return row[0]; });
 
 						if (opt.one) {
+							// We skipped the counting query, set the count now
+							total_results = data.length;
+
 							if (data.length)
 								data = data[0];
-							else
+							else {
+								// A default action may exist if the target
+								// object is not found
+								if (opt.not_found) {
+									opt.not_found();
+									return false;
+								}
+
 								data = null;
+							}
 						}
 
 						return fnc(data, page, total_results, next_page);
@@ -70,10 +81,17 @@ botoweb.Model = function (name, href, methods, props) {
 					botoweb.ldb.dbh.transaction(get_page);
 			};
 
-			query.count(txn, function (count) {
-				total_results = count;
-				next_page(txn);
-			});
+			// No need for a count of results
+			if (opt.one) {
+				next_page();
+			}
+			else {
+				query.count(txn, function (count) {
+					total_results = count;
+
+					next_page(txn);
+				});
+			}
 		}
 
 		if (opt.txn)
@@ -136,6 +154,9 @@ botoweb.Model = function (name, href, methods, props) {
 
 		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
 			opt.one = true;
+			opt.not_found = function () {
+				botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, this.href), id, fnc, opt);
+			};
 			return this.query_ldb({id: id}, fnc, opt);
 		}
 
