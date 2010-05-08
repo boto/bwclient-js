@@ -323,7 +323,10 @@ botoweb.ui.page = new function() {
 			if ($(self).triggerHandler('change.', [loc, new_page]) !== false) {
 				// Signal that the page should be loaded
 				new_page = true;
-				$(self).triggerHandler('change.global', [loc, new_page]);
+
+				// Allow the global handler to block a page load
+				if ($(self).triggerHandler('change.global', [loc, new_page]) === false)
+					new_page = false;
 			}
 
 			self.history.unshift(loc);
@@ -348,6 +351,52 @@ botoweb.ui.page = new function() {
 				self.load(loc, null, { changed: true });
 			}
 		}
+	}
+
+	/**
+	 * Given some data, checks the page history URLs starting with the current
+	 * page until a non-matching page is found. If any of the tuples in data
+	 * are found in the query data of a URL, we check the next page.
+	 *
+	 * Once the safe page is found, history.go(-n) is used to redirect the user
+	 * to that page. This puts anything they were doing with the presumed unsafe
+	 * content as a Forward step in their history, avoiding confusion if they
+	 * click Back.
+	 */
+	this.backout = function (data) {
+		var recent_page = '';
+		var steps = 0;
+
+		// Count how many history steps it takes to get to a safe page
+		$.each(botoweb.ui.page.history, function (i, loc) {
+			var good = true;
+
+			$.each(data, function (key, val) {
+				if (loc.data[key] == val) {
+					good = false;
+					return false;
+				}
+			});
+
+			if (good) {
+				recent_page = loc;
+				return false;
+			}
+			steps++;
+		});
+
+		// We are already on a safe page
+		if (steps == 0)
+			botoweb.ui.page.refresh(true);
+
+		// Nearest safe page is within our app
+		else if (recent_page.full)
+			history.go(-steps);
+
+		// Target page may send the user to the site they were visiting before
+		// loading the app... just go back 1
+		else
+			history.back();
 	}
 
 	/**
