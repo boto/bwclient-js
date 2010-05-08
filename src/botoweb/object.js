@@ -227,12 +227,14 @@ botoweb.Object = function(id, model, data, opt) {
 		if (typeof prop == 'undefined' || !prop.is_type('blob'))
 			return;
 
-		if (prop.data.length && prop.data[0].val === undefined)
-			prop.data = [];
+		//if (prop.data.length && prop.data[0].val === undefined)
+		//	prop.data = [];
 
 		botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name), function (data) {
-			prop.data.push({val: data});
+			//prop.data.push({val: data});
 			fnc(data);
+		}, function () {
+			fnc();
 		});
 	};
 
