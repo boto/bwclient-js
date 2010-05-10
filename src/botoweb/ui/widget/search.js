@@ -95,10 +95,14 @@ botoweb.ui.widget.Search = function(node, block) {
 
 		var search_id = self.results.search_id;
 
+		$(botoweb.ui.page).triggerHandler('search_begin', [self.model, query]);
+
 		self.model.query(query, function(results, page, count, next_page) {
-			if (results.length) {
+			if (page == 0)
+				$(botoweb.ui.page).triggerHandler('search_receive', [count]);
+
+			if (results.length)
 				self.results.update(results, page, count, next_page, search_id);
-			}
 
 			return false;
 		}, { no_cache: true });
