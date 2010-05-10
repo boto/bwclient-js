@@ -64,9 +64,28 @@ botoweb.ui = {
 		$('header nav').show();
 
 		botoweb.ui.nodes.search_results = $('<div class="search_results_container"><div class="search_results"></div></div>').appendTo($('body')).hide();
-		$(botoweb.ui.page).bind('change.global', function () {
+		$(botoweb.ui.page).bind('change.global', function (e, loc, new_page) {
+			// Object deletion is normally handled by an event to avoid the
+			// history entry. If that event is removed, we must handle the
+			// deletion globally.
+			if (loc.data && loc.data.action == 'delete') {
+				var model = botoweb.env.models[loc.data.model];
+
+				if (model)
+					botoweb.ui.markup.delete_obj(model, loc.data.id, e);
+				else
+					history.back();
+
+				// The page change is NOT authorized, we don't want this command
+				// to update the UI in any way.
+				return false;
+			}
+
 			$('#ui-timepicker-div, #ui-datepicker-div').hide();
 			botoweb.ui.nodes.search_results.hide();
+
+			// The page change is authorized
+			return true;
 		})
 
 		botoweb.ui.overlay.node = $('<div/>').addClass('ui-widget-overlay')

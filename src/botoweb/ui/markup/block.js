@@ -60,6 +60,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 			if (self.obj_id && loc.data.id == self.obj_id) {
 				self.opt = loc.data;
+				self.opt.root = true;
 
 				if (!self.waiting)
 					self.done();
@@ -113,6 +114,11 @@ botoweb.ui.markup.Block = function (node, opt) {
 					function update () {
 						// Data may not be updated immediately
 						setTimeout(function () {
+							if (fnc) {
+								if (fnc() === false)
+									return;
+							}
+
 							if (self.no_obj)
 								document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
 							else
@@ -123,8 +129,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 					if ($(botoweb.ui.forms).triggerHandler('save_complete', [obj, update]) !== false)
 						update();
 				}
-
-				if (fnc)
+				else if (fnc)
 					fnc();
 			};
 

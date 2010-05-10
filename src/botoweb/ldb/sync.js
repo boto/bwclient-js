@@ -36,9 +36,20 @@ botoweb.ldb.sync = {
 		opt = opt || {};
 		var self = botoweb.ldb.sync;
 
+		var now = new Date().valueOf();
+
+		// Only allow one tab to sync
+		if (localStorage.sync_app && localStorage.sync_app != botoweb.uuid && localStorage.sync_app_timeout > now) {
+			console.log('Another tab is synchronizing.');
+			return;
+		}
+
+		// Take control of the sync_app lock
+		localStorage.setItem('sync_app', botoweb.uuid);
+		localStorage.setItem('sync_app_timeout', now + 8 * 1000);
+
 		if (self.running)
 			return;
-
 
 		// sync_model is set when a model is being synced. If the page is
 		// refreshed while the update is running, this ensures that the sync
@@ -63,6 +74,25 @@ botoweb.ldb.sync = {
 		});
 
 		self.next_update();
+	},
+
+	/**
+	 * Allows a single tab to lock sync priveleges. Called at a short interval
+	 * to update the heartbeat data, this function will also trigger a sync as
+	 * soon as another tab loses control to ensure that any partial syncs are
+	 * completed.
+	 */
+	heartbeat: function () {
+		var now = new Date().valueOf();
+
+		// Update my timeout
+		if (localStorage.sync_app == botoweb.uuid) {
+			localStorage.setItem('sync_app_timeout', now + 8 * 1000);
+		}
+		// Take control
+		else if (localStorage.sync_app && localStorage.sync_app != botoweb.uuid && localStorage.sync_app_timeout <= now) {
+			botoweb.ldb.sync.update();
+		}
 	},
 
 	/**
@@ -91,6 +121,9 @@ botoweb.ldb.sync = {
 			// The UI code can establish a listener for the end event
 			self.running = false;
 
+			delete localStorage.sync_app;
+			delete localStorage.sync_app_timeout;
+
 			$(self).trigger('end');
 
 			return;
@@ -105,8 +138,8 @@ botoweb.ldb.sync = {
 			model = botoweb.env.models[model];
 
 		if (!model || !model.name) {
-			botoweb.util.error('Cannot sync unknown model: ' + model_name, 'warning');
-			return;
+			console.warn('Cannot sync unknown model: ' + model_name);
+			return botoweb.ldb.sync.next_update();
 		}
 
 		// Clear the table for a full refresh to ensure that deleted items are
@@ -459,7 +492,7 @@ botoweb.ldb.sync = {
 				// for the current sync.
 				if (total_count){
 					self.task_processed += results.length;
-					console.log("Processed: " + self.task_processed);
+					//DEBUG console.log("Processed: " + self.task_processed);
 				}
 
 				// The following lines use setTimeout to call the function. This

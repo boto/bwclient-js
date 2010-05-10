@@ -36,6 +36,11 @@ botoweb.sql = {
 		 */
 		this.filters = [];
 		/**
+		 * An array of join objects.
+		 * @type {[Object]}
+		 */
+		this.left_joins = [];
+		/**
 		 * An array of group by clauses (order is preserved).
 		 * @type {[[botoweb.sql.Expression, 'ASC'|'DESC']]}
 		 */
@@ -109,20 +114,49 @@ botoweb.sql = {
 					return;
 
 				// Join and search against the reference table if this row has one
-				if (this[0] + '_ref' in tbl.c) {
+				if (this[1] == 'sort') {
+					query.order_by(tbl.c[this[0]], this[2]);
+				}
+				else if (this[0] + '_ref' in tbl.c) {
 					var ref = tbl.c[this[0] + '_ref'];
 					var val = tbl.c[this[0] + '_ref'].values;
+					var op = this[1];
+
+					var expr;
+
+					if ($.isArray(this[2])) {
+						var parts = $.map(this[2], function (v) {
+							return val.cmp(v, op);
+						});
+						expr = botoweb.sql.or(parts);
+					}
+					else
+						expr = val.cmp(this[2], op);
 
 					// The search query
-					query.filter(val.cmp(this[2], this[1]));
+					query.filter(expr);
 
 					// Restrict the join and group the results to ensure only
 					// one row per root object
 					query.filter(ref.cmp(tbl.c.id));
 					query.group_by(tbl.c.id);
 				}
-				else
-					query.filter(tbl.c[this[0]].cmp(this[2], this[1]));
+				else {
+					var op = this[1];
+					var expr;
+					var val = tbl.c[this[0]];
+
+					if ($.isArray(this[2])) {
+						var parts = $.map(this[2], function (v) {
+							return val.cmp(v, op);
+						});
+						expr = botoweb.sql.or(parts);
+					}
+					else
+						expr = val.cmp(this[2], op);
+
+					query.filter(expr);
+				}
 			});
 
 			return query;
@@ -141,6 +175,41 @@ botoweb.sql = {
 		this.append_column = function (column) {
 			this.columns.push(column);
 
+			if (column.bind_params) {
+				$.each(column.bind_params, function () {
+					self.bind_params.push(this);
+				});
+			}
+
+			return this;
+		};
+
+		/**
+		 * Creates a left join clause which will allow results to be generated
+		 * without the existence condition of a normal join.
+		 *
+		 * @param {botoweb.sql.Table} tbl The table to join.
+		 * @param {[botoweb.sql.Expression]} filters The conditions to complete
+		 * the join.
+		 * @return The Query for chaining.
+		 */
+		this.left_join = function () {
+			var args = $.makeArray(arguments);
+			var tbl = args.shift();
+
+			this.left_joins.push({
+				tbl: tbl,
+				filters: args
+			});
+
+			$.each(args, function () {
+				if (this.bind_params) {
+					$.each(this.bind_params, function () {
+						self.bind_params.push(this);
+					});
+				}
+			});
+
 			return this;
 		};
 
@@ -151,6 +220,14 @@ botoweb.sql = {
 		 * @private
 		 */
 		function add_table (tbl) {
+			if (
+				$.grep(self.left_joins, function (j) {
+					return (j.tbl.toString(true) == tbl.toString(true))
+				}).length
+			) {
+				return;
+			}
+
 			if ($.inArray(tbl, self.tables) == -1)
 				self.tables.push(tbl);
 		};
@@ -426,10 +503,19 @@ botoweb.sql = {
 				}
 			});
 
-			var sql = 'SELECT ' + columns.join(', ');
+			// Pass true arg to toString to tell the column to return its alias
+			// definition form
+			var sql = 'SELECT ' + $.map(columns, function (c) { return c.toString(true) }).join(', ');
 
+			// Pass true arg to toString to tell the table to return its alias
+			// definition form
 			if (this.tables.length)
-				sql += '\nFROM ' + this.tables.join(', ');
+				sql += '\nFROM ' + $.map(this.tables, function (t) { return t.toString(true) }).join(', ');
+
+			// Pass true arg to toString to tell the table to return its alias
+			// definition form
+			if (this.left_joins.length)
+				sql += '\n' + $.map(this.left_joins, function (j) { return 'LEFT JOIN ' + j.tbl.toString(true) + ' ON ' + j.filters.join(' AND '); }).join('\n');
 
 			if (this.filters.length)
 				sql += '\nWHERE ' + this.filters.join(' AND ');
@@ -442,6 +528,8 @@ botoweb.sql = {
 
 			if (this.max_results)
 				sql += '\nLIMIT ' + this.start + ', ' + this.max_results;
+
+			//console.error(sql);
 
 			return sql;
 		};
@@ -465,12 +553,13 @@ botoweb.sql = {
 	 * @param {[String]} columns The internal JS names for the columns.
 	 * @constructor
 	 */
-	Table: function (tbl_name, tbl_columns, model, name, columns) {
+	Table: function (tbl_name, tbl_columns, model, name, columns, alias_for) {
 		this.name = name || tbl_name;
 		this.tbl_name = tbl_name;
 		this.c = {};
 		this.parent = null;
 		this.model = model;
+		this.alias_for = alias_for;
 
 		// Prevent array indexing errors if columns is undef
 		if (!columns)
@@ -487,6 +576,16 @@ botoweb.sql = {
 			this.parent = tbl;
 			return this;
 		};
+
+		/**
+		 * Creates a clone of the table which uses an alternate name to prevent
+		 * conflict if the same table is joined on itself.
+		 */
+		this.alias = function (alias_name) {
+			alias_name = alias_name || this.tbl_name + '__' + botoweb.sql.alias_id++;
+
+			return new botoweb.sql.Table(alias_name, tbl_columns, model, name, columns, this.tbl_name);
+		}
 
 		/**
 		 * Drops the table, use with caution.
@@ -513,7 +612,10 @@ botoweb.sql = {
 		/**
 		 * @return The DB table name.
 		 */
-		this.toString = function () {
+		this.toString = function (define_alias) {
+			if (define_alias && this.alias_for)
+				return this.alias_for + ' ' + this.tbl_name;
+
 			return this.tbl_name;
 		};
 	},
@@ -527,10 +629,22 @@ botoweb.sql = {
 	 * @param {botoweb.sql.Table} table The table containing the column.
 	 * @constructor
 	 */
-	Column: function (name, table, prop_name) {
+	Column: function (name, table, prop_name, alias_name) {
 		this.col_name = name;
 		this.table = table;
 		this.name = prop_name;
+		this.alias_name = alias_name;
+
+		/**
+		 * Creates a clone of the column which uses an alternate name to prevent
+		 * conflict when selecting multiple similar columns.
+		 */
+		this.alias = function (alias_name) {
+			if (!alias_name)
+				return this;
+
+			return new botoweb.sql.Column(name, table, prop_name, alias_name);
+		}
 
 		/**
 		 * Compares the column to another column, expression, or literal.
@@ -548,7 +662,7 @@ botoweb.sql = {
 
 			var sql_op = 'like';
 
-			switch (op) {
+			switch (op.toLowerCase()) {
 				case 'contains':
 					val = '%' + val + '%';
 					break;
@@ -567,6 +681,9 @@ botoweb.sql = {
 				case 'like':
 					break;
 
+				case 'in':
+					break;
+
 				default:
 					if (/\w/.test(op))
 						return null;
@@ -575,15 +692,19 @@ botoweb.sql = {
 			}
 
 			return new botoweb.sql.Expression([this, val], function() {
-				return this.columns.join(' ' + sql_op + ' ');
+				if (op == 'in') {
+					return this.columns[0] + ' IN (' + $.grep(this.columns, function (val, i) { return i > 0; }).join(', ') + ')';
+				}
+				else
+					return this.columns.join(' ' + sql_op + ' ');
 			});
 		}
 
 		/**
 		 * @return a non-conflicting table.column name.
 		 */
-		this.toString = function() {
-			return this.table + '.' + this.col_name;
+		this.toString = function(define_alias) {
+			return this.table + '.' + this.col_name + ((define_alias && this.alias_name) ? ' AS ' + this.alias_name : '');
 		}
 	},
 
@@ -600,11 +721,12 @@ botoweb.sql = {
 	 * converted to SQL. Called in the context of the botoweb.sql.Expression.
 	 * @constructor
 	 */
-	Expression: function (columns, str_fnc) {
+	Expression: function (columns, str_fnc, alias_name) {
 		var self = this;
 		this.columns = [];
 		this.tables = [];
 		this.bind_params = [];
+		this.alias_name = alias_name;
 
 		function add_table (tbl) {
 			if ($.inArray(tbl, self.tables) == -1)
@@ -621,7 +743,13 @@ botoweb.sql = {
 				self.columns.push(c);
 				add_table(c.table);
 			}
-			// Literal
+			// Literals
+			else if ($.isArray(c)) {
+				$.each(c, function () {
+					self.columns.push('?');
+					self.bind_params.push(this);
+				});
+			}
 			else {
 				self.columns.push('?');
 				self.bind_params.push(c);
@@ -629,11 +757,22 @@ botoweb.sql = {
 		});
 
 		/**
+		 * Creates a clone of the column which uses an alternate name to prevent
+		 * conflict when selecting multiple similar columns.
+		 */
+		this.alias = function (alias_name) {
+			if (!alias_name)
+				return this;
+
+			return new botoweb.sql.Expression(columns, str_fnc, alias_name);
+		}
+
+		/**
 		 * Represents the expression as a string in whatever way it is directed
 		 * to do so by its maker.
 		 */
-		this.toString = function() {
-			return str_fnc.call(this);
+		this.toString = function(define_alias) {
+			return str_fnc.call(this) + ((define_alias && this.alias_name) ? ' AS ' + this.alias_name : '');
 		};
 	},
 
@@ -643,7 +782,7 @@ botoweb.sql = {
 	 * @return A composite botoweb.sql.Expression.
 	 */
 	or: function () {
-		return new botoweb.sql.Expression(arguments, function () {
+		return new botoweb.sql.Expression(((arguments.length == 1) ? arguments[0] : arguments), function () {
 			return '(' + this.columns.join(' OR ') + ')';
 		});
 	},
@@ -654,7 +793,7 @@ botoweb.sql = {
 	 * @return A composite botoweb.sql.Expression.
 	 */
 	and: function () {
-		return new botoweb.sql.Expression(arguments, function () {
+		return new botoweb.sql.Expression(((arguments.length == 1) ? arguments[0] : arguments), function () {
 			return '(' + this.columns.join(' AND ') + ')';
 		});
 	},
@@ -668,9 +807,22 @@ botoweb.sql = {
 	 */
 	func: function(func_str) {
 		var args = $.makeArray(arguments);
-		args = args.splice(1);
+		args.shift();
+
+		var before = '(';
+		var after = ')';
+
+		// This is not handled properly when the separator is bound, so we make
+		// it a literal
+		if (func_str.toUpperCase() == 'GROUP_CONCAT' && args.length == 2) {
+			var sep = args.pop();
+			after = ", '" + sep + "')";
+		}
+
 		return new botoweb.sql.Expression(args, function() {
-			return func_str + '(' + this.columns.join(',') + ')';
+			return func_str + before + this.columns.join(',') + after;
 		});
-	}
+	},
+
+	alias_id: 0
 };

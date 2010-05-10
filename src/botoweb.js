@@ -6,6 +6,9 @@
  * @author Ian Paterson
  */
 var botoweb = {
+	// A unique ID which allows us to recognize a user with multiple browser tabs
+	uuid: '',
+
 	env: {},
 	util: {},
 
@@ -40,7 +43,7 @@ var botoweb = {
 			var data = [];
 
 			var t = new Date().valueOf();
-			console.log('Completed botoweb find in ' + (t - ts) + 'ms');
+			//DEBUG console.log('Completed botoweb find in ' + (t - ts) + 'ms');
 
 			xml.find(model_names).each(function () {
 				var obj = botoweb.xml.to_obj(this, opt);
@@ -110,7 +113,7 @@ var botoweb = {
 		var page = 0;
 		var process = function(xml, xhr){
 			var t = new Date().valueOf();
-			console.log('Completed botoweb query in ' + (t - ts) + 'ms');
+			//DEBUG console.log('Completed botoweb query in ' + (t - ts) + 'ms');
 
 			var data = [];
 			$(xml).find(obj_name).each(function(){
@@ -290,6 +293,8 @@ var botoweb = {
 	init: function(href, opt, fnc) {
 		if (!opt) opt = {};
 
+		botoweb.uuid = botoweb.util.uuid();
+
 		new botoweb.Environment(href, function(env) {
 			console.log('API initialization complete');
 
@@ -309,6 +314,7 @@ var botoweb = {
 
 					// Update the local database every 2 minutes
 					setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);
+					setInterval(botoweb.ldb.sync.heartbeat, 5 * 1000);
 				}, function(msg){
 					botoweb.ui.init();
 					if (fnc)
