@@ -114,10 +114,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 					function update () {
 						// Data may not be updated immediately
 						setTimeout(function () {
-							if (fnc) {
-								if (fnc() === false)
-									return;
-							}
+							if (fnc && fnc(obj) === false)
+								return;
 
 							if (self.no_obj)
 								document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);
@@ -130,7 +128,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 						update();
 				}
 				else if (fnc)
-					fnc();
+					fnc(obj);
 			};
 
 			if (this.no_obj) {
@@ -146,8 +144,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 				self.saved = true;
 
 				var onsave = function () {
-					if (fnc)
-						fnc(obj);
+					// Allow the callback to block the redirection
+					if (fnc && fnc(obj) === false)
+						return;
 
 					if (self.opt.root)
 						document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(obj.id);

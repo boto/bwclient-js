@@ -64,6 +64,10 @@ botoweb.ui = {
 		$('header nav').show();
 
 		botoweb.ui.nodes.search_results = $('<div class="search_results_container"><div class="search_results"></div></div>').appendTo($('body')).hide();
+		$(botoweb.ui.page).bind('load.global', function () {
+			botoweb.ui.overlay.hide();
+		});
+
 		$(botoweb.ui.page).bind('change.global', function (e, loc, new_page) {
 			// Object deletion is normally handled by an event to avoid the
 			// history entry. If that event is removed, we must handle the

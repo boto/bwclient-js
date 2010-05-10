@@ -72,15 +72,56 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 			self.block.save(function () {
 				botoweb.ui.overlay.hide();
 
-				if (self.block.opt.root)
-					document.location.href = document.location.href.replace(/&action=[^&]*/, '');
+				botoweb.ui.page.uncache(botoweb.ui.page.location.full.replace(/&action=[^&]*/, ''));
+
+				if (self.block.opt.root) {
+					// Force the page to redirect to the object page - this will
+					// be needed if the user did a Save and Continue Editing on
+					// a create page.
+					if (document.location.href.indexOf('redirect=true') >= 0)
+						self.block.no_obj = true;
+					else
+						document.location.href = document.location.href.replace(/&action=[^&]*/, '');
+				}
+			});
+		}
+
+		function onupdate () {
+			botoweb.ui.overlay.show();
+
+			self.block.save(function (obj) {
+				// Allow the block to be saved again
+				self.block.saved = false;
+
+				// On saving a new object, we need to include its ID in the NEW
+				// object URL so that we do not create a new object.
+				if (self.block.opt.root && self.block.no_obj && botoweb.ui.page.location.data.id != obj.id) {
+					// Changing the URL immediately causes problems
+					setTimeout(function () {
+						document.location.href += '&redirect=true&id=' + escape(obj.id);
+					}, 500);
+
+					botoweb.ui.overlay.hide();
+				}
+				else
+					// Refresh the page but prevent it from redirecting
+					botoweb.ui.page.refresh(true);
+
+				return false;
 			});
 		}
 
 		function oncancel () {
 			// Editing an object?
-			if (botoweb.ui.page.location.data.id)
-				document.location.href = document.location.href.replace(/&action=[^&]*/, '');
+			if (botoweb.ui.page.location.data.id) {
+				// Force the page to redirect to the object page - this will
+				// be needed if the user did a Save and Continue Editing on
+				// a create page.
+				if (document.location.href.indexOf('redirect=true') >= 0)
+					document.location.href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, self.model) + '?id=' + escape(self.obj_id);
+				else
+					document.location.href = document.location.href.replace(/&action=[^&]*/, '');
+			}
 
 			// Or creating something new
 			else
@@ -95,11 +136,15 @@ botoweb.ui.widget.EditingTools = function(node, block, actions) {
 		$(self.block).bind('edit', function () {
 			self.node.find('li').hide();
 
-			botoweb.ui.button('Save Changes', { icon: 'ui-icon-disk' })
+			botoweb.ui.button('Save Changes<br /><small>and finish editing</small>', { icon: 'ui-icon-disk' })
 				.click(onsave)
 				.appendTo($('<li class="tmp"/>').appendTo(self.node));
 
-			botoweb.ui.button('Cancel', { icon: 'ui-icon-close', primary: false })
+			botoweb.ui.button('Save Changes<br /><small>and continue editing</small>', { icon: 'ui-icon-disk', primary: true })
+				.click(onupdate)
+				.appendTo($('<li class="tmp"/>').appendTo(self.node));
+
+			botoweb.ui.button('Cancel Changes<br /><small>since last save</small>', { icon: 'ui-icon-close', primary: false })
 				.click(oncancel)
 				.appendTo($('<li class="tmp"/>').appendTo(self.node));
 		});
