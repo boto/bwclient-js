@@ -213,7 +213,7 @@
 						return;
 					}
 
-					var editable = this.parents($markup.sel.editable + ':first').attr($markup.prop.editable);
+					var editable = this.attr($markup.prop.editable) || this.parents($markup.sel.editable + ':first').attr($markup.prop.editable);
 
 					if (editable === undefined)
 						editable = block.opt.editable;
