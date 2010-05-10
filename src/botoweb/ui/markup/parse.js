@@ -333,20 +333,32 @@
 					}
 
 					else if (block.obj && prop.is_type('blob')) {
-						var load_data = function () {
+						var load_data = function (sync) {
 							node.unbind('ready');
 
 							botoweb.Object.load(block.model, (block.obj || block.obj_id), val, function (data) {
-								if (!data) return;
+								if (sync)
+									block.waiting--;
 
-								node.html(botoweb.util.html_format(data));
+								if (data)
+									node.html(botoweb.util.html_format(data));
+
+								if (!block.waiting)
+									block.done();
 							});
 						}
 
 						if (this.is('.delay_load'))
 							this.bind('ready', load_data);
-						else
-							load_data();
+						else {
+							// Data tables must have all data loaded before display
+							var sync = this.parents('td').length;
+
+							if (sync)
+								block.waiting++;
+
+							load_data(sync);
+						}
 					}
 
 					else if (block.obj) {
@@ -421,61 +433,13 @@
 				// It is safest not to make a history entry for deletes, just
 				// attach a click event.
 				if (val == 'delete') {
+					// This link MUST be caught by a page change listener which
+					// must use the browser history to get back. It will only be
+					// loaded if the click event is stripped off this link.
+					this.attr('href', '#?action=delete&model=' + block.model.name + '&id=' + block.obj_id);
+
 					this.click(function (e) {
-						block.model.get(block.obj_id, function (obj) {
-							var dialog = $('<div/>')
-								.html(
-									'Are you sure you want to delete the following ' + block.model.name + '?'
-									+ '<h3>' + obj.toString() + '</h3>'
-								)
-								.dialog({
-									resizable: true,
-									modal: true,
-									title: 'Please confirm',
-									buttons: {
-										'Delete item': function() {
-											var dialog = $(this);
-											botoweb.ui.overlay.show();
-
-											obj.del(function (success) {
-												botoweb.ui.overlay.hide();
-
-												dialog.dialog('close')
-
-												if (success) {
-													var recent_page = '';
-													var steps = 0;
-													$.each(botoweb.ui.page.history, function () {
-														if (this.data.id != block.obj_id) {
-															recent_page = this;
-															return false;
-														}
-														steps++;
-													});
-
-													if (steps == 0)
-														botoweb.ui.page.refresh(true);
-													else if (recent_page.full)
-														document.location.href = recent_page.full;
-													else
-														history.back();
-
-													setTimeout(botoweb.ldb.sync.update, 1000);
-												}
-											});
-											return false;
-										},
-										'Cancel': function() {
-											$(this).dialog('close');
-										}
-									}
-								});
-
-							dialog.parent('.ui-dialog').find('button:last').addClass('ui-priority-secondary');
-						});
-
-						e.preventDefault();
-						return false;
+						$markup.delete_obj(block.model, block.obj_id, e);
 					});
 
 					return;

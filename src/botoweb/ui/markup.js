@@ -291,4 +291,56 @@ botoweb.ui.markup = new function () {
 		});
 		block.ignored = [];
 	};
+
+	/**
+	 * Shows a confirmation and deletes an object.
+	 */
+	this.delete_obj = function (model, obj_id, e) {
+		model.get(obj_id, function (obj) {
+			var dialog = $('<div/>')
+				.html(
+					'Are you sure you want to delete the following ' + model.name + '?'
+					+ '<h3>' + obj.toString() + '</h3>'
+				)
+				.dialog({
+					resizable: true,
+					modal: true,
+					title: 'Please confirm',
+					buttons: {
+						'Delete item': function() {
+							var dialog = $(this);
+							botoweb.ui.overlay.show();
+
+							obj.del(function (success) {
+								botoweb.ui.overlay.hide();
+
+								dialog.dialog('close')
+
+								if (success) {
+									// Get this object out of the history and go to a safe page
+									botoweb.ui.page.backout({ id: obj.id });
+
+									setTimeout(botoweb.ldb.sync.update, 1000);
+								}
+							});
+							return false;
+						},
+						'Cancel': function() {
+							$(this).dialog('close');
+
+							// Was triggered by a URL instead of an event
+							if (!e && botoweb.ui.page.location.data.action == 'delete') {
+								history.back();
+							}
+						}
+					}
+				});
+
+			dialog.parent('.ui-dialog').find('button:last').addClass('ui-priority-secondary');
+		});
+
+		if (e)
+			e.preventDefault();
+		return false;
+	}
 }();
