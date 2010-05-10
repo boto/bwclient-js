@@ -155,7 +155,7 @@ botoweb.Model = function (name, href, methods, props) {
 		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
 			opt.one = true;
 			opt.not_found = function () {
-				botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, this.href), id, fnc, opt);
+				botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, self.href), id, fnc, opt);
 			};
 			return this.query_ldb({id: id}, fnc, opt);
 		}
