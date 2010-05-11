@@ -410,6 +410,13 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	// Copy any optional data
 	$.extend(this.meta, opt);
 
+	// Create a default label by converting _ to space and title casing
+	if (!this.meta.label) {
+		this.meta.label = this.meta.name.replace(/(^|_)(\w)/g, function (m, space, chr) {
+			return space.replace('_', ' ') + chr.toUpperCase();
+		});
+	}
+
 	if (this.is_type('query')) {
 		setTimeout(function () {
 			self.meta.ref_props = [];
