@@ -24,7 +24,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.waiting = 0;
 	this.no_obj = true;
 	this.opt = opt;
-	this.def = {};
+	this.def = opt.def || {};
+	this.data = opt.data || {};
 	this.state = opt.state || 'view';
 	this.saved = false;
 
@@ -238,9 +239,15 @@ botoweb.ui.markup.Block = function (node, opt) {
 			}
 		}
 
-		if (this.opt.data) {
+		if (this.data && typeof this.data == 'string') {
 			try {
-				eval('this.def = ' + unescape(this.opt.data));
+				eval('this.data = ' + unescape(this.data));
+			} catch (e) {}
+		}
+
+		if (this.def && typeof this.def == 'string') {
+			try {
+				eval('this.def = ' + unescape(this.def));
 			} catch (e) {}
 		}
 

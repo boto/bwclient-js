@@ -172,7 +172,8 @@ $forms.Field = function (prop, opt) {
 		field.attr('id', this.fields.length + '_' + this.id)
 			.addClass('edit_field');
 
-		if (this.opt.allow_multiple || this.prop && this.prop.is_type('list') && this.opt.allow_list) {
+		// Picklist has its own list handling
+		if (!(this instanceof $forms.Picklist) && (this.opt.allow_multiple || this.prop && this.prop.is_type('list') && this.opt.allow_list)) {
 			var sortable = this.prop && this.prop.is_type('list');
 
 			var node;
@@ -276,7 +277,8 @@ $forms.Field = function (prop, opt) {
 
 		this.set_values();
 
-		if (this.opt.allow_multiple || this.prop.is_type('list') && this.opt.allow_list) {
+		// Picklist has its own list handling
+		if (!(this instanceof $forms.Picklist) && (this.opt.allow_multiple || this.prop.is_type('list') && this.opt.allow_list)) {
 			var add_selection = $ui.button('Add item', { icon: 'ui-icon-arrowthick-1-s', corners: [1,1,0,0] })
 				.addClass('small add_selection')
 				.click(function () {
@@ -426,12 +428,29 @@ $forms.Field = function (prop, opt) {
 
 	this.set_default = function () {
 		$.each(this.fields, function () {
+			var val = self.prop.meta.def;
+
+			if ('val' in self.opt) {
+				val = self.opt.val;
+			}
+			else if ('def' in self.opt) {
+				val = self.opt.def;
+			}
+
 			if (!$(this).val().length)
-				$(this).val(('def' in self.opt) ? self.opt.def : self.prop.meta.def);
+				$(this).val(val);
 		});
 	}
 
 	this.set_values = function () {
+		// Override value
+		if ('val' in self.opt) {
+			$.each(self.opt.val, function () {
+				self.add_field(this);
+			});
+			return;
+		}
+
 		var val = this.prop.val();
 
 		if (val && val.length && (val.length > 1 || val[0].val)) {
@@ -718,12 +737,21 @@ $forms.Bool = function () {
 			name: 'field_' + Math.round(Math.random() * 10000)
 		});
 
+		var val = self.prop.meta.def;
+
+		if ('val' in self.opt) {
+			val = self.opt.val;
+		}
+		else if ('def' in self.opt) {
+			val = self.opt.def;
+		}
+
 		if (value == 'True')
 			field.find('input[value=True]').attr('checked', true);
 		else if (value == 'False')
 			field.find('input[value=False]').attr('checked', true);
 		else
-			field.find('input[value=' + (('def' in self.opt) ? self.opt.def : self.prop.meta.def || 'False') + ']').attr('checked', true);
+			field.find('input[value=' + (val || 'False') + ']').attr('checked', true);
 
 		field.data('get_val', function () {
 			return field.find(':checked').val()
@@ -1361,7 +1389,10 @@ $forms.Picklist = function () {
 			}
 		}
 
-		if (self.obj_id) {
+		if ('val' in self.opt) {
+			handle_val(self.opt.val);
+		}
+		else if (self.obj_id) {
 			// Calling this immediately results in an unknown conflict with other things
 			// that call .val on this property, so we delay a few ms.
 			setTimeout(function () {
