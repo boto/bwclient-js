@@ -87,7 +87,7 @@ botoweb.sql = {
 				add_table(t);
 			});
 
-			$.each(expr.bind_params, function() { self.bind_params.push(this) });
+			$.each(expr.bind_params, function() { self.bind_params.push(this.toString()) });
 
 			return this;
 		};
@@ -177,7 +177,7 @@ botoweb.sql = {
 
 			if (column.bind_params) {
 				$.each(column.bind_params, function () {
-					self.bind_params.push(this);
+					self.bind_params.push(this.toString());
 				});
 			}
 
@@ -205,7 +205,7 @@ botoweb.sql = {
 			$.each(args, function () {
 				if (this.bind_params) {
 					$.each(this.bind_params, function () {
-						self.bind_params.push(this);
+						self.bind_params.push(this.toString());
 					});
 				}
 			});
@@ -529,7 +529,7 @@ botoweb.sql = {
 			if (this.max_results)
 				sql += '\nLIMIT ' + this.start + ', ' + this.max_results;
 
-			//console.error(sql);
+			//console.error(sql, this.bind_params);
 
 			return sql;
 		};
@@ -737,7 +737,7 @@ botoweb.sql = {
 			if (c instanceof botoweb.sql.Expression) {
 				self.columns.push(c);
 				$.each(c.tables, function() { add_table(this); });
-				$.each(c.bind_params, function() { self.bind_params.push(this); });
+				$.each(c.bind_params, function() { self.bind_params.push(this.toString()); });
 			}
 			else if (c instanceof botoweb.sql.Column) {
 				self.columns.push(c);
@@ -747,12 +747,12 @@ botoweb.sql = {
 			else if ($.isArray(c)) {
 				$.each(c, function () {
 					self.columns.push('?');
-					self.bind_params.push(this);
+					self.bind_params.push(this.toString());
 				});
 			}
 			else {
 				self.columns.push('?');
-				self.bind_params.push(c);
+				self.bind_params.push(c.toString());
 			}
 		});
 
