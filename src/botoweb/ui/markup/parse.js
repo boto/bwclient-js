@@ -301,14 +301,22 @@
 						if (block.obj) {
 							block.waiting++;
 							var async = false;
+							var limit = this.attr($markup.prop.limit) * 1;
 
 							node.hide();
 
 							block.obj.data[val].val(function (data) {
+								// Remove anything past the limit
+								if (limit && data.length > limit)
+									data = data.splice(limit);
+
 								if (data.length && (data.length > 1 || data[0].val)) {
 									if (node.is('li')) {
 										var items = block.obj.data[val].toString(true);
-										$.each(items, function () {
+
+										// This inserts new items under the source list item,
+										// so we need to reverse the list.
+										$.each(items.reverse(), function () {
 											node.after(node.clone().html('' + this).show());
 										});
 									}
@@ -375,6 +383,10 @@
 							input: this.attr($markup.prop.input_type)
 						};
 
+						// Force value for the field
+						if (prop.meta.name in block.data) {
+							opt.val = [{val: block.data[prop.meta.name]}];
+						}
 
 						// Ensure the template is nested in a single parent
 						contents = $('<div/>').append(contents);
