@@ -36,11 +36,6 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			type = opt.item_type;
 	}
 
-	// Calculated types are handled the same as blobs in the front-end.
-	else if (type == 'calculated') {
-		type = 'blob';
-	}
-
 	/**
 	 * Creates a new object. Expects data to be in the right format.
 	 *
@@ -55,7 +50,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		if (!this.data || this.data.length == 0) {
 			// If the data MUST be loaded from botoweb to know if there is a
 			// value, then default it to undefined to signify "unknown"
-			if (model_prop.is_type('query', 'blob'))
+			if (model_prop.meta.calculated || model_prop.is_type('query', 'blob'))
 				this.data = [{val: undefined}];
 			// Otherwise default it to null to signify "no value"
 			else

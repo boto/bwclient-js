@@ -85,7 +85,7 @@ botoweb.ldb = {
 					var set = {};
 
 					var column_definitions = $.map(model.props, function (prop) {
-						if (prop.meta.name in set)
+						if (prop.meta.name in set || prop.meta.no_store)
 							return;
 
 						set[prop.meta.name] = 1;
@@ -305,6 +305,10 @@ botoweb.ldb = {
 	 * @return The full column definition string.
 	 */
 	prop_to_column_defn: function (prop) {
+		// Cannot be stored
+		if (prop.meta.no_store)
+			return null;
+
 		var col = botoweb.ldb.prop_to_column(prop);
 
 		switch (prop.meta.type) {

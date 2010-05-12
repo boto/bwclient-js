@@ -378,7 +378,8 @@ botoweb.ldb.sync = {
 						var model_prop = this;
 						var prop = obj.data[this.meta.name];
 
-						if (this.is_type('query', 'blob'))
+						// Some types cannot or should not be stored
+						if (this.meta.no_store || this.is_type('query', 'blob'))
 							return;
 						else if (this.is_type('list', 'complexType')) {
 							txn.executeSql(

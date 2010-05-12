@@ -39,13 +39,19 @@ botoweb.xml = {
 				min_value: 'min',
 				max_value: 'max',
 				ref_name: 'reference_name',
-				href: 'href'
+				href: 'href',
+				no_store: 'no_store',
+				calculated: 'calculated'
 			};
 
 			$.each(map, function (a, b) {
 				if (tags.attr(b) != undefined)
 					opt[a] = tags.attr(b);
 			});
+
+			// Calculated properties can never be stored
+			if (opt.calculated)
+				opt.no_store = true;
 
 			if (opt.ref_name)
 				opt.refs = opt.ref_name.split(',');
@@ -127,7 +133,19 @@ botoweb.xml = {
 
 				var d = null;
 
-				if (this.is_type('reference', 'blob', 'query')) {
+				// Calculated properties are not included in the XML
+				if (this.meta.calculated) {
+					d = tags.map(function (i, tag) {
+						tag = $(tag);
+						return {
+							// The value is undefined until the object is loaded
+							val: undefined,
+
+							href: tag.attr('href')
+						};
+					});
+				}
+				else if (this.is_type('reference', 'blob', 'query')) {
 					d = tags.map(function (i, tag) {
 						tag = $(tag);
 						return {
