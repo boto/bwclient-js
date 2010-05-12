@@ -298,21 +298,8 @@ botoweb.ui.page = new function() {
 
 			self.location = loc;
 
-			// Remove all non-global events attached to the central forms obj
-			if ($(botoweb.ui.forms).data('events')) {
-				var to_remove = [];
-
-				$.each($(botoweb.ui.forms).data('events'), function () {
-					$.each(this, function () {
-						if (this.namespace != 'global')
-							to_remove.push(this)
-					});
-				});
-
-				$.each(to_remove, function () {
-					$(botoweb.ui.forms).unbind(this.type, this.handler);
-				});
-			}
+			// Do not allow any form events to linger across pages
+			botoweb.ui.forms.detach_events();
 
 			// If a new page was loaded there probably will not be anything
 			// bound to the change event, but we trigger it anyway to support a

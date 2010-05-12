@@ -344,6 +344,11 @@ $forms.Field = function (prop, opt) {
 								}
 
 								function update() {
+									$ui.overlay.hide();
+
+									if (!self.opt.block.opt.no_refresh)
+										$ui.page.refresh();
+
 									$($ldb.sync).bind('end', updated);
 
 									$ldb.sync.update();
@@ -353,11 +358,6 @@ $forms.Field = function (prop, opt) {
 
 								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
 									update();
-
-								$ui.overlay.hide();
-
-								if (!self.opt.block.opt.no_refresh)
-									$ui.page.refresh();
 							}
 
 							botoweb.Object.update(self.obj_model, self.obj_id, data, function (obj) {
@@ -1456,5 +1456,25 @@ $forms.Picklist = function () {
 		return a_val;
 	};
 };
+
+/**
+ * Remove all non-global events attached to the central forms obj
+ */
+$forms.detach_events = function () {
+	if ($($forms).data('events')) {
+		var to_remove = [];
+
+		$.each($($forms).data('events'), function () {
+			$.each(this, function () {
+				if (this.namespace != 'global')
+					to_remove.push(this)
+			});
+		});
+
+		$.each(to_remove, function () {
+			$($forms).unbind(this.type, this.handler);
+		});
+	}
+}
 
 })(jQuery);
