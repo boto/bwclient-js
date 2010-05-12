@@ -150,6 +150,9 @@ botoweb.ldb = {
 					// These names refer to the actual DB schema
 					botoweb.ldb.model_to_table(model),
 					$.map(model.props, function (prop) {
+						if (prop.meta.no_store)
+							return;
+
 						var name = botoweb.ldb.prop_to_column(prop);
 
 						if (prop.is_type('reference') && !prop.is_type('list'))
@@ -161,6 +164,9 @@ botoweb.ldb = {
 					// These friendlier names will be used in the abstraction
 					model.name,
 					$.map(model.props, function (prop) {
+						if (prop.meta.no_store)
+							return;
+
 						if (prop.is_type('reference') && !prop.is_type('list'))
 							return [prop.meta.name, prop.meta.name + '__type'];
 
