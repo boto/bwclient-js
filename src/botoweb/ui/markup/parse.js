@@ -224,195 +224,200 @@
 					var contents;
 					var prop = block.model.prop_map[val];
 
-					if (prop.is_type('reference', 'query')) {
-						if (follow_props) {
-							this.append($('<span/>')
-								.attr(prop, follow_props));
-						}
+					var display_prop = function (prop) {
+						if (prop.is_type('reference', 'query')) {
+							if (follow_props) {
+								node.append($('<span/>')
+									.attr(prop, follow_props));
+							}
 
-						if (this.find($markup.sel.attribute + ', ' + $markup.sel.attribute_list).length == 0) {
-							this.append('<a bwAttribute="name" bwLink="view"/>');
-						}
+							if (node.find($markup.sel.attribute + ', ' + $markup.sel.attribute_list).length == 0) {
+								node.append('<a bwAttribute="name" bwLink="view"/>');
+							}
 
-						contents = this.contents().clone();
-						this.empty();
+							contents = node.contents().clone();
+							node.empty();
 
-						function descend (obj) {
-							if (obj && obj.id) {
-								var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), {
-									obj: obj,
-									editable: editable,
-									parent: block,
-									no_cache: block.no_cache
-								});
-								block.children.push(b);
+							function descend (obj) {
+								if (obj && obj.id) {
+									var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), {
+										obj: obj,
+										editable: editable,
+										parent: block,
+										no_cache: block.no_cache
+									});
+									block.children.push(b);
 
-								node.append(b.node.contents());
+									node.append(b.node.contents());
+								}
+							}
+
+							if (block.obj) {
+								block.waiting++;
+
+								var load_data = function () {
+									var async = false;
+
+									node.unbind('ready');
+
+									var filter = node.attr($markup.prop.filter);
+
+									if (filter) {
+										try {
+											filter = $util.interpolate(filter, block.obj);
+											eval('filter = ' + filter);
+										}
+										catch (e) { console.error(e.message) }
+									}
+
+									botoweb.Object.val(block.model, (block.obj || block.obj_id), val, function (data) {
+										$.each(data, function () {
+											if (this && this.val)
+												descend(this.val);
+										});
+
+										block.waiting--;
+
+										if (async && !block.waiting)
+											block.done();
+									}, $.extend({
+										obj: block.obj,
+										filter: filter
+									}, block.opt));
+
+									async = true;
+								}
+
+								if (node.is('.delay_load'))
+									node.bind('ready', load_data);
+								else
+									load_data();
+							}
+							else {
+								descend();
 							}
 						}
 
-						if (block.obj) {
-							block.waiting++;
-
-							var load_data = function () {
+						else if (prop.is_type('list')) {
+							if (block.obj) {
+								block.waiting++;
 								var async = false;
+								var limit = node.attr($markup.prop.limit) * 1;
 
-								node.unbind('ready');
+								node.hide();
 
-								var filter = node.attr($markup.prop.filter);
+								prop.val(function (data) {
+									// Remove anything past the limit
+									if (limit && data.length > limit)
+										data = data.splice(limit);
 
-								if (filter) {
-									try {
-										filter = $util.interpolate(filter, block.obj);
-										eval('filter = ' + filter);
+									if (data.length && (data.length > 1 || data[0].val)) {
+										if (node.is('li')) {
+											var items = prop.toString(true);
+
+											// This inserts new items under the source list item,
+											// so we need to reverse the list.
+											$.each(items.reverse(), function () {
+												node.after(node.clone().html('' + this).show());
+											});
+										}
+										else {
+											prop.toString();
+
+											if (str)
+												node.html(str);
+
+											node.show();
+										}
 									}
-									catch (e) { console.error(e.message) }
-								}
-
-								botoweb.Object.val(block.model, (block.obj || block.obj_id), val, function (data) {
-									$.each(data, function () {
-										if (this && this.val)
-											descend(this.val);
-									});
 
 									block.waiting--;
 
 									if (async && !block.waiting)
 										block.done();
-								}, $.extend({
-									obj: block.obj,
-									filter: filter
-								}, block.opt));
+								}, block.opt);
 
 								async = true;
 							}
-
-							if (node.is('.delay_load'))
-								node.bind('ready', load_data);
-							else
-								load_data();
 						}
-						else {
-							descend();
+
+						else if (block.obj && prop.is_type('blob')) {
+							node.html(botoweb.util.html_format(prop.toString()));
 						}
-					}
 
-					else if (prop.is_type('list')) {
-						if (block.obj) {
-							block.waiting++;
-							var async = false;
-							var limit = this.attr($markup.prop.limit) * 1;
+						else if (block.obj) {
+							node.html(prop.toString() || '');
+						}
 
-							node.hide();
+						if (editable && prop.meta.write) {
+							var opt = {
+								node: node,
+								block: block,
+								model: block.model,
+								editable: false,
+								def: block.def[prop.meta.name],
+								input: node.attr($markup.prop.input_type)
+							};
 
-							block.obj.data[val].val(function (data) {
-								// Remove anything past the limit
-								if (limit && data.length > limit)
-									data = data.splice(limit);
+							// Force value for the field
+							if (prop.meta.name in block.data) {
+								opt.val = [{val: block.data[prop.meta.name]}];
+							}
 
-								if (data.length && (data.length > 1 || data[0].val)) {
-									if (node.is('li')) {
-										var items = block.obj.data[val].toString(true);
+							// Ensure the template is nested in a single parent
+							contents = $('<div/>').append(contents);
 
-										// This inserts new items under the source list item,
-										// so we need to reverse the list.
-										$.each(items.reverse(), function () {
-											node.after(node.clone().html('' + this).show());
-										});
-									}
-									else {
-										var str = block.obj.data[val].toString();
+							// In order to have a template, a propert must be either
+							// a reference or query, and it must have at least one
+							// editable attribute or attrbuteList.
+							if (prop.is_type('reference','query') &&
+								(contents.find($markup.sel.attribute_list).length ||
+								contents.find($markup.sel.attribute).length > 1)
+							) {
+								opt.template = contents;
+							}
 
-										if (str)
-											node.html(str);
+							if (block.obj && val in block.obj.data)
+								prop = block.obj.data[val];
 
-										node.show();
-									}
-								}
-
-								block.waiting--;
-
-								if (async && !block.waiting)
-									block.done();
-							}, block.opt);
-
-							async = true;
+							block.fields.push($forms.prop_field(prop, opt));
 						}
 					}
 
-					else if (block.obj && prop.is_type('blob')) {
-						var load_data = function (sync) {
-							node.unbind('ready');
-
-							botoweb.Object.load(block.model, (block.obj || block.obj_id), val, function (data) {
-								if (sync)
-									block.waiting--;
-
-								if (data)
-									node.html(botoweb.util.html_format(data));
-
-								if (!block.waiting)
-									block.done();
-							});
-						}
-
-						if (this.is('.delay_load'))
-							this.bind('ready', load_data);
-						else {
-							// Data tables must have all data loaded before display
-							var sync = this.parents('td').length;
-
-							if (sync)
+					if (block.obj) {
+						// Property needs to be loaded
+						if ((prop.meta.no_store || prop.is_type('blob')) && !prop.is_loaded()) {
+							if (node.is('.delay_load')) {
+								node.bind('ready', function () {
+									block.model.get(block.obj_id, function (obj) {
+										block.obj = obj;
+										block.obj.load(prop.meta.name, display_prop);
+									});
+								});
+							}
+							else {
 								block.waiting++;
 
-							load_data(sync);
-						}
-					}
+								block.obj.load(prop.meta.name, function (p) {
+									block.waiting--;
 
-					else if (block.obj) {
-						if (prop.meta.calculated) {
-							block.obj.load(prop.meta.name, function (prop) {
-								console.error(prop);
-								node.html(prop.toString() || '');
-							});
+									display_prop(p);
+
+									if (!block.waiting)
+										block.done();
+								});
+							}
 						}
+
+						// Property is either already loaded or loadable during
+						// parsing
 						else
-							this.html(block.obj.data[val].toString() || '');
+							display_prop(block.obj.data[prop.meta.name]);
+					}
+					else {
+						display_prop(prop);
 					}
 
-					if (editable && prop.meta.write) {
-						var opt = {
-							node: this,
-							block: block,
-							model: block.model,
-							editable: false,
-							def: block.def[prop.meta.name],
-							input: this.attr($markup.prop.input_type)
-						};
-
-						// Force value for the field
-						if (prop.meta.name in block.data) {
-							opt.val = [{val: block.data[prop.meta.name]}];
-						}
-
-						// Ensure the template is nested in a single parent
-						contents = $('<div/>').append(contents);
-
-						// In order to have a template, a propert must be either
-						// a reference or query, and it must have at least one
-						// editable attribute or attrbuteList.
-						if (prop.is_type('reference','query') &&
-							(contents.find($markup.sel.attribute_list).length ||
-							contents.find($markup.sel.attribute).length > 1)
-						) {
-							opt.template = contents;
-						}
-
-						if (block.obj && val in block.obj.data)
-							prop = block.obj.data[val];
-
-						block.fields.push($forms.prop_field(prop, opt));
-					}
 				}, {
 					suffix: ':first'
 				});
