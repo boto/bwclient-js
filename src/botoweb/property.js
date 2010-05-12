@@ -50,7 +50,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		if (!this.data || this.data.length == 0) {
 			// If the data MUST be loaded from botoweb to know if there is a
 			// value, then default it to undefined to signify "unknown"
-			if (model_prop.meta.calculated || model_prop.is_type('query', 'blob'))
+			if (model_prop.meta.no_store || model_prop.is_type('query', 'blob'))
 				this.data = [{val: undefined}];
 			// Otherwise default it to null to signify "no value"
 			else
@@ -225,10 +225,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 					}
 				}
 
-				if (opt.obj)
-					opt.obj.follow(this.meta.name, process, opt.filter, opt);
-				else
-					botoweb.Object.follow(this.obj_model, this.obj_id, this.meta.name, process, opt.filter, opt);
+				botoweb.Object.follow(this.obj_model, (opt.obj || this.obj_id), this.meta.name, process, opt.filter, opt);
 
 				async = true;
 			};
@@ -336,6 +333,30 @@ botoweb.Property = function(name, type, perm, model, opt) {
 					});
 			});
 		}
+	}
+
+	// Calculated properties must always be loaded from the server
+	if (opt.no_store && !this.load) {
+		this.load = function (fnc, opt) {
+			opt = opt || {};
+
+			if (fnc) {
+				this.onload.push(fnc);
+
+				// We already started to load the data
+				if (this.onload.length > 1)
+					return;
+			}
+
+			var self = this;
+			var async = false;
+
+			botoweb.Object.load(this.obj_model, (opt.obj || this.obj_id), this.meta.name, function (prop) {
+				fnc(prop.data);
+			}, opt);
+
+			async = true;
+		};
 	}
 
 	/**
