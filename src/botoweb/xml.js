@@ -128,64 +128,83 @@ botoweb.xml = {
 				return;
 			}
 			$.each(model.props, function() {
-				// May match more than one!
-				var tags = xml.find('> ' + this.meta.name);
+				var prop = $xml.to_prop(this, xml, opt);
 
-				var d = null;
-
-				// Calculated properties are not included in the XML
-				if (this.meta.calculated) {
-					d = tags.map(function (i, tag) {
-						tag = $(tag);
-						return {
-							// The value is undefined until the object is loaded
-							val: undefined,
-
-							href: tag.attr('href')
-						};
-					});
-				}
-				else if (this.is_type('reference', 'blob', 'query')) {
-					d = tags.map(function (i, tag) {
-						tag = $(tag);
-						return {
-							// The value is undefined until the object is loaded
-							val: undefined,
-
-							href: tag.attr('href'),
-							type: tag.attr('item_type'),
-							id: tag.attr('id')
-						};
-					});
-				}
-
-				else if (this.is_type('complexType')) {
-					d = tags.children().map(function(i, tag) {
-						tag = $(tag);
-						return {
-							key: tag.attr('name'),
-							type: tag.attr('type'),
-							val: tag.text()
-						};
-					});
-				}
-
-				else {
-					d = tags.map(function(i, tag) {
-						return { val: $(tag).text() };
-					});
-				}
-
-				// Less content for the next query
-				tags.remove();
-
-				// Create an instance once the data is gathered, any data that
-				// is missing will be filled with defaults by the constructor.
-				data[this.meta.name] = new this.instance($.makeArray(d));
+				if (prop)
+					data[this.meta.name] = prop;
 			});
 		}
 
 		return new botoweb.Object(xml.attr('id'), model, data, opt);
+	},
+
+	/**
+	 * Returns a new property based on the XML data.
+	 *
+	 * @return The corresponding property
+	 * @type botoweb.Property
+	 */
+	to_prop: function (model_prop, xml, opt) {
+		opt = opt || {};
+
+		// May match more than one!
+		var tags = xml.find('> ' + model_prop.meta.name);
+
+		// Default will be set later
+		if (tags.length == 0)
+			return;
+
+		var d = null;
+
+		// Calculated properties are not included in the XML
+		if (model_prop.meta.calculated && !opt.parse_calculated) {
+			d = tags.map(function (i, tag) {
+				tag = $(tag);
+				return {
+					// The value is undefined until the object is loaded
+					val: undefined,
+
+					href: tag.attr('href')
+				};
+			});
+		}
+		else if (model_prop.is_type('reference', 'blob', 'query')) {
+			d = tags.map(function (i, tag) {
+				tag = $(tag);
+				return {
+					// The value is undefined until the object is loaded
+					val: undefined,
+
+					href: tag.attr('href'),
+					type: tag.attr('item_type'),
+					id: tag.attr('id')
+				};
+			});
+		}
+
+		else if (model_prop.is_type('complexType')) {
+			d = tags.children().map(function(i, tag) {
+				tag = $(tag);
+				return {
+					key: tag.attr('name'),
+					type: tag.attr('type'),
+					val: tag.text()
+				};
+			});
+		}
+
+		else {
+			d = tags.map(function(i, tag) {
+				return { val: $(tag).text() };
+			});
+		}
+
+		// Less content for the next query
+		tags.remove();
+
+		// Create an instance once the data is gathered, any data that
+		// is missing will be filled with defaults by the constructor.
+		return new model_prop.instance($.makeArray(d));
 	},
 
 	from_obj: function (model_name, data) {
