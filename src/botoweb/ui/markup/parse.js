@@ -370,7 +370,14 @@
 					}
 
 					else if (block.obj) {
-						this.html(block.obj.data[val].toString() || '');
+						if (prop.meta.calculated) {
+							block.obj.load(prop.meta.name, function (prop) {
+								console.error(prop);
+								node.html(prop.toString() || '');
+							});
+						}
+						else
+							this.html(block.obj.data[val].toString() || '');
 					}
 
 					if (editable && prop.meta.write) {

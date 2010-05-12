@@ -221,18 +221,30 @@ botoweb.Object = function(id, model, data, opt) {
 		});
 	}
 
-	this.load = function(prop, fnc) {
+	this.load = function(prop, fnc, opt) {
+		opt = opt || {};
 		var prop = this.data[prop];
 
-		if (typeof prop == 'undefined' || !prop.is_type('blob'))
+		if (typeof prop == 'undefined' || (!prop.is_type('blob') && !prop.meta.no_store))
 			return;
 
-		if (prop.data.length && prop.data[0].val === undefined)
-			prop.data = [];
+		botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name), function (data, xhr) {
+			var ct = xhr.getResponseHeader('Content-type') + '';
 
-		botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name), function (data) {
-			prop.data.push({val: data});
-			fnc(data);
+			if (ct.indexOf('text/xml') >= 0) {
+				// Must send a model prop so that the constructor is available
+				var p = botoweb.xml.to_prop(self.model.prop_map[prop.meta.name], $(data).children().first(), { parse_calculated: true });
+
+				if (p) {
+					fnc(p);
+				}
+			}
+			else {
+				if (!prop.meta.no_store)
+					prop.data = [{val: data}];
+
+				fnc(data);
+			}
 		}, function () {
 			fnc();
 		});
