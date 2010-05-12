@@ -226,7 +226,7 @@ botoweb.Object = function(id, model, data, opt) {
 		var prop = this.data[prop];
 
 		if (typeof prop == 'undefined' || (!prop.is_type('blob') && !prop.meta.no_store))
-			return;
+			return prop;
 
 		botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, prop.meta.name), function (data, xhr) {
 			var ct = xhr.getResponseHeader('Content-type') + '';
@@ -240,13 +240,12 @@ botoweb.Object = function(id, model, data, opt) {
 				}
 			}
 			else {
-				if (!prop.meta.no_store)
-					prop.data = [{val: data}];
+				prop.data = [{val: data}];
 
-				fnc(data);
+				fnc(prop);
 			}
 		}, function () {
-			fnc();
+			fnc(prop);
 		});
 	};
 
