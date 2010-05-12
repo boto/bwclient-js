@@ -68,6 +68,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		self.toString = model_prop.toString;
 		self.to_sql = model_prop.to_sql;
 		self.format_val = model_prop.format_val;
+		self.is_loaded = model_prop.is_loaded;
 
 		if (this.load) {
 			this.obj_id = undefined;
@@ -330,6 +331,8 @@ botoweb.Property = function(name, type, perm, model, opt) {
 							load.call(self, null, opt);
 						else
 							$.each(self.onload, function() { this(self.data, true); });
+
+						self.onload = [];
 					});
 			});
 		}
@@ -349,13 +352,13 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			}
 
 			var self = this;
-			var async = false;
 
 			botoweb.Object.load(this.obj_model, (opt.obj || this.obj_id), this.meta.name, function (prop) {
-				fnc(prop.data);
+				$.each(self.onload, function () {
+					this(prop.data);
+				});
+				self.onload = [];
 			}, opt);
-
-			async = true;
 		};
 	}
 
@@ -374,7 +377,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			// property, the val property will be null. undefined is used ONLY
 			// when the value has not yet been loaded. If val is null or
 			// anything else, this statement will evaluate to true.
-			if (this.data && (this.data.length == 0 || this.data[0].val !== undefined))
+			if (this.is_loaded())
 				return fnc(this.data, this);
 
 			// Load the data as defined by its type
@@ -390,6 +393,16 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		// returned.
 		return this.data;
 	};
+
+	this.is_loaded = function () {
+		if (!this.data)
+			return false;
+
+		if (this.data.length == 0 || this.data[0].val !== undefined)
+			return false;
+
+		return true;
+	}
 
 	/**
 	 * Returns the property's type (usually just used as a true value) if the
