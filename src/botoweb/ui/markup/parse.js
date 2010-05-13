@@ -347,12 +347,12 @@
 
 						// Special tabular display of mappings
 						else if (block.obj && prop.is_type('complexType') && node.is('tr')) {
+							// Cannot be edited in any way
 							editable = false;
-
 
 							var data = prop.val();
 							$.each(data, function (i, item) {
-								var row = node.clone().insertAfter(node);
+								var row = node.clone().insertBefore(node);
 
 								$markup.find(row, '_attribute', function(val, prop) {
 									if (val == 'key')
@@ -364,7 +364,14 @@
 								});
 							});
 
-							node.hide();
+							var table = node.parents('table.dataTable');
+
+							if (table.length) {
+								new botoweb.ui.widget.DataTable(table);
+							}
+
+							// Empty template row no longer needed
+							node.remove();
 						}
 
 						else if (block.obj) {
