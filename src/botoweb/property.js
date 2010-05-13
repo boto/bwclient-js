@@ -279,7 +279,6 @@ botoweb.Property = function(name, type, perm, model, opt) {
 					return load.call(this, fnc, opt);
 				else
 					return fnc(this.data, true);
-
 			}
 
 			// The list may have already been queried in which case the list
@@ -335,10 +334,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 						// Call the original load fnc
 						if (load)
 							load.call(self, null, opt);
-						else
+						else {
 							$.each(self.onload, function() { this(self.data, true); });
-
-						self.onload = [];
+							self.onload = [];
+						}
 					});
 			});
 		}
