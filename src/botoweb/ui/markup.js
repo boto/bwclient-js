@@ -11,6 +11,7 @@ botoweb.ui.markup = new function () {
 	this.prop = {
 		'action':         'bwAction',
 		'attribute':      'bwAttribute',
+		'_attribute':      '_bwAttribute',
 		'attributes':     'bwAttributes',
 		'class_name':     'bwClass',
 		'condition':      'bwCondition',
