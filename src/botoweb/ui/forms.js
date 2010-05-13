@@ -489,19 +489,24 @@ $forms.Field = function (prop, opt) {
 	this.cancel = function () {
 		this.node.hide();
 		if (this.opt.node) {
-			// The first element of a list is the template and should remain
-			// hidden.
-			if (!this.prop.is_type('list') || !this.opt.node.is(':empty'))
-				this.opt.node.show();
+			try {
+				// The first element of a list is the template and should remain
+				// hidden.
+				if (!this.prop.is_type('list') || !this.opt.node.is(':empty'))
+					this.opt.node.show();
 
-			// Lists often have multiple copies of the same node, so we need to
-			// show not only the target, but also its siblings which have the
-			// same bwAttribute property.
-			this.opt.node.siblings(
-				$ui.markup.sel._attribute.replace(']',
-					'=' + this.prop.meta.name + ']'
-				)
-			).show();
+				// Lists often have multiple copies of the same node, so we need to
+				// show not only the target, but also its siblings which have the
+				// same bwAttribute property.
+				this.opt.node.siblings(
+					$ui.markup.sel._attribute.replace(']',
+						'=' + this.prop.meta.name + ']'
+					)
+				).show();
+			} catch (e) {
+				// Siblings will throw an error if the node is no longer in the
+				// document.
+			}
 		}
 		this.editing = false;
 		this.node.empty();
