@@ -345,6 +345,28 @@
 							node.html(botoweb.util.html_format(prop.toString()));
 						}
 
+						// Special tabular display of mappings
+						else if (block.obj && prop.is_type('complexType') && node.is('tr')) {
+							editable = false;
+
+
+							var data = prop.val();
+							$.each(data, function (i, item) {
+								var row = node.clone().insertAfter(node);
+
+								$markup.find(row, '_attribute', function(val, prop) {
+									if (val == 'key')
+										this.html(item.key);
+									else if (val == 'val')
+										this.html(item.val);
+
+									this.removeAttr(prop);
+								});
+							});
+
+							node.hide();
+						}
+
 						else if (block.obj) {
 							node.html(prop.toString() || '');
 						}
