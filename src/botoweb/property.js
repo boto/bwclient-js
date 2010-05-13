@@ -404,7 +404,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		if (!this.data)
 			return false;
 
-		if (this.data.length == 0 || this.data[0].val !== undefined)
+		if (this.data.length == 0 || this.data[0].val === undefined)
 			return false;
 
 		return true;
