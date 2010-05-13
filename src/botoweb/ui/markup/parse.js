@@ -322,7 +322,7 @@
 											});
 										}
 										else {
-											prop.toString();
+											var str = prop.toString();
 
 											if (str)
 												node.html(str);

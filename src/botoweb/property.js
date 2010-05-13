@@ -165,6 +165,8 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			this.format_val = function (val, opt) {
 				opt.separator = '<br />';
 				return val.key + ' &rarr; ' + (val.val || 'none');
+				//console.log(val);
+				//return "<tr><td>" + val.key + ' </td><td> ' + (val.val || 'none') + " </td></tr>";
 			}
 			break;
 
@@ -273,7 +275,11 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 		this.load = function (fnc, opt) {
 			if (!model.local) {
-				return load.call(this, fnc, opt);
+				if (load)
+					return load.call(this, fnc, opt);
+				else
+					return fnc(this.data, true);
+
 			}
 
 			// The list may have already been queried in which case the list
