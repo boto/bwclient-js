@@ -199,6 +199,9 @@ botoweb.ui.page = new function() {
 		// Unbind anything not in a namespace
 		$(self).unbind('.');
 
+		// Do not allow any form events to linger across pages
+		botoweb.ui.forms.detach_events();
+
 		if (!self.preserve_cache) {
 			// TODO do this in a smarter way
 			$.each(botoweb.env.models, function () {
@@ -297,9 +300,6 @@ botoweb.ui.page = new function() {
 				new_page = true;
 
 			self.location = loc;
-
-			// Do not allow any form events to linger across pages
-			botoweb.ui.forms.detach_events();
 
 			// If a new page was loaded there probably will not be anything
 			// bound to the change event, but we trigger it anyway to support a
