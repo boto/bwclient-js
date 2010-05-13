@@ -192,7 +192,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 					this.onload.push(fnc);
 
 					// We already started to load the data
-					if (this.onload.length > 1)
+					if (this.onload.length > 1 || this.loading)
 						return;
 				}
 
@@ -213,7 +213,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 						data.push({ val: null });
 
 					// onload contains callbacks which are waiting on this data
-					if (self.onload && self.onload.length) {
+					// More callbacks may be added asynchronously while
+					// these functions are running.
+					while (self.onload && self.onload.length) {
 						var fncs = self.onload;
 
 						// The onload functions are no longer needed but must
@@ -226,7 +228,11 @@ botoweb.Property = function(name, type, perm, model, opt) {
 							this(data, self);
 						});
 					}
+
+					self.loading = false;
 				}
+
+				this.loading = true;
 
 				botoweb.Object.follow(this.obj_model, (opt.obj || this.obj_id), this.meta.name, process, opt.filter, opt);
 
@@ -300,8 +306,10 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			this.onload.push(fnc);
 
 			// We already started to load the data
-			if (this.onload.length > 1)
+			if (this.onload.length > 1 || this.loading)
 				return;
+
+			this.loading = true;
 
 			var self = this;
 
@@ -331,12 +339,23 @@ botoweb.Property = function(name, type, perm, model, opt) {
 							return data;
 						});
 
+						self.loading = false;
+
 						// Call the original load fnc
 						if (load)
 							load.call(self, null, opt);
 						else {
-							$.each(self.onload, function() { this(self.data, true); });
-							self.onload = [];
+							// More callbacks may be added asynchronously while
+							// these functions are running.
+							while (self.onload && self.onload.length) {
+								var fncs = self.onload;
+
+								self.onload = [];
+
+								$.each(fncs, function() {
+									this(self.data, true);
+								});
+							}
 						}
 					});
 			});
@@ -352,17 +371,26 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				this.onload.push(fnc);
 
 				// We already started to load the data
-				if (this.onload.length > 1)
+				if (this.onload.length > 1 || this.loading)
 					return;
 			}
+
+			this.loading = true;
 
 			var self = this;
 
 			botoweb.Object.load(this.obj_model, (opt.obj || this.obj_id), this.meta.name, function (prop) {
-				$.each(self.onload, function () {
-					this(prop.data);
-				});
-				self.onload = [];
+				while (self.loading && self.loading.length) {
+					var fncs = self.onload;
+
+					self.onload = [];
+
+					$.each(fncs, function () {
+						this(prop.data);
+					});
+				}
+
+				self.loading = false;
 			}, opt);
 		};
 	}
