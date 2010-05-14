@@ -109,6 +109,12 @@ botoweb.ui.markup.Block = function (node, opt) {
 			var onsave;
 
 			var onsave = function (obj) {
+				// Save failed
+				if (!obj) {
+					$ui.overlay.hide();
+					return;
+				}
+
 				self.saved = true;
 
 				if (self.opt.root) {
@@ -142,6 +148,12 @@ botoweb.ui.markup.Block = function (node, opt) {
 		}
 		else {
 			this.model.save(data, function (obj) {
+				// Save failed
+				if (!obj) {
+					$ui.overlay.hide();
+					return;
+				}
+
 				self.saved = true;
 
 				var onsave = function () {
