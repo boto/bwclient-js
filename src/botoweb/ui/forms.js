@@ -1333,12 +1333,12 @@ $forms.Picklist = function () {
 							cancel_search();
 
 						// Otherwise wait for a 500ms pause in typing
-						else if (e.keyCode) {
+						else if (e.keyCode && this.value != prev_value) {
 							clearTimeout(autosearch);
 
 							if (this.value == '' && !selecting)
 								cancel_search();
-							else if (this.value != prev_value) {
+							else {
 								cancel_search();
 								autosearch = setTimeout(do_search, 500);
 							}
