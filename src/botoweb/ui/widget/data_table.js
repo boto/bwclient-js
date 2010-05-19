@@ -13,6 +13,15 @@ var sort_regex = new RegExp('\\s*<[^>]*>\\s*|[^\\w\\s\\d]+|\\b(the|a|an)\\s+', '
  * @param node the node containing the search parameters.
  */
 botoweb.ui.widget.DataTable = function(table, opt) {
+	var sorting = [];
+
+	table.find('th').each(function (col_idx) {
+		if (/\bsort-(asc|desc)\b/.test(this.className)) {
+			sorting = [[col_idx, RegExp.$1]];
+			return false;
+		}
+	});
+
 	this.data_table = table.dataTable({
 		bJQueryUI: true,
 		oLanguage: {
@@ -20,7 +29,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 			sLengthMenu: "Show _MENU_ per page",
 			sInfo: 'Showing _START_ to _END_ of _TOTAL_ results'
 		},
-		aaSorting: [],
+		aaSorting: sorting,
 		sDom: '<"fg-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix"flT<"clear">p>t<"fg-toolbar ui-widget-header ui-corner-bl ui-corner-br ui-helper-clearfix"ip>',
 		sPaginationType: 'full_numbers',
 		"bAutoWidth": false
@@ -35,7 +44,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 
 	var settings = this.data_table.fnSettings();
 	if (!settings) return;
-	$(settings.aoColumns).each(function() {
+	$(settings.aoColumns).each(function(col_idx) {
 		// Sort on raw value, not HTML markup
 		this.bUseRendered = true;
 		var col_class = false;
@@ -46,6 +55,8 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 		//	this.bSortable = false;
 		if (/\bno-search\b/.test(this.nTh.className))
 			this.bSearchable = false;
+		if (/\bhidden\b/.test(this.nTh.className))
+			this.bVisible = false;
 		if (/\bhidden\b/.test(this.nTh.className))
 			this.bVisible = false;
 		if (/\b(col-\S+)\b/.test(this.nTh.className)) {
@@ -150,7 +161,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 
 		this.paused = pause_button;
 
-		this.data_table.fnDraw(false);
+		this.data_table.fnDraw();
 	}
 
 	this.toggle_pause = function () {
@@ -213,7 +224,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 
 	this.append = function(row) {
 		var item = $(row).find('> td').map(function() {
-			if (this.innerHTML.indexOf('<!--') < 0)
+			if (this.innerHTML.indexOf('<!-- DATA ') < 0)
 				return self.sort_string(this.innerHTML) + this.innerHTML.replace('\n',' ');
 
 			return this.innerHTML.replace('\n',' ');
@@ -230,7 +241,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 	}
 
 	this.sort_string = function (str) {
-		return '<!-- ' + str.toLowerCase().replace(sort_regex, '') + ' -->';
+		return '<!-- DATA ' + str.toLowerCase().replace(sort_regex, '') + ' -->';
 	}
 
 	this.update = function(row, values) {

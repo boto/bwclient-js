@@ -382,7 +382,7 @@
 
 							// Facilitate sorting
 							else
-								node.html('<!-- ' + prop.to_sql() + ' -->' + prop.toString());
+								node.html('<!-- DATA ' + prop.to_sql() + ' -->' + prop.toString());
 						}
 
 						else if (block.obj) {
