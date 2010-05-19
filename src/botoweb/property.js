@@ -119,7 +119,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			 * necessary to load complexType or list data from botoweb because
 			 * the data is included in the XML.
 			 */
-			this.load = function (fnc) {
+			this.load = function (fnc, opt) {
+				opt = opt || {};
+
 				if (fnc) {
 					this.onload.push(fnc);
 
@@ -129,6 +131,20 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				}
 
 				var self = this;
+
+				if (this.meta.no_store) {
+					botoweb.Object.load(this.obj_model, (opt.obj || this.obj_id), this.meta.name, function (prop) {
+						// onload contains callbacks which are waiting on
+						// this data
+						if (self.onload.length)
+							$.each(self.onload, function() { this(prop.data, true); });
+
+						// The onload functions are no longer needed
+						self.onload = [];
+					});
+
+					return;
+				}
 
 				var tbl = botoweb.ldb.tables[botoweb.ldb.prop_to_table(this)];
 
@@ -140,7 +156,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 						)
 						.filter(tbl.c.id.cmp(self.obj_id))
 						.all(txn, function (rows) {
-							self.data = $.map(rows, function (row) {
+							var data = $.map(rows, function (row) {
 								var data = { val: row.val };
 
 								if ('type' in row)
@@ -154,7 +170,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 							// onload contains callbacks which are waiting on
 							// this data
 							if (self.onload.length)
-								$.each(self.onload, function() { this(self.data, true); });
+								$.each(self.onload, function() { this(data, true); });
 
 							// The onload functions are no longer needed
 							self.onload = [];
