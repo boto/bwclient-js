@@ -104,6 +104,9 @@ $forms.Field = function (prop, opt) {
 		function edit (e) {
 			if (self.editing) return;
 
+			if (e.ctrlKey || e.metaKey)
+				return;
+
 			self.edit(true);
 
 			e.stopPropagation();
