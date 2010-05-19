@@ -82,8 +82,7 @@ $forms.Field = function (prop, opt) {
 			attr: {}
 		},
 		choices: [],
-		type: 'string',
-		def: ''
+		type: 'string'
 	}, opt);
 
 	this.template = this.opt.template;

@@ -374,6 +374,17 @@
 							node.remove();
 						}
 
+						else if (block.obj && prop.is_type('dateTime')) {
+							var str = prop.toString();
+
+							if (!str)
+								node.html('');
+
+							// Facilitate sorting
+							else
+								node.html('<!-- ' + prop.to_sql() + ' -->' + prop.toString());
+						}
+
 						else if (block.obj) {
 							node.html(prop.toString() || '');
 						}
@@ -384,9 +395,11 @@
 								block: block,
 								model: block.model,
 								editable: false,
-								def: block.def[prop.meta.name],
 								input: node.attr($markup.prop.input_type)
 							};
+
+							if (prop.meta.name in block.def)
+								opt.def = block.def[prop.meta.name];
 
 							// Force value for the field
 							if (prop.meta.name in block.data) {

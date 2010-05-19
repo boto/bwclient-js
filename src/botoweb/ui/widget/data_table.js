@@ -213,7 +213,10 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 
 	this.append = function(row) {
 		var item = $(row).find('> td').map(function() {
-			return self.sort_string(this.innerHTML) + this.innerHTML.replace('\n',' ');
+			if (this.innerHTML.indexOf('<!--') < 0)
+				return self.sort_string(this.innerHTML) + this.innerHTML.replace('\n',' ');
+
+			return this.innerHTML.replace('\n',' ');
 		});
 		if (item.length == settings.aoColumns.length)
 			this.pending.push(item);
