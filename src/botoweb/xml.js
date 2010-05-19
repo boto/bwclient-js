@@ -148,7 +148,9 @@ botoweb.xml = {
 		opt = opt || {};
 
 		// May match more than one!
-		var tags = xml.find('> ' + model_prop.meta.name);
+		// Clone the XML since we may be modifying it - the original XML needs
+		// to be preserved.
+		var tags = xml.clone().find('> ' + model_prop.meta.name);
 
 		// Default will be set later
 		if (tags.length == 0)

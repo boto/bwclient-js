@@ -134,13 +134,22 @@ botoweb.Property = function(name, type, perm, model, opt) {
 
 				if (this.meta.no_store) {
 					botoweb.Object.load(this.obj_model, (opt.obj || this.obj_id), this.meta.name, function (prop) {
-						// onload contains callbacks which are waiting on
-						// this data
-						if (self.onload.length)
-							$.each(self.onload, function() { this(prop.data, true); });
+						// onload contains callbacks which are waiting on this data
+						// More callbacks may be added asynchronously while
+						// these functions are running.
+						while (self.onload && self.onload.length) {
+							var fncs = self.onload;
 
-						// The onload functions are no longer needed
-						self.onload = [];
+							// The onload functions are no longer needed but must
+							// be cleared BEFORE beginning to iterate the existing
+							// fncs. Otherwise, some which load while these callbacks
+							// are executing will never run.
+							self.onload = [];
+
+							$.each(fncs, function() {
+								this(prop.data, self);
+							});
+						}
 					});
 
 					return;
