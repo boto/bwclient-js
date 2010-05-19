@@ -208,24 +208,31 @@ botoweb.ui.markup.Block = function (node, opt) {
 		this.onready = [];
 		this.saved = false;
 
-		this.node.removeClass(this.state);
+		this.node.addClass(this.state);
+
+		$(this).bind('edit clone', function (event) {
+			self.node.removeClass(self.state);
+			self.state = event.type;
+			self.node.addClass(self.state);
+		});
+
+		$(this).bind('cancel_edit cancel_clone edit_canceled clone_canceled', function (event) {
+			self.node.removeClass(self.state);
+			self.state = 'view';
+			self.node.addClass(self.state);
+		});
 
 		if (this.opt.action == 'edit' && this.state != 'edit') {
-			this.state = 'edit';
 			$(this).triggerHandler('edit');
 		}
 
 		if (this.opt.action == 'clone' && this.state != 'clone') {
-			this.state = 'clone';
 			$(this).triggerHandler('clone');
 		}
 
 		if (!this.opt.action && this.state != 'view') {
 			$(this).triggerHandler('cancel_' + this.state);
-			this.state = 'view';
 		}
-
-		this.node.addClass(this.state);
 	}
 
 	this.init = function () {
