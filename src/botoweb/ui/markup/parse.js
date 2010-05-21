@@ -317,8 +317,8 @@
 
 											// This inserts new items under the source list item,
 											// so we need to reverse the list.
-											$.each(items.reverse(), function () {
-												node.after(node.clone().html('' + this).show());
+											$.each(items.reverse(), function (i) {
+												node.after(node.clone().html('' + this + ((i > 0) ? '<span class="hidden">; </span>' : '')).show());
 											});
 										}
 										else {
