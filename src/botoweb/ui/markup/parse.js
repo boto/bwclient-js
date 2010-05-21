@@ -119,7 +119,8 @@
 				var b = new $markup.Block(this, {
 					model: model,
 					editable: true,
-					no_cache: block.no_cache
+					no_cache: block.no_cache,
+					root: block.opt.redirect_on_save
 				});
 
 				if (data) {
@@ -145,15 +146,12 @@
 						e.preventDefault();
 
 						b.save(function (obj) {
-							function update () {
-								if (block.opt.onsave)
-									block.opt.onsave();
-								else
-									botoweb.ui.page.refresh();
-							}
+							if (block.opt.onsave)
+								block.opt.onsave();
+							else
+								botoweb.ui.page.refresh();
 
-							if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
-								update();
+							return false;
 						});
 
 						return false;
