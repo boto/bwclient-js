@@ -626,6 +626,7 @@ $forms.DateTime = function () {
 			showOptions: {direction: 'down'},
 			duration: 350,
 			dateFormat: 'mm/dd/yy',
+			currentText: "<small>Go to current month</small>",
 			showTime: true,
 			time24h: false,
 			altField: this.field,
