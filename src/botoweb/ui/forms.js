@@ -1037,7 +1037,7 @@ $forms.Picklist = function () {
 
 	this.build_field = function (value, opt) {
 		if (opt.use_template && this.opt.template && this.opt.template.length) {
-			if (!self.prop.is_type('list','query')) {
+			if (!this.opt.allow_multiple && !self.prop.is_type('list','query')) {
 				self.node.find('.selections').empty();
 				self.node.find('.editing_template').parent().remove();
 			}
@@ -1203,7 +1203,7 @@ $forms.Picklist = function () {
 
 			// Don't add if already selected
 			if (selections.find('#' + obj.id).length == 0) {
-				if (!self.prop.is_type('list','query')) {
+				if (!self.opt.allow_multiple && !self.prop.is_type('list','query')) {
 					selections.empty();
 					self.node.find('.editing_template').parent().remove();
 				}
@@ -1215,7 +1215,7 @@ $forms.Picklist = function () {
 
 				if (obj && obj.model) {
 					selections.append(
-						$('<div class="selection"/>')
+						$('<div class="selection clear"/>')
 							.attr('id', obj.id)
 							.attr($ui.markup.prop.model, obj.model.name)
 							.html(' ' + botoweb.env.cfg.format.picklist_result(obj.data.name.toString(), obj))
