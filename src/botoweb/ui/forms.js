@@ -672,6 +672,21 @@ $forms.DateTime = function () {
 	};
 
 	this.set_values = function () {
+		if (this.opt.val) {
+			$.each(this.opt.val, function () {
+				var ts = this.val.toString();
+
+				// Timestamp may be in ISO 8601 format; convert it to a human
+				// friendly date
+				if (ts.indexOf('T') >= 0) {
+					ts = botoweb.util.from_timestamp(ts);
+				}
+
+				self.add_field(ts);
+			});
+			return;
+		}
+
 		var val = this.prop.toString(true);
 
 		if (val && val.length) {
