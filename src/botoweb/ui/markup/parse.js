@@ -307,13 +307,19 @@
 								node.hide();
 
 								prop.val(function (data) {
+									var p = prop;
+
 									// Remove anything past the limit
-									if (limit && data.length > limit)
-										data = data.splice(limit);
+									if (limit && data.length > limit) {
+										data = data.slice(0, limit);
+
+										// Create a fake property for the truncated data
+										p = new block.model.prop_map[val].instance(data);
+									}
 
 									if (data.length && (data.length > 1 || data[0].val)) {
 										if (node.is('li')) {
-											var items = prop.toString(true);
+											var items = p.toString(true);
 
 											// This inserts new items under the source list item,
 											// so we need to reverse the list.
@@ -322,7 +328,7 @@
 											});
 										}
 										else {
-											var str = prop.toString();
+											var str = p.toString();
 
 											if (str)
 												node.html(str);
