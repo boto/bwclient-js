@@ -241,10 +241,10 @@
 									var b = new botoweb.ui.markup.Block($('<div/>').append(contents.clone()), {
 										obj: obj,
 										editable: editable,
-										parent: block,
+										//parent: block,
 										no_cache: block.no_cache
 									});
-									block.children.push(b);
+									//block.children.push(b);
 
 									node.append(b.node.contents());
 								}
@@ -276,8 +276,13 @@
 
 										block.waiting--;
 
-										if (async && !block.waiting)
+										data = null;
+
+										if (async && !block.waiting) {
 											block.done();
+											block = null;
+											prop = null;
+										}
 									}, $.extend({
 										obj: block.obj,
 										filter: filter
@@ -335,10 +340,16 @@
 										}
 									}
 
+									data = null;
+									p = null;
+
 									block.waiting--;
 
-									if (async && !block.waiting)
+									if (async && !block.waiting) {
 										block.done();
+										block = null;
+										prop = null;
+									}
 								}, block.opt);
 
 								async = true;
@@ -449,8 +460,11 @@
 
 									display_prop(p);
 
-									if (!block.waiting)
+									if (!block.waiting) {
 										block.done();
+										block = null;
+										prop = null;
+									}
 								});
 							}
 						}

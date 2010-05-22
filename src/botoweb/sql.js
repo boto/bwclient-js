@@ -428,6 +428,8 @@ botoweb.sql = {
 				if (typeof page != 'undefined') {
 					function next_page() {
 						setTimeout(function () {
+							rows = null;
+							results = null;
 							botoweb.ldb.dbh.transaction(function (txn) {
 								query.page(txn, fnc, page + 1);
 							});

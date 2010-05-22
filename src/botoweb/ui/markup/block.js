@@ -15,9 +15,9 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.obj = opt.obj;
 	this.obj_id = opt.obj_id;
 	this.model = opt.model;
-	this.parent = opt.parent;
+	//this.parent = opt.parent;
 	this.onready = [];
-	this.children = [];
+	//this.children = [];
 	this.fields = [];
 	this.nested = [];
 	this.ignored = [];
@@ -28,6 +28,10 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.data = opt.data || {};
 	this.state = opt.state || 'view';
 	this.saved = false;
+
+	delete this.opt.obj;
+	delete this.opt.parent;
+	delete this.opt.children;
 
 	if (opt.onready)
 		this.onready.push(opt.onready);
@@ -188,8 +192,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 		return new $markup.Block(node, opt);
 	};
 
-	if (this.parent && !this.model)
-		this.model = this.parent.model;
+	//if (this.parent && !this.model)
+	//	this.model = this.parent.model;
 
 	if (node.attr($markup.prop.model)) {
 		this.model = botoweb.env.models[node.attr($markup.prop.model)];
@@ -197,13 +201,6 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 
 	this.done = function () {
-		// Release the reference to the object. Anything which needs this block's
-		// object must load it based on model and obj_id. We keep the root
-		// object since it has occasion to be used constantly.
-		if (!this.opt.root) {
-			this.obj = null;
-		}
-
 		$.each(this.onready, function () { this(self) });
 		this.onready = [];
 		this.saved = false;
@@ -232,6 +229,13 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 		if (!this.opt.action && this.state != 'view') {
 			$(this).triggerHandler('cancel_' + this.state);
+		}
+
+		// Release the reference to the object. Anything which needs this block's
+		// object must load it based on model and obj_id. We keep the root
+		// object since it has occasion to be used constantly.
+		if (!this.opt.root) {
+			this.obj = null;
 		}
 	}
 

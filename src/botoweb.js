@@ -135,6 +135,8 @@ var botoweb = {
 			if (url) {
 				next_page = function () {
 					setTimeout(function () {
+						data = null;
+						xml = null;
 						botoweb.ajax.get(url, process);
 					}, 100);
 				}

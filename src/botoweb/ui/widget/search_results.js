@@ -43,6 +43,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 
 	self.update = function(results, page, count, next_page, search_id) {
 		var ts = new Date().valueOf();
+		var results_length = results.length;
 
 		self.next_page = next_page;
 
@@ -100,7 +101,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 
 			$(block.node).trigger('ready');
 
-			if (self.num_results >= count || hit_limit && c >= results.length) {
+			if (self.num_results >= count || hit_limit && c >= results_length) {
 				if (self.data_table) {
 					if (hit_limit && self.num_results < count) {
 						self.limit_pages = 'none';
@@ -113,7 +114,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 				if (!hit_limit || self.num_results >= count)
 					self.next_page = null;
 			}
-			else if (c >= results.length && !sent_next_query && !self.stopped) {
+			else if (c >= results_length && !sent_next_query && !self.stopped) {
 				clearTimeout(next_page_timeout);
 
 				console.warn('Running normal query');
@@ -124,7 +125,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 					next_page();
 			}
 
-			if (c >= results.length) {
+			if (c >= results_length) {
 				self.outstanding_pages--;
 
 				var t = new Date().valueOf();
@@ -138,6 +139,8 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 
 			if (self.num_results == 50 && self.data_table)
 				self.data_table.data_table.fnDraw();
+
+			block = null;
 		}
 
 		// The first two pages are used to analyze how long each result set
@@ -173,6 +176,8 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 				});
 			}
 		});
+
+		results = null;
 	}
 
 	self.stop = function() {
