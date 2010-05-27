@@ -48,7 +48,7 @@ botoweb.ui.page = new function() {
 
 			$('#botoweb.page').children().first().triggerHandler('reload')
 
-			$(self).triggerHandler('load');
+			$(self).triggerHandler('load', [loc]);
 
 			return;
 		}
@@ -274,7 +274,7 @@ botoweb.ui.page = new function() {
 			$('#botoweb.page').append(node);
 
 			console.log('PAGE: load');
-			$(self).triggerHandler('load');
+			$(self).triggerHandler('load', [self.location]);
 		});
 	}
 

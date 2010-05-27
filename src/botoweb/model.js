@@ -101,17 +101,27 @@ botoweb.Model = function (name, href, methods, props) {
 	};
 
 	this.find = function(filters, fnc, opt){
-		if (!opt) opt = {};
+		opt = $.extend({op: 'find'}, opt);
 
-		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
+		var use_local = this.local && botoweb.ldb.dbh && !opt.no_ldb;
+
+		$(botoweb).triggerHandler('log', [{
+			method: 'GET',
+			op: opt.op,
+			model: this.name,
+			filters: filters,
+			local: use_local
+		}]);
+
+		if (use_local) {
 			return this.query_ldb(filters, fnc, opt);
 		}
 
-		botoweb[(opt.query) ? 'query' : 'find'](botoweb.util.url_join(botoweb.env.base_url, this.href), filters, botoweb.env.model_names.join(','), fnc, opt);
+		botoweb[opt.op](botoweb.util.url_join(botoweb.env.base_url, this.href), filters, botoweb.env.model_names.join(','), fnc, opt);
 	}
 
 	this.query = function(query, fnc, opt) {
-		return this.find(query, fnc, $.extend(opt, {query: 1}));
+		return this.find(query, fnc, $.extend(opt, {op: 'query'}));
 	}
 
 	this.all = function(fnc, opt){
@@ -121,7 +131,17 @@ botoweb.Model = function (name, href, methods, props) {
 	this.count = function(filters, fnc, opt){
 		if (!opt) opt = {};
 
-		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
+		var use_local = this.local && botoweb.ldb.dbh && !opt.no_ldb;
+
+		$(botoweb).triggerHandler('log', [{
+			method: 'HEAD',
+			op: 'count',
+			model: this.name,
+			filters: filters,
+			local: use_local
+		}]);
+
+		if (use_local) {
 			var tbl = botoweb.ldb.tables[this.name];
 			var query = new botoweb.sql.Query(tbl.c.id);
 
@@ -152,7 +172,17 @@ botoweb.Model = function (name, href, methods, props) {
 		if (this.objs[id])
 			return fnc(this.objs[id], false);
 
-		if (this.local && botoweb.ldb.dbh && !opt.no_ldb) {
+		var use_local = this.local && botoweb.ldb.dbh && !opt.no_ldb;
+
+		$(botoweb).triggerHandler('log', [{
+			method: 'GET',
+			op: 'get_by_id',
+			model: this.name,
+			id: id,
+			local: use_local
+		}]);
+
+		if (use_local) {
 			opt.one = true;
 			opt.not_found = function () {
 				botoweb.get_by_id(botoweb.util.url_join(botoweb.env.base_url, self.href), id, fnc, opt);
@@ -164,13 +194,27 @@ botoweb.Model = function (name, href, methods, props) {
 	}
 
 	this.save = function(data, fnc){
+		var id = '';
+
 		ref = botoweb.env.base_url + this.href;
 		method = "POST";
 		if("id" in data && typeof data.id != 'undefined'){
+			id = data.id;
+
 			ref += ("/" + data.id);
 			delete data.id;
 			method = "PUT";
 		}
+
+		$(botoweb).triggerHandler('log', [{
+			method: method,
+			op: 'save',
+			model: this.name,
+			id: id,
+			data: data,
+			local: false
+		}]);
+
 		return botoweb.save(ref, this.name, data, method, fnc);
 	}
 
@@ -178,6 +222,14 @@ botoweb.Model = function (name, href, methods, props) {
 	// Delete this object
 	//
 	this.del = function(id, fnc){
+		$(botoweb).triggerHandler('log', [{
+			method: 'DELETE',
+			op: 'del',
+			model: this.name,
+			id: id,
+			local: false
+		}]);
+
 		return botoweb.del(botoweb.util.url_join(botoweb.env.base_url, this.href, id), function(success) {
 			if (success) {
 				delete self.objs[id];

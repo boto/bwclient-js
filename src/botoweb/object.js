@@ -191,9 +191,20 @@ botoweb.Object = function(id, model, data, opt) {
 			if (is_new)
 				changed['id'] = [{val:self.id, type:'string'}];
 
+			var method = ((is_new) ? 'POST' : 'PUT');
+
+			$(botoweb).triggerHandler('log', [{
+				method: method,
+				op: 'save',
+				model: self.model.name,
+				id: self.id,
+				data: changed,
+				local: false
+			}]);
+
 			botoweb.save(
 				botoweb.util.url_join(botoweb.env.base_url, self.model.href, ((is_new) ? null : self.id)),
-				self.model.name, changed, ((is_new) ? 'POST' : 'PUT'), fnc
+				self.model.name, changed, method, fnc
 			);
 		}
 		else {
