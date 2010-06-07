@@ -314,9 +314,14 @@ var botoweb = {
 					if (fnc)
 						fnc();
 					botoweb.ldb.sync.update();
+					botoweb.ldb.sync.verify();
 
 					// Update the local database every 2 minutes
 					setInterval(botoweb.ldb.sync.update, 2 * 60 * 1000);
+
+					// Verify that local data has not been lost
+					setInterval(botoweb.ldb.sync.verify, 5 * 60 * 1000);
+
 					setInterval(botoweb.ldb.sync.heartbeat, 5 * 1000);
 				}, function(msg){
 					botoweb.ui.init();

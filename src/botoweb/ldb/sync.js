@@ -92,7 +92,59 @@ botoweb.ldb.sync = {
 		// Take control
 		else if (localStorage.sync_app && localStorage.sync_app != botoweb.uuid && localStorage.sync_app_timeout <= now) {
 			botoweb.ldb.sync.update();
+			botoweb.ldb.sync.verify();
 		}
+	},
+
+	/**
+	 * Checks the record count in the local database against the object count in
+	 * SimpleDB. Since SimpleDB counts are not 100% accurate, allows for a 10%
+	 * variance. If the local data appears to be tampered with the corresponding
+	 * tables are reset.
+	 */
+	verify: function () {
+		// Only allow synching tab to verify data
+		if (localStorage.sync_app && localStorage.sync_app != botoweb.uuid && localStorage.sync_app_timeout > new Date().valueOf())
+			return;
+
+		$.each(botoweb.env.models, function(i, model) {
+			// This also takes care of the obvious problem if we tried to verify
+			// counts while a model was synchronizing. Synchronizing models are
+			// marked as not local. On page load, botoweb.ldb.sync.update MUST
+			// be called before verify.
+			if (!model.local)
+				return;
+
+			var num_remote = -1;
+			var num_local = -1;
+
+			// Run both counts at the same time, asynchronously, then call this
+			// function when both have finished.
+			var compare_counts = function (local, remote) {
+				if (remote < local * .9 || remote > local * 1.1) {
+					console.warn(model.name + ' may be corrupted, will be repaired. Found ' + remote + ' remote and ' + local + ' local records.');
+
+					// Drop tables and mark model for re-synching.
+					botoweb.ldb.sync.reset(model.name);
+				}
+			};
+
+			// Count objects in Simple DB (count may be estimated)
+			model.count([], function (remote) {
+				if (num_local >= 0)
+					compare_counts(num_local, remote);
+				else
+					num_remote = remote;
+			}, { no_ldb: true });
+
+			// Count exact number of records in local DB
+			model.count([], function (local) {
+				if (num_remote >= 0)
+					compare_counts(local, num_remote);
+				else
+					num_local = local;
+			});
+		});
 	},
 
 	/**
@@ -278,14 +330,19 @@ botoweb.ldb.sync = {
 	reset: function(model_name) {
 		var db = botoweb.ldb.dbh;
 
-		// This key is used to fire a reset, not deleting it will cause some
-		// circular recursion.
-		delete localStorage.sync_model;
-
 		if (model_name) {
-			botoweb.env.models[model_name].local = false;
+			var model = botoweb.env.models[model_name];
+			model.local = false;
+
 			db.transaction(function (txn) {
 				botoweb.ldb.tables[model_name].__drop(txn);
+
+				// Drop any tables for this model's properties
+				$.each(model.props, function () {
+					if (this.is_type('list', 'complexType')) {
+						botoweb.ldb.tables[botoweb.ldb.prop_to_table(this)].__drop(txn);
+					}
+				});
 			});
 
 			localStorage.setItem('last_update_' + model_name, '');
