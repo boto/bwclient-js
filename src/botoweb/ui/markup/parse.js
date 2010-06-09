@@ -347,7 +347,6 @@
 
 									if (async && !block.waiting) {
 										block.done();
-										block = null;
 										prop = null;
 									}
 								}, block.opt);
@@ -462,7 +461,6 @@
 
 									if (!block.waiting) {
 										block.done();
-										block = null;
 										prop = null;
 									}
 								});
