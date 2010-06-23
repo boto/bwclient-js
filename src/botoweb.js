@@ -329,6 +329,9 @@ var botoweb = {
 						fnc();
 				});
 			} else {
+				if(botoweb.ui){
+					botoweb.ui.init();
+				}
 				if(fnc){
 					fnc();
 				}
