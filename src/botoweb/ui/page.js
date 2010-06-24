@@ -97,6 +97,8 @@ botoweb.ui.page = new function() {
 			data: {}
 		};
 
+		loc.base_dir = loc.href.replace(/[^\/]*$/, '');
+
 		if (url.indexOf('#') >= 0) {
 			loc.hash = url.replace(/.*#/, '');
 			loc.hash_href = loc.hash.replace(/\?.*/g, '');
