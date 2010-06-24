@@ -307,15 +307,22 @@ botoweb.ui.markup.Block = function (node, opt) {
 	};
 
 	if (this.model && !this.obj && opt.id) {
-		this.model.get(opt.id, function (obj) {
+		this.model.get(opt.id, function (obj, error_data) {
 			if (obj) {
 				self.obj_id = obj.id;
 				self.obj = obj;
 			}
 			else if (self.opt.root) {
-				botoweb.ui.alert('The ' + self.model.name + ' that you attempted to access cannot be found. Click OK to return to the page you were last visiting.', 'No record of this item', function () {
-					history.back();
-				});
+				if (error_data.status == 403) {
+					botoweb.ui.alert('You do not have access to this ' + self.model.name + '. Click OK to return to the page you were last visiting.', 'Access denied', function () {
+						history.back();
+					});
+				}
+				else {
+					botoweb.ui.alert('The ' + self.model.name + ' that you attempted to access cannot be found. Click OK to return to the page you were last visiting.', 'No record of this item', function () {
+						history.back();
+					});
+				}
 				return;
 			}
 
