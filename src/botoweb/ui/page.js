@@ -70,7 +70,7 @@ botoweb.ui.page = new function() {
 		if (html)
 			fnc(html, opt);
 		else {
-			var base = botoweb.env.cfg.static_host || loc.base_href;
+			var base = botoweb.env.cfg.static_host || loc.base_dir;
 
 			$.get(botoweb.util.url_join(base, loc.hash_href), function (html) {
 				init_page(loc.hash_href, html, fnc, opt);

@@ -111,8 +111,8 @@ botoweb.xml = {
 	 */
 	to_obj: function(xml, opt) {
 		if (!opt) opt = {};
-
 		xml = $(xml);
+		if (!xml.get(0)) return;
 
 		var model = botoweb.env.models[opt.item_type || xml.get(0).tagName];
 
