@@ -13,6 +13,7 @@ var sort_regex = new RegExp('\\s*<[^>]*>\\s*|[^\\w\\s\\d]+|\\b(the|a|an)\\s+', '
  * @param node the node containing the search parameters.
  */
 botoweb.ui.widget.DataTable = function(table, opt) {
+	opt = opt || {};
 	var sorting = [];
 
 	table.find('th').each(function (col_idx) {
@@ -22,6 +23,21 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 		}
 	});
 
+	var dt_template = 't' // the table
+		+ '<"fg-toolbar ui-widget-header ui-corner-bottom ui-helper-clearfix"'
+		+ 'i' // showing 1 to 10 of 250 results text
+		+ 'p' // paging links
+		+ '>';
+
+	if (!table.hasClass('hide_tools')) {
+		dt_template = '<"fg-toolbar ui-widget-header ui-corner-top ui-helper-clearfix"'
+			+ 'f' // quick filtering
+			+ 'l' // per page limiting
+			+ 'T' // TableTools plugin
+			+ '<"clear">p' // paging links
+			+ '>' + dt_template;
+	}
+
 	this.data_table = table.dataTable({
 		bJQueryUI: true,
 		oLanguage: {
@@ -30,7 +46,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 			sInfo: 'Showing _START_ to _END_ of _TOTAL_ results'
 		},
 		aaSorting: sorting,
-		sDom: '<"fg-toolbar ui-widget-header ui-corner-tl ui-corner-tr ui-helper-clearfix"flT<"clear">p>t<"fg-toolbar ui-widget-header ui-corner-bl ui-corner-br ui-helper-clearfix"ip>',
+		sDom: dt_template,
 		sPaginationType: 'full_numbers',
 		"bAutoWidth": false
 	});
