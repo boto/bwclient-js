@@ -395,8 +395,12 @@
 								node.html('');
 
 							// Facilitate sorting
-							else
-								node.html('<!-- DATA ' + prop.to_sql() + ' -->' + prop.toString());
+							else {
+								if (node.attr($markup.prop.date_format))
+									str = $util.from_timestamp(prop.val()[0].val, node.attr($markup.prop.date_format));
+
+								node.html('<!-- DATA ' + prop.to_sql() + ' -->' + str);
+							}
 						}
 
 						else if (block.obj) {

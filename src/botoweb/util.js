@@ -61,7 +61,7 @@ $util.timestamp = function (d) {
  *
  * @param {String} ts An ISO 8601 timestamp string.
  */
-$util.from_timestamp = function (ts) {
+$util.from_timestamp = function (ts, format) {
 	var t = ts.match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/);
 
 	if (!t || t.length < 7)
@@ -83,15 +83,24 @@ $util.from_timestamp = function (ts) {
 	else
 		date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3], 12, 0, 0));
 
-	var time_str = '0' + (date_time.getMonth() + 1) + '/0' +
-		date_time.getDate() + '/' + date_time.getFullYear();
+	var time_str;
 
-	if (has_time) {
-		time_str += ' 0' + (date_time.getHours() % 12 || 12) + ':0' + date_time.getMinutes() + ' ' +
-			((date_time.getHours() < 12 || date_time.getHours() == 0) ? 'AM' : 'PM');
+	if (format) {
+		time_str = $.datepicker.formatDate(format, date_time);
+	}
+	else {
+		time_str = '0' + (date_time.getMonth() + 1) + '/0' +
+			date_time.getDate() + '/' + date_time.getFullYear();
+
+		if (has_time) {
+			time_str += ' 0' + (date_time.getHours() % 12 || 12) + ':0' + date_time.getMinutes() + ' ' +
+				((date_time.getHours() < 12 || date_time.getHours() == 0) ? 'AM' : 'PM');
+		}
+
+		time_str = time_str.replace(/(^|[ \/:])0(\d\d)/g, '$1$2');
 	}
 
-	return time_str.replace(/(^|[ \/:])0(\d\d)/g, '$1$2');
+	return time_str;
 };
 
 /**

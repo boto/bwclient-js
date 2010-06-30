@@ -15,6 +15,7 @@ botoweb.ui.markup = new function () {
 		'attributes':     'bwAttributes',
 		'class_name':     'bwClass',
 		'condition':      'bwCondition',
+		'date_format':    'bwDateFormat',
 		'def':            'bwDefault',
 		'editable':       'bwEditable',
 		'existing_only':  'bwExistingOnly',
