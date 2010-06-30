@@ -62,7 +62,7 @@ $util.timestamp = function (d) {
  * @param {String} ts An ISO 8601 timestamp string.
  */
 $util.from_timestamp = function (ts, format) {
-	var t = ts.match(/(\d+)-(\d+)-(\d+)T(\d+):(\d+):(\d+)/);
+	var t = ts.match(/(\d+)-(\d+)-(\d+)(?:T(\d+):(\d+):(\d+))?/);
 
 	if (!t || t.length < 7)
 		return

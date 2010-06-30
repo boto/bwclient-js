@@ -36,6 +36,14 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			type = opt.item_type;
 	}
 
+	// Both dates and dateTimes can represent dates, dateTime can also represent
+	// a time. We handle these identically on the front-end
+	if (type == 'date') {
+		type = 'dateTime';
+
+		opt.date_only = true;
+	}
+
 	/**
 	 * Creates a new object. Expects data to be in the right format.
 	 *
