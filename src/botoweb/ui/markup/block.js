@@ -240,6 +240,17 @@ botoweb.ui.markup.Block = function (node, opt) {
 	}
 
 	this.init = function () {
+		// A trigger may be called just before the page is parsed. This allows
+		// the DOM to be edited as a whole based on the object data, before it
+		// is split up into nested objects which would not be possible to edit
+		// in this way.
+		if (this.opt.root && this.node.attr($markup.prop.trigger)) {
+			var val = this.node.attr($markup.prop.trigger);
+
+			if (val in botoweb.env.cfg.triggers)
+				botoweb.env.cfg.triggers[val](this.obj, this.node, this);
+		}
+
 		/**
 		 * If the parsing routine has not been marked to skip, runs the parsing
 		 * function. If the parsing function returns
