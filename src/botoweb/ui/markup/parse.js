@@ -10,10 +10,15 @@
 		 * Parse conditional tags and remove them from the block.node if the
 		 * corresponding condition function returns false.
 		 */
-		condition: function (block) {
+		condition: function (block, pre_condition) {
 			var matches = false;
 
-			$markup.find(block.node, 'condition', function (val, prop) {
+			var sel = 'condition';
+
+			if (pre_condition)
+				sel = 'pre_condition';
+
+			$markup.find(block.node, sel, function (val, prop) {
 				matches = true;
 
 				this.removeAttr(prop);
@@ -27,6 +32,13 @@
 			});
 
 			return matches;
+		},
+
+		/**
+		 * Calls condition but directs it to search for precondition blocks.
+		 */
+		pre_condition: function (block) {
+			return $markup.parse.condition(block, true);
 		},
 
 		/**
