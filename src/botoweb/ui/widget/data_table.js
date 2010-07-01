@@ -15,6 +15,7 @@ var sort_regex = new RegExp('\\s*<[^>]*>\\s*|[^\\w\\s\\d]+|\\b(the|a|an)\\s+', '
 botoweb.ui.widget.DataTable = function(table, opt) {
 	opt = opt || {};
 	var sorting = [];
+	var paginate = true;
 
 	table.find('th').each(function (col_idx) {
 		if (/\bsort-(asc|desc)\b/.test(this.className)) {
@@ -38,6 +39,9 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 			+ '>' + dt_template;
 	}
 
+	if (table.hasClass('no_paging'))
+		paginate = false;
+
 	this.data_table = table.dataTable({
 		bJQueryUI: true,
 		oLanguage: {
@@ -47,6 +51,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 		},
 		aaSorting: sorting,
 		sDom: dt_template,
+		bPaginate: paginate,
 		sPaginationType: 'full_numbers',
 		"bAutoWidth": false
 	});
