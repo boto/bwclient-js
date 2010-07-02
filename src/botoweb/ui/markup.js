@@ -15,6 +15,7 @@ botoweb.ui.markup = new function () {
 		'attributes':     'bwAttributes',
 		'class_name':     'bwClass',
 		'condition':      'bwCondition',
+		'context':        'bwContext',
 		'date_format':    'bwDateFormat',
 		'def':            'bwDefault',
 		'editable':       'bwEditable',
@@ -28,6 +29,7 @@ botoweb.ui.markup = new function () {
 		'searchable':     'bwSearchable',
 		'template':       'bwTemplate',
 		'trigger':        'bwTrigger',
+		'use_context':    'bwUseContext',
 		'widget':         'bwWidget'
 	};
 
@@ -60,6 +62,7 @@ botoweb.ui.markup = new function () {
 		'section':        'section',
 		'template':       '*[bwTemplate]',
 		'trigger':        '*[bwTrigger]',
+		'use_context':    '*[bwUseContext]',
 		'widget':         '*[bwWidget]'
 	};
 

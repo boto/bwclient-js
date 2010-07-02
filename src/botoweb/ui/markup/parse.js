@@ -18,8 +18,19 @@
 			if (pre_condition)
 				sel = 'pre_condition';
 
+			var my_context = block.node.attr($markup.prop.context);
+
 			$markup.find(block.node, sel, function (val, prop) {
 				matches = true;
+
+				// Preconditions may live outside of the normal nested context
+				if (sel == 'pre_condition') {
+					var context = this.attr($markup.prop.use_context);
+
+					// Skip preconditions that do not match the current context
+					if (context && context != my_context)
+						return;
+				}
 
 				this.removeAttr(prop);
 
