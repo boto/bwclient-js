@@ -71,7 +71,8 @@ botoweb.Model = function (name, href, methods, props) {
 							}
 						}
 
-						return fnc(data, page, total_results, next_page);
+						// If page is undefined, we have loaded all the results.
+						return fnc(data, page, total_results, ((page !== undefined) ? next_page : null));
 					}, page++, opt);
 				}
 
