@@ -21,6 +21,8 @@ botoweb.ui.markup = new function () {
 		'editable':       'bwEditable',
 		'existing_only':  'bwExistingOnly',
 		'filter':         'bwFilter',
+		'format':         'bwFormat',
+		'formula':        'bwFormula',
 		'input_type':     'bwInputType',
 		'link':           'bwLink',
 		'limit':          'bwLimit',
@@ -349,5 +351,19 @@ botoweb.ui.markup = new function () {
 		if (e)
 			e.preventDefault();
 		return false;
+	}
+
+	/**
+	 * Sets the HTML of a node, accounting for various transformations which
+	 * may be applied to that HTML.
+	 */
+	this.set_html = function (node, html, opt) {
+		opt = $.extend({prefix: '', suffix: ''}, opt);
+		var format = node.attr(this.prop.format);
+
+		if (format)
+			html = botoweb.util.format(format, html);
+
+		node.html(opt.prefix + html + opt.suffix);
 	}
 }();

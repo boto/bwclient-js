@@ -203,6 +203,54 @@ $util.html_format = function (str) {
 }
 
 /**
+ * Performs transformations according to predefined or user-defined
+ * formatting functions.
+ */
+$util.format = function (format, value) {
+	format = format.replace(/\((.*?)\)/, '');
+
+	var params = RegExp.$1;
+
+	var formatter = $util.formats[format];
+
+	if (!formatter) {
+		console.error('Formatter for ' + format + ' does not exist. Please add it to botoweb.util.formats');
+		return;
+	}
+
+	// Remove non-numeric characters
+	if (formatter.type == 'number')
+		value = parseFloat(('' + value).replace(/<.*?>|[^0-9.]/g, ''));
+
+	return formatter.fnc(value, params);
+};
+
+$util.formats = {
+	'dollar': {
+		type: 'number',
+		fnc: function(value) { return '$' + value.toFixed(2); }
+	},
+
+	'float': {
+		type: 'number',
+		fnc: function(value, precision) { return value.toFixed(parseInt(precision)); }
+	},
+
+	'floor': {
+		type: 'number',
+		fnc: Math.floor
+	},
+
+	'round': {
+		type: 'number',
+		fnc: Math.round
+	}
+};
+
+// Aliases
+$util.formats.int = $util.formats.floor;
+
+/**
  * Converts certain special characters to their normal ascii equivalents.
  *
  * @param {String} str The string to normalize.

@@ -221,9 +221,9 @@
 
 					// Special cases
 					if (val == 'id')
-						return this.html(block.obj.id);
+						return $markup.set_html(this, block.obj.id);
 					else if (val == 'model')
-						return this.html(block.obj.model.name);
+						return $markup.set_html(this, block.obj.model.name);
 
 					// If the property is not supported, empty the container to
 					// prevent anything inside from being parsed according to
@@ -380,7 +380,7 @@
 						}
 
 						else if (block.obj && prop.is_type('blob')) {
-							node.html(botoweb.util.html_format(prop.toString()));
+							$markup.set_html(node, botoweb.util.html_format(prop.toString()));
 						}
 
 						// Special tabular display of mappings
@@ -394,9 +394,9 @@
 
 								$markup.find(row, '_attribute', function(val, prop) {
 									if (val == 'key')
-										this.html(item.key);
+										$markup.set_html(this, item.key);
 									else if (val == 'val')
-										this.html(item.val);
+										$markup.set_html(this, item.val);
 
 									this.removeAttr(prop);
 								});
@@ -423,12 +423,12 @@
 								if (node.attr($markup.prop.date_format))
 									str = $util.from_timestamp(prop.val()[0].val, node.attr($markup.prop.date_format));
 
-								node.html('<!-- DATA ' + prop.to_sql() + ' -->' + str);
+								$markup.set_html(node, str, { prefix: '<!-- DATA ' + prop.to_sql() + ' -->' });
 							}
 						}
 
 						else if (block.obj) {
-							node.html(prop.toString() || '');
+							$markup.set_html(node, prop.toString() || '');
 						}
 
 						if (editable && prop.meta.write) {
