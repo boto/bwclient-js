@@ -178,11 +178,84 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 		if (this.button_stop && !pause_button) {
 			this.button_stop = null;
 			this.status.empty();
+			this.update_totals();
 		}
 
 		this.paused = pause_button;
 
 		this.data_table.fnDraw();
+	}
+
+	/**
+	 * Updates the cells in the tfoot of a dataTable which have a bwFormula
+	 * specified based on the data in the table.
+	 */
+	this.update_totals = function () {
+		var tfoot = $(table).find('tfoot');
+
+		if (tfoot.length == 0)
+			return;
+
+		function sanitize_cell(value) {
+			return parseFloat(value.replace(/<.*?>|,|\$/g, ''));
+		}
+
+		tfoot.find('td, th').each(function (i, col) {
+			col = $(col);
+			var formula = col.attr(botoweb.ui.markup.prop.formula);
+
+			if (!formula)
+				return;
+
+			formula = formula.replace(/\((.*?)\)/, '');
+			var params = RegExp.$1;
+
+			var data = self.data_table.fnGetData();
+			var fnc;
+			var value;
+
+			switch (formula) {
+				case 'sum':
+					value = 0;
+					$.each(data, function () {
+						value += sanitize_cell(this[i]);
+					});
+					break;
+
+				case 'mean':
+					value = 0;
+					$.each(data, function () {
+						value += sanitize_cell(this[i]);
+					});
+					value /= data.length;
+					break;
+
+				case 'max':
+					value = -1e99;
+					$.each(data, function () {
+						var v = sanitize_cell(this[i]);
+
+						if (v > value)
+							value = v;
+					});
+					break;
+
+				case 'min':
+					value = 1e99;
+					$.each(data, function () {
+						var v = sanitize_cell(this[i]);
+
+						if (v < value)
+							value = v;
+					});
+					break;
+
+				default:
+					return;
+			}
+
+			botoweb.ui.markup.set_html(col, value);
+		});
 	}
 
 	this.toggle_pause = function () {
