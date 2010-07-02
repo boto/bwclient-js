@@ -187,13 +187,22 @@ var botoweb = {
 
 		url += "?query=[" + escape(parts.join(",") + "]");
 
-		$.ajax({
-			type: "HEAD",
-			url: url,
-			complete: function(data) {
-				fnc(data.getResponseHeader('X-Result-Count') || 0);
-			}
-		});
+		if(fnc){
+			$.ajax({
+				type: "HEAD",
+				url: url,
+				complete: function(data) {
+					fnc(data.getResponseHeader('X-Result-Count') || 0);
+				}
+			});
+		} else {
+			var data = $.ajax({
+				type: "HEAD",
+				async: false,
+				url: url
+			});
+			return data.getResponseHeader("X-Result-Count") || 0;
+		}
 	},
 
 	//

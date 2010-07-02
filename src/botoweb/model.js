@@ -154,7 +154,7 @@ botoweb.Model = function (name, href, methods, props) {
 			return;
 		}
 
-		botoweb.count(botoweb.env.base_url + this.href, filters, fnc);
+		return botoweb.count(botoweb.env.base_url + this.href, filters, fnc);
 	};
 
 	this.cache = function(obj) {
