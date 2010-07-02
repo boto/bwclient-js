@@ -14,6 +14,12 @@ botoweb.ui.widget.Search = function(node, block) {
 	self.node = $(node).addClass('widget-search');
 	self.header = self.node.find(botoweb.ui.markup.sel.header);
 	self.model = botoweb.env.models[self.node.attr(botoweb.ui.markup.prop.model)];
+
+	if(!self.model){
+		console.error("Model not found: " + self.node.attr(botoweb.ui.markup.prop.model));
+		return;
+	}
+
 	self.results = new botoweb.ui.widget.SearchResults(self.node.find(botoweb.ui.markup.sel.search_results), self.model, {
 		block: block
 	});

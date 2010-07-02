@@ -218,7 +218,8 @@
 					// prevent anything inside from being parsed according to
 					// the current object when it was intended for a referenced
 					// object
-					if (!(val in block.model.prop_map) || !block.model.prop_map[val].meta.read) {
+					if (!block.model || !(val in block.model.prop_map) || !block.model.prop_map[val].meta.read) {
+						console.log("Can't access: " + block.model + "[" + val + "]");
 						this.empty();
 						return;
 					}
