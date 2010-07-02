@@ -79,6 +79,10 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 		if (self.limit_pages != 'none' && self.limit_pages * 1 - 1 <= page)
 			hit_limit = true;
 
+		// If page is undefined, we have loaded all the results.
+		if (page === undefined)
+			hit_limit = true;
+
 		function add_row(block) {
 			if (search_id != self.search_id)
 				return;

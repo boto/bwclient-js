@@ -108,14 +108,23 @@ botoweb.sql = {
 			// Convert implicit = (hash map) filters to explicit format
 			filters = botoweb.ldb.normalize_filters(filters);
 
+			var limit = 0;
+			var start = 0;
+
 			// Convert each filter into a column comparison expression
 			$.each(filters, function() {
-				if (!(this[0] in tbl.c))
+				if (this[0] && !(this[0] in tbl.c))
 					return;
 
 				// Join and search against the reference table if this row has one
 				if (this[1] == 'sort') {
 					query.order_by(tbl.c[this[0]], this[2]);
+				}
+				else if (this[1] == 'limit') {
+					limit = this[2];
+				}
+				else if (this[1] == 'offset') {
+					start = this[2];
 				}
 				else if (this[0] + '_ref' in tbl.c) {
 					var ref = tbl.c[this[0] + '_ref'];
@@ -158,6 +167,9 @@ botoweb.sql = {
 					query.filter(expr);
 				}
 			});
+
+			if (limit)
+				query.limit(limit, start);
 
 			return query;
 		};
@@ -299,7 +311,12 @@ botoweb.sql = {
 			if (!page)
 				page = 0;
 
-			this.limit(100, 100 * page);
+			// Do not override a limit that was already set, and do not support
+			// paging.
+			if (this.max_results)
+				page = undefined;
+			else
+				this.limit(100, 100 * page);
 
 			botoweb.env.time = new Date().valueOf();
 
@@ -440,7 +457,7 @@ botoweb.sql = {
 						next_page()
 				}
 				else
-					fnc(rows, results, txn);
+					fnc(rows, undefined, results, txn);
 			};
 		};
 
