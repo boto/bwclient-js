@@ -92,7 +92,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 
 			if (self.data_table) {
 				block.node.find('td:first').append($('<!-- BWOBJ ' + block.model.name + '/' + block.obj_id + ' -->'));
-				self.data_table.append(block.node);
+				self.data_table.append(block.node, block.obj);
 
 				// Update the progress bar no more than 100 times
 				// to avoid unnecessary overhead

@@ -316,13 +316,37 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 			});
 	}
 
-	this.append = function(row) {
-		var item = $(row).find('> td').map(function() {
-			if (this.innerHTML.indexOf('<!-- DATA ') < 0)
-				return self.sort_string(this.innerHTML) + this.innerHTML.replace('\n',' ');
+	this.append = function(row, obj) {
+		// Converts each row to an HTML string which includes an HTML comment for
+		// easy data sorting.
+		function stringify (node) {
+			return $(node).find('> td').map(function() {
+				if (this.innerHTML.indexOf('<!-- DATA ') < 0)
+					return self.sort_string(this.innerHTML) + this.innerHTML.replace('\n',' ');
 
-			return this.innerHTML.replace('\n',' ');
-		});
+				return this.innerHTML.replace('\n',' ');
+			});
+		}
+
+		var item = stringify(row);
+
+		// If the row has a valid trigger on it, call the trigger when the row
+		// is ready. The trigger may modify the row in-place or create a new TR.
+		// We do not add this row to the pending queue because we need a dataTable
+		// row id for it immediately in order to allow it to be updated.
+		// The trigger may modify the row in-place and call the update function
+		// in the third argument to update the displayed data.
+		var trigger = row.attr(botoweb.ui.markup.prop.trigger);
+		if (trigger && trigger in botoweb.env.cfg.triggers) {
+			var row_id = this.data_table.fnAddData(item)[0];
+
+			botoweb.env.cfg.triggers[trigger](obj, row, { update: function (new_node) {
+				var item = stringify(new_node || row);
+				self.data_table.fnUpdate(item, row_id);
+			}});
+			return;
+		}
+
 		if (item.length == settings.aoColumns.length)
 			this.pending.push(item);
 
