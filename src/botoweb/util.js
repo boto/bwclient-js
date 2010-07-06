@@ -235,7 +235,7 @@ $util.format = function (format, value, opt) {
 		$(opt.node).addClass('format-' + format)
 	}
 
-	var formatted = formatter.fnc(value, params);
+	var formatted = '' + formatter.fnc(value, params);
 
 	if (formatter.type == 'number') {
 		// Insert commas according to US number formatting
@@ -257,12 +257,12 @@ $util.format = function (format, value, opt) {
 $util.formats = {
 	'dollar': {
 		type: 'number',
-		fnc: function(value, x) { return '$' + value.toFixed(2); }
+		fnc: function(value, precision) { return '$' + value.toFixed(parseInt(precision || 2)); }
 	},
 
 	'float': {
 		type: 'number',
-		fnc: function(value, precision) { return value.toFixed(parseInt(precision)); }
+		fnc: function(value, precision) { return value.toFixed(parseInt(precision || 2)); }
 	},
 
 	'floor': {
@@ -273,6 +273,25 @@ $util.formats = {
 	'round': {
 		type: 'number',
 		fnc: Math.round
+	},
+
+	'uppercase': {
+		type: 'string',
+		fnc: function (value) { return value.toUpperCase(); }
+	},
+
+	'lowercase': {
+		type: 'string',
+		fnc: function (value) { return value.toLowerCase(); }
+	},
+
+	'html_whitespace': {
+		type: 'string',
+		fnc: function (value) {
+			return value.replace(/\t/g, '&nbsp; &nbsp;&nbsp;')
+				.replace(/  /g, ' &nbsp;')
+				.replace(/\r?\n/g, '<br />');
+		}
 	}
 };
 
