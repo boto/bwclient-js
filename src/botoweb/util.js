@@ -206,7 +206,8 @@ $util.html_format = function (str) {
  * Performs transformations according to predefined or user-defined
  * formatting functions.
  */
-$util.format = function (format, value) {
+$util.format = function (format, value, opt) {
+	opt = opt || {};
 	format = format.replace(/\((.*?)\)/, '');
 
 	var params = RegExp.$1;
@@ -219,16 +220,44 @@ $util.format = function (format, value) {
 	}
 
 	// Remove non-numeric characters
-	if (formatter.type == 'number')
-		value = parseFloat(('' + value).replace(/<.*?>|[^0-9.]/g, ''));
+	if (formatter.type == 'number') {
+		var tmpval = parseFloat(('' + value).replace(/<.*?>|[^0-9.]/g, ''));
 
-	return formatter.fnc(value, params);
+		if (isNaN(tmpval)) {
+			console.error('Value cannot be formatted as a number: ', value);
+			return;
+		}
+
+		value = tmpval;
+	}
+
+	if (opt.node) {
+		$(opt.node).addClass('format-' + format)
+	}
+
+	var formatted = formatter.fnc(value, params);
+
+	if (formatter.type == 'number') {
+		// Insert commas according to US number formatting
+		if (opt.commas) {
+			formatted = formatted.replace(/(\d+)(\.|\D|$)/, function (x, int_part, suffix) {
+				do {
+					/()/.test(''); // reset RegExp
+					int_part = int_part.replace(/(\d)(\d{3})(,|$)/, '$1,$2');
+				} while (RegExp.$1);
+
+				 return int_part + suffix;
+			});
+		}
+	}
+
+	return formatted;
 };
 
 $util.formats = {
 	'dollar': {
 		type: 'number',
-		fnc: function(value) { return '$' + value.toFixed(2); }
+		fnc: function(value, x) { return '$' + value.toFixed(2); }
 	},
 
 	'float': {
