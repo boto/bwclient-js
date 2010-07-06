@@ -140,8 +140,6 @@ botoweb.ui.page = new function() {
 			if (key.indexOf('page_') == 0)
 				localStorage.setItem(key, '');
 		}
-
-		document.location.reload();
 	};
 
 	/**
