@@ -208,6 +208,7 @@ $util.html_format = function (str) {
  */
 $util.format = function (format, value, opt) {
 	opt = opt || {};
+	/()/.test('');
 	format = format.replace(/\((.*?)\)/, '');
 
 	var params = RegExp.$1;
