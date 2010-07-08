@@ -361,7 +361,7 @@ botoweb.ui.markup = new function () {
 		opt = $.extend({prefix: '', suffix: ''}, opt);
 		var format = node.attr(this.prop.format);
 
-		if (format) {
+		if (format && html) {
 			var parts = format.split(' ');
 			for (var i = 0; i < parts.length; i++) {
 				if (parts[i])

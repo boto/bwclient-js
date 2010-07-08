@@ -212,12 +212,23 @@ $util.format = function (format, value, opt) {
 	format = format.replace(/\((.*?)\)/, '');
 
 	var params = RegExp.$1;
+	var prefix = '';
 
 	var formatter = $util.formats[format];
 
 	if (!formatter) {
 		console.error('Formatter for ' + format + ' does not exist. Please add it to botoweb.util.formats');
 		return;
+	}
+
+	if (opt.node) {
+		var n = $(opt.node);
+		n.addClass('format-' + format);
+
+		// Use the original value for sorting
+		if (n.html().indexOf('<!-- DATA') < 0) {
+			prefix = '<!-- DATA ' + value + ' -->';
+		}
 	}
 
 	// Remove non-numeric characters
@@ -230,10 +241,6 @@ $util.format = function (format, value, opt) {
 		}
 
 		value = tmpval;
-	}
-
-	if (opt.node) {
-		$(opt.node).addClass('format-' + format)
 	}
 
 	var formatted = '' + formatter.fnc(value, params);
@@ -252,7 +259,7 @@ $util.format = function (format, value, opt) {
 		}
 	}
 
-	return formatted;
+	return prefix + formatted;
 };
 
 $util.formats = {
