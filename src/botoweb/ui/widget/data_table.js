@@ -133,7 +133,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 	this.status = $('<div/>')
 		.addClass('selection-buttons');
 
-	this.data_table.parent().find('.fg-toolbar.ui-corner-bl').append(
+	this.data_table.parent().find('.fg-toolbar.ui-corner-bottom').append(
 		this.status
 	);
 

@@ -311,10 +311,11 @@ botoweb.sql = {
 			if (!page)
 				page = 0;
 
-			// Do not override a limit that was already set, and do not support
-			// paging.
-			if (this.max_results)
+			// Do not override a limit that was already set, and if a limit is
+			// already set, do not support paging.
+			if (this.max_results && page == 0) {
 				page = undefined;
+			}
 			else
 				this.limit(100, 100 * page);
 
