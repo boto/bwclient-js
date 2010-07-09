@@ -275,7 +275,7 @@ botoweb.xml = {
 
 				node.clone().text(ts).appendTo(parent);
 			});
-		},
+		}
 	}
 };
 

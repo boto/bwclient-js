@@ -320,7 +320,7 @@ $util.normalize_string = function (str) {
 		dash: '-',
 		ellipse: '...',
 		bad_whitespace: ' ',
-		linefeed: '\n',
+		linefeed: '\n'
 	}, function (type, replacement) {
 		str = str.replace($util.re[type], replacement);
 	});

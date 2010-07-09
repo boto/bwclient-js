@@ -329,7 +329,8 @@ botoweb.ui.markup = new function () {
 									// Get this object out of the history and go to a safe page
 									botoweb.ui.page.backout({ id: obj.id });
 
-									setTimeout(botoweb.ldb.sync.update, 1000);
+									if (botoweb.ldb)
+										setTimeout(botoweb.ldb.sync.update, 1000);
 								}
 							});
 							return false;
