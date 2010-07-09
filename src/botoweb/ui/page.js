@@ -136,9 +136,11 @@ botoweb.ui.page = new function() {
 	 * Removes all cached pages from localStorage and refreshes the browser.
 	 */
 	this.reset = function () {
-		for (var key in localStorage) {
-			if (key.indexOf('page_') == 0)
-				localStorage.setItem(key, '');
+		if (typeof localStorage != 'undefined') {
+			for (var key in localStorage) {
+				if (key.indexOf('page_') == 0)
+					localStorage.setItem(key, '');
+			}
 		}
 	};
 
@@ -220,7 +222,8 @@ botoweb.ui.page = new function() {
 	 * @private
 	 */
 	function store (url, data) {
-		localStorage.setItem('page_' + url.replace(/\W/g, '_'), data);
+		if (typeof localStorage != 'undefined')
+			localStorage.setItem('page_' + url.replace(/\W/g, '_'), data);
 	}
 
 	/**
@@ -231,7 +234,8 @@ botoweb.ui.page = new function() {
 	 * @private
 	 */
 	function retrieve (url) {
-		return localStorage['page_' + url.replace(/\W/g, '_')];
+		if (typeof localStorage != 'undefined')
+			return localStorage['page_' + url.replace(/\W/g, '_')];
 	}
 
 	/**
