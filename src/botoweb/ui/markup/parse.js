@@ -35,7 +35,7 @@
 				this.removeAttr(prop);
 
 				if (val in botoweb.env.cfg.conditions){
-					if(botoweb.env.cfg.conditions[val](block.obj, this) === false)
+					if(botoweb.env.cfg.conditions[val](block.obj, this, block) === false)
 						this.remove();
 				}
 				else
@@ -62,7 +62,7 @@
 				matches = true;
 
 				if (val in botoweb.env.cfg.triggers)
-					botoweb.env.cfg.triggers[val](block.obj, this);
+					botoweb.env.cfg.triggers[val](block.obj, this, block);
 				else
 					this.removeAttr(prop);
 			});
