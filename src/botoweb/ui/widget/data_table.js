@@ -4,15 +4,14 @@
  */
 
 (function ($) {
-
-var sort_regex = new RegExp('\\s*<[^>]*>\\s*|[^\\w\\s\\d]+|\\b(the|a|an)\\s+', 'g');
+var $util = botoweb.util;
 
 /**
  * Generates a search form.
  *
  * @param node the node containing the search parameters.
  */
-botoweb.ui.widget.DataTable = function(table, opt) {
+var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 	opt = opt || {};
 	var sorting = [];
 	var paginate = true;
@@ -66,10 +65,20 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 	var settings = this.data_table.fnSettings();
 	if (!settings) return;
 	$(settings.aoColumns).each(function(col_idx) {
-		// Sort on raw value, not HTML markup
+		// Sort on HTML markup, we will convert the raw value to the proper text
+		// for exporting.
 		this.bUseRendered = true;
 		var col_class = false;
-		this.sType = 'string';
+
+		if (/\btype-num\b/.test(this.nTh.className))
+			this.sType = 'num-html';
+		else
+			this.sType = 'string';
+
+		// IE does not properly handle specifying sType in the constructor, so
+		// we must do it. But upon doing so we have to reset this flag which is
+		// set in the constructor to make the change take effect.
+		this._bAutoType = false;
 
 		// Expose dataTables functionality through classNames on the TH element
 		//if (/\bno-sort\b/.test(this.nTh.className))
@@ -100,7 +109,8 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 
 		// Works opposite of how a rendering function should, but this is required
 		// to function without modifying dataTables. Returns the original HTML after
-		// setting the column's value to its text-only form.
+		// setting the column's value to its text-only form. This text value is
+		// included in any exports instead of the HTML version.
 		this.fnRender = function(t) {
 			var html = t.aData[t.iDataColumn];
 			var text = html.replace(/<[^>]*>/g, '');
@@ -322,7 +332,7 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 		function stringify (node) {
 			return $(node).find('> td').map(function() {
 				if (this.innerHTML.indexOf('<!-- DATA ') < 0)
-					return self.sort_string(this.innerHTML) + this.innerHTML.replace('\n',' ');
+					return $util.sortable_string($(this).text()) + this.innerHTML.replace('\n',' ');
 
 				return this.innerHTML.replace('\n',' ');
 			});
@@ -358,10 +368,6 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 		this.pending = [];
 	}
 
-	this.sort_string = function (str) {
-		return '<!-- DATA ' + str.toLowerCase().replace(sort_regex, '') + ' -->';
-	}
-
 	this.update = function(row, values) {
 		var settings = this.data_table.fnSettings();
 
@@ -390,6 +396,15 @@ botoweb.ui.widget.DataTable = function(table, opt) {
 	}
 };
 
+$dt.extract_data = function (str) {
+	if (str.indexOf('<!-- DATA') >= 0) {
+		/<!-- DATA\s*(.*?)\s*-->/.test(str);
+		return RegExp.$1 || '';
+	}
+	else
+		return str.replace(/<.*?>/g, '');
+};
+
 /**
  * Sorts strings in the most minimal way possible (assuming they are already
  * indexed)
@@ -403,6 +418,26 @@ $.fn.dataTableExt.oSort['string-asc']  = function(x,y) {
  * indexed)
  */
 $.fn.dataTableExt.oSort['string-desc'] = function(x,y) {
+	return ((x < y) ?  1 : ((x > y) ? -1 : 0));
+};
+
+$.fn.dataTableExt.oSort['num-html-asc']  = function(a,b) {
+	var x = $dt.extract_data(a) || 0;
+	var y = $dt.extract_data(b) || 0;
+
+	x = parseFloat( x );
+	y = parseFloat( y );
+
+	return ((x < y) ? -1 : ((x > y) ?  1 : 0));
+};
+
+$.fn.dataTableExt.oSort['num-html-desc'] = function(a,b) {
+	var x = $dt.extract_data(a) || 0;
+	var y = $dt.extract_data(b) || 0;
+
+	x = parseFloat( x );
+	y = parseFloat( y );
+
 	return ((x < y) ?  1 : ((x > y) ? -1 : 0));
 };
 
@@ -481,7 +516,7 @@ $('div.dataTables_wrapper td').live('dblclick', function (e) {
 					obj: (o || obj)
 				});
 
-				clone.prepend($(data_table.sort_string(clone.text())));
+				clone.prepend($($util.sortable_string(clone.text())));
 
 				// Update the sorting data, identify this row by its DOM
 				// node and the column by its index. We give false to

@@ -423,7 +423,7 @@
 								if (node.attr($markup.prop.date_format))
 									str = $util.from_timestamp(prop.val()[0].val, node.attr($markup.prop.date_format));
 
-								$markup.set_html(node, str, { prefix: '<!-- DATA ' + prop.to_sql() + ' -->' });
+								$markup.set_html(node, str, { prefix: $util.sortable_string(prop.to_sql()) });
 							}
 						}
 

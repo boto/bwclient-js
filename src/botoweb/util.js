@@ -227,7 +227,7 @@ $util.format = function (format, value, opt) {
 
 		// Use the original value for sorting
 		if (n.html().indexOf('<!-- DATA') < 0) {
-			prefix = '<!-- DATA ' + value + ' -->';
+			prefix = $util.sortable_string(value);
 		}
 	}
 
@@ -337,6 +337,11 @@ $util.sort_props = function(a,b) {
 	return (a.name || a).toString().toLowerCase() > (b.name || b).toString().toLowerCase() ? 1 : -1;
 };
 
+$util.sortable_string = function (str) {
+	// Remove non sortable characters, any leading spaces, and any duplicated spaces
+	return '<!-- DATA ' + str.toLowerCase().replace($util.re.non_sortable, '').replace(/^ +/, '').replace(/ {2,}/, ' ') + ' -->';
+};
+
 $util.uuid = function () {
 	return Math.uuidFast().toLowerCase();
 };
@@ -351,6 +356,8 @@ $util.re = {
 	ellipse: /…/g,
 	bad_whitespace: /[\t\v]+/g,
 	linefeed: /\r?\n|\r\n?/g,
+
+	non_sortable: /[^\w\s\d]+|\b(the|a|an)\s+/g,
 
 	// See ascii table, all characters between Space and ~ are good, other
 	// characters must be converted to HTML entities. \n and \t are the only
