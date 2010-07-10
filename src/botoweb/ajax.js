@@ -43,7 +43,14 @@ botoweb.ajax = {
 
 					var timeout;
 
-					if (data.status == 408) {
+					if (data.status in botoweb.env.cfg.ajax_errors) {
+						var t = botoweb.env.cfg.ajax_errors[data.status](url, data);
+						if (!t)
+							return;
+
+						timeout = t;
+					}
+					else if (data.status == 408) {
 						timeout = 250;
 					}
 					else if (data.status == 503) {

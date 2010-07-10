@@ -91,7 +91,10 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 			picklist_result: function (text, obj) {
 				return '<div class="ar small">' + obj.model.name + '</div>' + text;
 			}
-		}
+		},
+
+		// Map status code number to a function accepting params url, xhr
+		ajax_errors: {}
 	}, cfg);
 
 	var self = this;
