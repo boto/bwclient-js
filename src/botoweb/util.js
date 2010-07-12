@@ -362,7 +362,7 @@ $util.re = {
 	bad_whitespace: /[\t\v]+/g,
 	linefeed: /\r?\n|\r\n?/g,
 
-	non_sortable: /[^\w\s\d]+|\b(the|a|an)\s+/g,
+	non_sortable: /[^\w\s\d.-]+|\b(the|a|an)\s+/g,
 
 	// See ascii table, all characters between Space and ~ are good, other
 	// characters must be converted to HTML entities. \n and \t are the only
