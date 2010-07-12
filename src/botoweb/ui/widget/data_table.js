@@ -422,8 +422,8 @@ $.fn.dataTableExt.oSort['string-desc'] = function(x,y) {
 };
 
 $.fn.dataTableExt.oSort['num-html-asc']  = function(a,b) {
-	var x = $dt.extract_data(a) || 0;
-	var y = $dt.extract_data(b) || 0;
+	var x = $dt.extract_data(a).replace(/[^\d.-]/g, '') || 0;
+	var y = $dt.extract_data(b).replace(/[^\d.-]/g, '') || 0;
 
 	x = parseFloat( x );
 	y = parseFloat( y );
@@ -432,8 +432,8 @@ $.fn.dataTableExt.oSort['num-html-asc']  = function(a,b) {
 };
 
 $.fn.dataTableExt.oSort['num-html-desc'] = function(a,b) {
-	var x = $dt.extract_data(a) || 0;
-	var y = $dt.extract_data(b) || 0;
+	var x = $dt.extract_data(a).replace(/[^\d.-]/g, '') || 0;
+	var y = $dt.extract_data(b).replace(/[^\d.-]/g, '') || 0;
 
 	x = parseFloat( x );
 	y = parseFloat( y );
