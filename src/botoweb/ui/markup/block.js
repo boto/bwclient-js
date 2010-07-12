@@ -201,7 +201,10 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 
 	this.done = function () {
-		$.each(this.onready, function () { this(self) });
+		$.each(this.onready, function (i, fnc) {
+			if (fnc)
+				fnc(self);
+		});
 		this.onready = [];
 		this.saved = false;
 

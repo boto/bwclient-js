@@ -338,6 +338,11 @@ $util.sort_props = function(a,b) {
 };
 
 $util.sortable_string = function (str) {
+	if (!str)
+		str = '';
+	else
+		str = '' + str;
+
 	// Remove non sortable characters, any leading spaces, and any duplicated spaces
 	return '<!-- DATA ' + str.toLowerCase().replace($util.re.non_sortable, '').replace(/^ +/, '').replace(/ {2,}/, ' ') + ' -->';
 };
