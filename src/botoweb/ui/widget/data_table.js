@@ -200,11 +200,21 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 	 * Updates the cells in the tfoot of a dataTable which have a bwFormula
 	 * specified based on the data in the table.
 	 */
-	this.update_totals = function () {
+	this.update_totals = function (tries) {
 		var tfoot = $(table).find('tfoot');
+		tries = tries || 0;
 
-		if (tfoot.length == 0)
+		// If the table is loaded synchronously, the markup for the tfoot may not
+		// be loaded yet in some browsers. We retry a few times to ensure that if
+		// there is going to be a tfoot, we update any totals there.
+		if (tfoot.length == 0) {
+			if (tries < 2) {
+				setTimeout(function () {
+					self.update_totals(tries + 1);
+				}, 100);
+			}
 			return;
+		}
 
 		function sanitize_cell(value) {
 			return parseFloat(value.replace(/<.*?>|,|\$/g, ''));
@@ -326,7 +336,9 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 			});
 	}
 
-	this.append = function(row, obj) {
+	this.append = function(row, obj, opt) {
+		opt = opt || {};
+
 		// Converts each row to an HTML string which includes an HTML comment for
 		// easy data sorting.
 		function stringify (node) {
@@ -355,6 +367,11 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 				self.data_table.fnUpdate(item, row_id);
 			}});
 			return;
+		}
+
+		if (opt.redraw) {
+			this.data_table.fnAddData(item);
+			return
 		}
 
 		if (item.length == settings.aoColumns.length)
