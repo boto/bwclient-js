@@ -371,5 +371,19 @@ $util.re = {
 	non_ascii: /([^\n\t -~])/g
 };
 
+/**
+ * Get User Param
+ */
+$util.gup = function(name){
+	name = name.replace(/[\[]/,"\\\[").replace(/[\]]/,"\\\]");
+	var regexS = "[\\?&]"+name+"=([^&#]*)";
+	var regex = new RegExp( regexS );
+	var results = regex.exec( window.location.href );
+	if( results == null )
+		return "";
+	else
+		return results[1];
+};
+
 })(jQuery);
 
