@@ -221,6 +221,7 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 		}
 
 		tfoot.find('td, th').each(function (i, col) {
+
 			col = $(col);
 			var formula = col.attr(botoweb.ui.markup.prop.formula);
 
@@ -238,7 +239,9 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 				case 'sum':
 					value = 0;
 					$.each(data, function () {
-						value += sanitize_cell(this[i]);
+						var cell_val = sanitize_cell(this[i]);
+						if(!isNaN(cell_val))
+							value += cell_val;
 					});
 					break;
 
@@ -365,6 +368,7 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 			botoweb.env.cfg.triggers[trigger](obj, row, { update: function (new_node) {
 				var item = stringify(new_node || row);
 				self.data_table.fnUpdate(item, row_id);
+				self.update_totals();
 			}});
 			return;
 		}
