@@ -268,6 +268,11 @@ $util.formats = {
 		fnc: function(value, precision) { return '$' + value.toFixed(parseInt(precision || 2)); }
 	},
 
+	'percent': {
+		type: 'number',
+		fnc: function(value, precision) { return value.toFixed(parseInt(precision || 0)) + "%"; }
+	},
+
 	'float': {
 		type: 'number',
 		fnc: function(value, precision) { return value.toFixed(parseInt(precision || 2)); }
