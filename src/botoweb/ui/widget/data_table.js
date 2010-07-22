@@ -277,7 +277,10 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 					return;
 			}
 
-			botoweb.ui.markup.set_html(col, value);
+			// Value is converted to a string. Otherwise, if the value is
+			// 0 it would evaluate to false. Only a blank string should
+			// evaluate to false here.
+			botoweb.ui.markup.set_html(col, '' + value);
 		});
 	}
 
