@@ -233,7 +233,7 @@ $util.format = function (format, value, opt) {
 
 	// Remove non-numeric characters
 	if (formatter.type == 'number') {
-		var tmpval = parseFloat(('' + value).replace(/<.*?>|[^0-9.]/g, ''));
+		var tmpval = parseFloat(('' + value).replace(/<.*?>|[^0-9.-]/g, ''));
 
 		if (isNaN(tmpval)) {
 			console.error('Value cannot be formatted as a number: ', value);
