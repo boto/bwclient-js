@@ -20,6 +20,7 @@ $forms.prop_field = function (prop, opt) {
 			case 'textarea-only': return new $forms.Textarea(prop, opt);
 			case 'dropdown': return new $forms.Dropdown(prop, opt);
 			case 'text': return new $forms.Text(prop, opt);
+			case 'date': return new $forms.DateTime(prop, $.extend(opt, { date_only: true }));
 			case 'datetime': return new $forms.DateTime(prop, opt);
 			case 'boolean': return new $forms.Boolean(prop, opt);
 			case 'password': return new $forms.Password(prop, opt);
@@ -621,13 +622,15 @@ $forms.DateTime = function () {
 	this.opt.html.attr.type = 'text';
 
 	this.decorate_field = function (field) {
+		var showTime = !(this.opt.date_only || this.prop.meta.date_only);
+
 		var dp = field.datepicker({
 			showAnim: 'drop',
 			showOptions: {direction: 'down'},
 			duration: 350,
 			dateFormat: 'mm/dd/yy',
 			currentText: "<small>Go to current month</small>",
-			showTime: true,
+			showTime: showTime,
 			time24h: false,
 			altField: this.field,
 			changeMonth: true,
@@ -642,11 +645,13 @@ $forms.DateTime = function () {
 			// datePicker starts to animate, we also position and start to
 			// animate the timePicker with the same effect.
 			beforeShow: function () {
-				setTimeout(function () {
-					$('#ui-timepicker-div').css('top', $('#ui-datepicker-div').parent().css('top'));
-					$('#ui-timepicker-div').css('left', $('#ui-datepicker-div').offset().left + $('#ui-datepicker-div').width() + 5 + 'px');
-					$('#ui-timepicker-div').show('drop', {direction: 'down'}, 340);
-				}, 1);
+				if (showTime) {
+					setTimeout(function () {
+						$('#ui-timepicker-div').css('top', $('#ui-datepicker-div').parent().css('top'));
+						$('#ui-timepicker-div').css('left', $('#ui-datepicker-div').offset().left + $('#ui-datepicker-div').width() + 5 + 'px');
+						$('#ui-timepicker-div').show('drop', {direction: 'down'}, 340);
+					}, 1);
+				}
 			}
 		});
 

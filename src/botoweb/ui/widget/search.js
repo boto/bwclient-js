@@ -46,7 +46,8 @@ botoweb.ui.widget.Search = function(node, block) {
 			self.props.push(prop);
 
 			var field = botoweb.ui.forms.prop_field(prop, {
-				def: ''
+				def: '',
+				date_only: true
 			});
 
 			field.edit();
@@ -80,7 +81,8 @@ botoweb.ui.widget.Search = function(node, block) {
 			var val = field.val();
 
 			var op = '=';
-			var wrap = '';
+			var before = '';
+			var after = '';
 
 			// Anything with choices has to use the = op regardless of type
 			if (field.prop.meta.choices && field.prop.meta.choices.length) { }
@@ -88,13 +90,22 @@ botoweb.ui.widget.Search = function(node, block) {
 			// Strings use like comparison
 			else if (field.prop.is_type('str', 'string', 'blob')) {
 				op = 'like';
-				wrap = '%';
+				before = after = '%';
+			}
+
+			// Dates use like comparison that ignores the time
+			else if (field.opt.type == 'dateTime' || field.prop.is_type('dateTime')) {
+				$.each(val, function () {
+					this.val = this.val.replace(/(\d+)\/(\d+)\/(\d+).*/, '$3-$1-$2');
+				});
+				op = 'like';
+				after = '%';
 			}
 
 			if (val.length > 1)
-				query.push([field.prop.meta.name, op, $.map(val, function(v) { return wrap + v.val + wrap; })]);
+				query.push([field.prop.meta.name, op, $.map(val, function(v) { return before + v.val + after; })]);
 			else if (val.length && val[0].val)
-				query.push([field.prop.meta.name, op, wrap + val[0].val + wrap]);
+				query.push([field.prop.meta.name, op, before + val[0].val + after]);
 		});
 
 		self.results.reset();
