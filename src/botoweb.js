@@ -99,10 +99,16 @@ var botoweb = {
 			op = query_part[1];
 			value = query_part[2];
 
-			if(value.constructor.toString().indexOf("Array") != -1){
-				parts.push('["' + name + '","' + op + '",["' + value.join('","') + '"]]');
+			if(name.constructor.toString().indexOf("Array") != -1){
+				name = '["' + name.join('","') + '"]';
 			} else {
-				parts.push('["' + name + '","' + op + '","' + value + '"]');
+				name = '"' + name + '"';
+			}
+
+			if(value.constructor.toString().indexOf("Array") != -1){
+				parts.push('[' + name + ',"' + op + '",["' + value.join('","') + '"]]');
+			} else {
+				parts.push('[' + name + ',"' + op + '","' + value + '"]');
 			}
 		}
 
