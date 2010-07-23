@@ -303,6 +303,16 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				return '';
 			};
 			break;
+		case 's3key':
+			this.format_val = function (data, opt) {
+				var base_url = document.location.protocol + "//" + document.location.hostname + "/" + botoweb.env.base_url;
+				if(/Chrome/.test(navigator.userAgent)){
+					base_url = "view-source:" + base_url;
+				}
+				return "<a target='_blank' href='" + base_url + "/" + this.obj_model.href + "/" + (opt.obj || this.obj_id) + "/" + this.meta.name + "'>View</a>";
+			};
+			break;
+
 	}
 
 	this.to_sql = function () {
