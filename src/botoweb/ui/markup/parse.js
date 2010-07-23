@@ -304,7 +304,6 @@
 
 										if (async && !block.waiting) {
 											block.done();
-											block = null;
 											prop = null;
 										}
 									}, $.extend({
