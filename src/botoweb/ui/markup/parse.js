@@ -280,7 +280,7 @@
 								var load_data = function () {
 									var async = false;
 
-									node.unbind('ready');
+									node.unbind('ready', load_data);
 
 									var filter = node.attr($markup.prop.filter);
 
@@ -758,7 +758,7 @@
 				var node = this;
 
 				function load_data () {
-					node.unbind('ready');
+					node.unbind('ready', load_data);
 					botoweb.Object.follow(block.model, (block.obj || block.obj_id), val, results.update, filters, { no_cache: true });
 				}
 
