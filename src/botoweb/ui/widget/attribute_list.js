@@ -82,6 +82,9 @@ botoweb.ui.widget.AttributeList = function(node, model) {
 		var container = $('<div/>')
 			.addClass('property');
 
+		if (self.node.hasClass('delay_load'))
+			container.addClass('delay_load');
+
 		var follow = '';
 
 		if (self.follow_props[num])
