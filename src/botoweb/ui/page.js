@@ -35,8 +35,7 @@ botoweb.ui.page = new function() {
 
 		// Load the page from cache, unless it is a refresh
 		if (!opt.refresh && loc.full in this.cache) {
-			detach_events();
-			destroy(opt);
+			destroy(detach_events(), opt);
 
 			$('#botoweb.page').append(this.cache[loc.full]);
 
@@ -158,10 +157,10 @@ botoweb.ui.page = new function() {
 	 *
 	 * @private
 	 */
-	function destroy (opt) {
+	function destroy (should_cache, opt) {
 		opt = opt || {};
 
-		if (opt.changed && self.history.length > 1 && !self.history[1].data.action) {
+		if (should_cache && opt.changed && self.history.length > 1 && !self.history[1].data.action) {
 			self.cache[self.history[1].full] = $('#botoweb.page').children().detach();
 		}
 		else
@@ -178,13 +177,16 @@ botoweb.ui.page = new function() {
 
 		var self = botoweb.ui.page;
 
-		self.obj = null;
+		var should_cache = true;
 
 		console.log('PAGE: unload');
-		$(self).triggerHandler('destroy');
+		if ($(self).triggerHandler('destroy') === false)
+			should_cache = false;
+
+		self.obj = null;
 
 		// Cache handlers before unbinding them all
-		if (self.history.length > 1 && !(self.history[1].full in self.handler_cache)) {
+		if (should_cache && self.history.length > 1 && !(self.history[1].full in self.handler_cache)) {
 			var handler_list = [];
 
 			$.each($(self).data('events'), function (i, handlers) {
@@ -212,6 +214,8 @@ botoweb.ui.page = new function() {
 		}
 
 		self.preserve_cache = false;
+
+		return should_cache;
 	};
 
 	/**
@@ -268,12 +272,12 @@ botoweb.ui.page = new function() {
 	 * @param {String} html The HTML markup string.
 	 */
 	function show_page (html, opt) {
-		detach_events(opt);
+		var should_cache = detach_events(opt);
 		var self = botoweb.ui.page;
 		var old_loc = self.location;
 
 		botoweb.ui.markup.page_show(html, function (node) {
-			destroy(opt);
+			destroy(should_cache, opt);
 
 			$('#botoweb.page').append(node);
 
@@ -319,6 +323,8 @@ botoweb.ui.page = new function() {
 				if ($(self).triggerHandler('change.global', [loc, new_page]) === false)
 					new_page = false;
 			}
+			else
+				new_page = false;
 
 			self.history.unshift(loc);
 
