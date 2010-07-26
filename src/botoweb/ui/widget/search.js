@@ -137,5 +137,5 @@ botoweb.ui.widget.Search = function(node, block) {
 
 	new botoweb.ui.markup.Block(self.node, {
 		model: self.model
-	});
+	}).parse();
 };

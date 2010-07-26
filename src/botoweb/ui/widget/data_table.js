@@ -524,7 +524,7 @@ $('div.dataTables_wrapper td').live('dblclick', function (e) {
 				obj: obj,
 				editable: true,
 				no_refresh: true
-			});
+			}).parse();
 
 			first_attr.triggerHandler('dblclick');
 
@@ -538,7 +538,7 @@ $('div.dataTables_wrapper td').live('dblclick', function (e) {
 
 				new botoweb.ui.markup.Block(clone, {
 					obj: (o || obj)
-				});
+				}).parse();
 
 				clone.prepend($($util.sortable_string(clone.text())));
 

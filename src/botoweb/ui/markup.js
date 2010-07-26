@@ -181,11 +181,14 @@ botoweb.ui.markup = new function () {
 
 		// Create a new block and wait for any synchronous parsing to finish.
 		var block = new botoweb.ui.markup.Block(node, $.extend(true, {
-			root: true,
-			oninit: function () {
-				fnc(this.node);
-			}
+			root: true
 		}, botoweb.ui.page.location.data));
+
+		$(block).bind('init', function () {
+			fnc(this.node);
+		});
+
+		block.parse();
 
 		$.each(botoweb.env.cfg.markup.page_show, function () {
 			this(node);

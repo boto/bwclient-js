@@ -144,7 +144,7 @@
 					editable: true,
 					no_cache: block.no_cache,
 					root: block.opt.redirect_on_save
-				});
+				}).parse();
 
 				if (data) {
 					try {
@@ -267,7 +267,7 @@
 										editable: editable,
 										//parent: block,
 										no_cache: block.no_cache
-									});
+									}).parse();
 									//block.children.push(b);
 
 									node.append(b.node.contents());

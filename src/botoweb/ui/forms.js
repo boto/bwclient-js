@@ -1074,7 +1074,7 @@ $forms.Picklist = function () {
 				obj: value,
 				action: 'edit',
 				editable: true
-			});
+			}).parse();
 
 			// Add a field to set the backreference, this is critical when
 			// adding a new reference property

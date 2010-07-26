@@ -16,7 +16,6 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.obj_id = opt.obj_id;
 	this.model = opt.model;
 	//this.parent = opt.parent;
-	this.onready = [];
 	//this.children = [];
 	this.fields = [];
 	this.nested = [];
@@ -29,12 +28,18 @@ botoweb.ui.markup.Block = function (node, opt) {
 	this.state = opt.state || 'view';
 	this.saved = false;
 
+	// true when parse has been called, used to block init until parse is called
+	this.can_init = false;
+
+	// true when the object is loaded
+	this.ready = false;
+
+	// true when this.init has been called
+	this.did_init = false;
+
 	delete this.opt.obj;
 	delete this.opt.parent;
 	delete this.opt.children;
-
-	if (opt.onready)
-		this.onready.push(opt.onready);
 
 	if (typeof this.model == 'string')
 		this.model = botoweb.env.models[this.model];
@@ -201,11 +206,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 
 	this.done = function () {
-		$.each(this.onready, function (i, fnc) {
-			if (fnc)
-				fnc(self);
-		});
-		this.onready = [];
+		$(this).triggerHandler('done');
+		$(this).unbind('done');
 		this.saved = false;
 
 		this.node.addClass(this.state);
@@ -243,6 +245,12 @@ botoweb.ui.markup.Block = function (node, opt) {
 	}
 
 	this.init = function () {
+		if (this.did_init)
+			return;
+
+		this.did_init = true;
+		delete this.can_init;
+
 		// A trigger may be called just before the page is parsed. This allows
 		// the DOM to be edited as a whole based on the object data, before it
 		// is split up into nested objects which would not be possible to edit
@@ -316,11 +324,25 @@ botoweb.ui.markup.Block = function (node, opt) {
 			this.node.show();
 		} catch (e) {}
 
-		if (opt.oninit)
-			opt.oninit.call(this);
+		$(this).triggerHandler('init');
+		$(this).unbind('init');
 
 		if (!this.waiting)
 			this.done();
+	};
+
+	/**
+	 * Allows parsing to begin. If the object is already loaded, calls init.
+	 * Otherwise sets a flag that allows init to be called once the object is
+	 * loaded.
+	 */
+	this.parse = function () {
+		if (this.ready)
+			this.init();
+		else
+			this.can_init = true;
+
+		return this;
 	};
 
 	if (this.model && !this.obj && opt.id) {
@@ -343,11 +365,18 @@ botoweb.ui.markup.Block = function (node, opt) {
 				return;
 			}
 
-			self.init();
+			this.ready = true;
+
+			if (self.can_init)
+				self.init();
 		}, this.opt);
 	}
-	else
-		this.init();
+	else {
+		this.ready = true;
+
+		if (this.can_init)
+			this.init();
+	}
 };
 
 var $ui = botoweb.ui;
