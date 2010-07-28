@@ -169,10 +169,7 @@
 						e.preventDefault();
 
 						b.save(function (obj) {
-							if (block.opt.onsave)
-								block.opt.onsave();
-							else
-								botoweb.ui.page.refresh();
+							botoweb.ui.page.refresh();
 
 							return false;
 						});
@@ -230,7 +227,7 @@
 					// the current object when it was intended for a referenced
 					// object
 					if (!block.model || !(val in block.model.prop_map) || !block.model.prop_map[val].meta.read) {
-						console.log("Can't access: " + block.model + "[" + val + "]");
+						console.warn("Can't access: " + block.model + "[" + val + "]");
 						this.empty();
 						return;
 					}

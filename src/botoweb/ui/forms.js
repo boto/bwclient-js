@@ -346,7 +346,9 @@ $forms.Field = function (prop, opt) {
 									self.cancel();
 								}
 
-								function update() {
+								function done() {
+									$($forms).triggerHandler('save_complete.global', [obj, true]);
+
 									$ui.overlay.hide();
 
 									if (!self.opt.block.opt.no_refresh)
@@ -357,10 +359,10 @@ $forms.Field = function (prop, opt) {
 									$ldb.sync.update();
 								}
 
-								$(self.opt.block).triggerHandler('save_complete', [obj, update]);
+								$(self.opt.block).triggerHandler('save_complete', [obj, done]);
 
-								if ($($forms).triggerHandler('save_complete', [obj, update]) !== false)
-									update();
+								if ($($forms).triggerHandler('save_complete', [obj, done]) !== false)
+									done();
 							}
 
 							botoweb.Object.update(self.obj_model, self.obj_id, data, function (obj) {
@@ -877,7 +879,9 @@ $forms.File = function () {
 						.removeClass('ui-icon-clock')
 						.addClass('ui-icon-check');
 
-					if (fnc)
+					// Allow the next handler to run, if nothing else takes control by
+					// returning false, call the done function
+					if ($($forms).triggerHandler('save_complete', [obj, fnc]) !== false)
 						fnc();
 				}
 
@@ -893,6 +897,13 @@ $forms.File = function () {
 					upload.submit()
 				}, 1000);
 
+				// Do not allow any other handlers to run yet
+				event.stopImmediatePropagation();
+
+				// Do not allow this handler to trigger again
+				$(this).unbind(event.type, event.handler);
+
+				// Take control of the form submission
 				return false;
 			});
 		}
@@ -1381,6 +1392,7 @@ $forms.Picklist = function () {
 					.click(function () {
 						search_box.focus();
 						do_search();
+						return false;
 					})
 			);
 		}
