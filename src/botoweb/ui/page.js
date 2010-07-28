@@ -210,6 +210,7 @@ botoweb.ui.page = new function() {
 			// TODO do this in a smarter way
 			$.each(botoweb.env.models, function () {
 				this.objs = {};
+				this.dummy_objs = {};
 			});
 		}
 

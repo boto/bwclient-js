@@ -74,6 +74,56 @@ botoweb.ldb = {
 		}
 
 		if (botoweb.ldb.dbh) {
+			if (botoweb.env.cfg.db.cache_props.length) {
+				db.transaction(function (txn) {
+					var setup_cache_props = function (txn) {
+						txn.executeSql(
+							'CREATE TABLE IF NOT EXISTS meta_cache_props' +
+							' (id TEXT UNIQUE, prop_' + botoweb.env.cfg.db.cache_props.join(' TEXT, prop_') + ' TEXT)'
+						);
+
+						// Check the table schema for changes. If anything has changed
+						// we need to reset and re-sync the table.
+						txn.executeSql(
+							'SELECT sql FROM sqlite_master WHERE type = ? AND tbl_name = ?',
+							['table', 'meta_cache_props'],
+							function (txn, results) {
+								if (!results.rows.length)
+									return;
+
+								// Full CREATE TABLE... definition
+								var schema = results.rows.item(0).sql;
+
+								schema = schema.split('(')[1];
+								var new_columns = schema.split(', ');
+
+								var diff = false;
+
+								if (new_columns.length != botoweb.env.cfg.db.cache_props.length + 1)
+									diff = true;
+								else {
+									$.each(botoweb.env.cfg.db.cache_props, function (i, defn) {
+										// Compare the column names and stop checking
+										// if one does not match
+										if ('prop_' + defn != new_columns[i + 1].replace(/ .*$/g, '')) {
+											diff = true;
+											return false;
+										}
+									});
+								}
+
+								if (diff) {
+									console.warn('Local DB schema for meta_cache_props is outdated, data will be reset.');
+									txn.executeSql('DROP TABLE meta_cache_props', null, setup_cache_props);
+								}
+							}
+						);
+					};
+
+					setup_cache_props(txn);
+				});
+			}
+
 			// Initialize the database schema
 			$.each(botoweb.env.models, function(name, model) {
 
@@ -508,5 +558,84 @@ botoweb.ldb = {
 			// TODO instantiate botoweb.Model from row
 			opt.success(results);
 		});
-	}
+	},
+
+	/**
+	 * Finds any properties which may be cached, according to the cache_props
+	 * environment config.
+	 *
+	 * @param {botoweb.Object} obj The object to cache
+	 */
+	cache_props: function (obj) {
+		if (botoweb.env.cfg.db.cache_props.length == 0 || !botoweb.ldb.dbh)
+			return obj;
+
+		var columns = ['id'];
+		var bind_params = [obj.id];
+
+		$.each(botoweb.env.cfg.db.cache_props, function (i, p) {
+			if (p in obj.data) {
+				columns.push('prop_' + p);
+				bind_params.push(obj.data[p].toString());
+			}
+		});
+
+		botoweb.ldb.dbh.transaction(function (txn) {
+			txn.executeSql( "INSERT OR REPLACE INTO meta_cache_props" +
+				' (' + columns.join(', ') + ')' +
+				' VALUES (' + $.map(bind_params, function() { return '?' }).join(', ') + ')',
+				bind_params,
+				null,
+				function (t,e) { console.error(e.message)}
+			);
+		});
+
+		return obj;
+	},
+
+	/**
+	 * Finds any properties which may be cached, according to the cache_props
+	 * environment config.
+	 *
+	 * @param {botoweb.Object} obj The object to cache
+	 */
+	get_cached_props: function (model, id, fnc) {
+		if (botoweb.env.cfg.db.cache_props.length == 0 || !botoweb.ldb.dbh)
+			return [];
+
+		var props = {};
+
+		$.each(botoweb.env.cfg.db.cache_props, function (i, p) {
+			if (p in model.prop_map) {
+				props[p] = [];
+			}
+		});
+
+		botoweb.ldb.dbh.transaction(function (txn) {
+			txn.executeSql( "SELECT * FROM meta_cache_props WHERE " +
+				' id = ?',
+				[id],
+				function (txn, results) {
+					// The object is not cached, so we have to query it
+					if (results.rows.length == 0) {
+						console.error('???????NOTHING ', id);
+						return model.get(id, function (obj) {
+							fnc(obj.data);
+						});
+					}
+
+					var data = results.rows.item(0);
+
+					for (var i in props) {
+						props[i] = new model.prop_map[i].instance([{val: data['prop_' + i] }]);
+					}
+
+					fnc(props);
+				},
+				function (t, e) {
+					console.error(e.message);
+				}
+			);
+		});
+	},
 };

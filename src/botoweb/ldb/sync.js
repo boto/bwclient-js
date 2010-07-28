@@ -426,6 +426,8 @@ botoweb.ldb.sync = {
 							delete model.objs[obj.id];
 						else
 							model.objs[obj.id] = obj;
+
+						delete model.dummy_objs[obj.id];
 					}
 
 					result_id++;
@@ -522,6 +524,10 @@ botoweb.ldb.sync = {
 							function (txn, e) {
 								console.error(e);
 							}
+						);
+						txn.executeSql( 'DELETE FROM meta_cache_props' +
+							' WHERE id = ?',
+							[obj.id]
 						);
 					}
 					else {

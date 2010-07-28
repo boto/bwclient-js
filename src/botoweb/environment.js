@@ -52,7 +52,10 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 			size_mb: 5,
 
 			// These models will be downloaded locally and kept synchronized
-			sync_models: []
+			sync_models: [],
+
+			// These property names will be cached on any object that has them
+			cache_props: []
 		},
 
 		// Functions allowing custom markup modification, such as expanding a

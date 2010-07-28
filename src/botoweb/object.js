@@ -31,6 +31,7 @@ botoweb.Object = function(id, model, data, opt) {
 	if (!opt.no_cache && !botoweb.env.cfg.disable_cache) {
 		console.warn('Caching ' + this.model.name + ' ' + this.id);
 		self.model.objs[this.id] = this;
+		delete self.model.dummy_objs[this.id];
 	}
 
 	$.each(self.model.props, function () {
@@ -74,10 +75,30 @@ botoweb.Object = function(id, model, data, opt) {
 					if (val.id == 'None') {
 						remaining--;
 					}
+					// Load memory cached object
 					else if (model.objs[val.id]) {
 						objs.push(model.objs[val.id]);
 						remaining--;
 					}
+					// Load only cached data by id, make a dummy object
+					else if (opt.dummy_obj && botoweb.ldb) {
+						if (model.dummy_objs[val.id]) {
+							objs.push(model.dummy_objs[val.id]);
+							remaining--;
+						}
+						else {
+							botoweb.ldb.get_cached_props(model, val.id, function (data) {
+								var obj = new model.instance(data, val.id);
+								model.dummy_objs[val.id] = obj;
+								objs.push(obj);
+
+								remaining--;
+								if (remaining <= 0)
+									fnc(objs, 0, objs.length);
+							});
+						}
+					}
+					// Load full object by id
 					else {
 						model.get(val.id, function(o) {
 							objs.push(o);

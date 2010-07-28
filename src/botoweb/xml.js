@@ -144,7 +144,13 @@ botoweb.xml = {
 			});
 		}
 
-		return new botoweb.Object(xml.attr('id'), model, data, opt);
+		var obj = new botoweb.Object(xml.attr('id'), model, data, opt);
+
+		if (botoweb.ldb && botoweb.ldb.dbh) {
+			botoweb.ldb.cache_props(obj);
+		}
+
+		return obj;
 	},
 
 	/**

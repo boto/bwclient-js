@@ -272,8 +272,6 @@
 							}
 
 							if (block.obj) {
-								block.waiting++;
-
 								var load_data = function () {
 									var async = false;
 
@@ -289,23 +287,50 @@
 										catch (e) { console.error(e.message) }
 									}
 
+									// If we specify that the objects returned
+									// should be dummy objects with only an id,
+									// a separate request will be needed to load
+									// the object's properties. We only use this
+									// if all the properties that we need are in
+									// the local property cache.
+									var dummy_obj = true;
+
+									// If there are any properties of the object
+									// that we want besides those that are
+									// cached, we have to load the full object
+									node.find($markup.sel.attribute).each(function () {
+										var prop_name = $(this).attr($markup.prop.attribute);
+
+										if ($.inArray() < 0) {
+											dummy_obj = false;
+											return false;
+										}
+									});
+
+									if (dummy_obj) {
+										console.error('USING DUMMY ', node.html());
+									}
+
 									botoweb.Object.val(block.model, (block.obj || block.obj_id), val, function (data) {
 										$.each(data, function () {
 											if (this && this.val)
 												descend(this.val);
 										});
 
-										block.waiting--;
-
 										data = null;
 
-										if (async && !block.waiting) {
-											block.done();
-											prop = null;
+										if (!node.is('.delay_load')) {
+											block.waiting--;
+
+											if (async && !block.waiting) {
+												block.done();
+												prop = null;
+											}
 										}
 									}, $.extend({
 										obj: block.obj,
-										filter: filter
+										filter: filter,
+										dummy_obj: dummy_obj
 									}, block.opt));
 
 									async = true;
@@ -313,8 +338,10 @@
 
 								if (node.is('.delay_load'))
 									node.bind('ready', load_data);
-								else
+								else {
+									block.waiting++;
 									load_data();
+								}
 							}
 							else {
 								descend();

@@ -22,6 +22,7 @@ botoweb.Model = function (name, href, methods, props) {
 	this.prop_map = {};
 	this.local = false;
 	this.objs = {};
+	this.dummy_objs = {};
 
 	this.set_props = function(props) {
 		var self = this;
@@ -234,6 +235,7 @@ botoweb.Model = function (name, href, methods, props) {
 		return botoweb.del(botoweb.util.url_join(botoweb.env.base_url, this.href, id), function(success) {
 			if (success) {
 				delete self.objs[id];
+				delete self.dummy_objs[id];
 
 				if (self.local) {
 					botoweb.ldb.sync.process([new self.instance(null, id)], null, null, function () {

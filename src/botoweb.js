@@ -253,6 +253,7 @@ var botoweb = {
 				// for the object immediately after creation, which will break
 				// any subsequent attempt to use the new object.
 				obj.model.objs[obj.id] = obj;
+				delete obj.model.dummy_objs[obj.id];
 
 				// Update database immediately. Usually a sync following the
 				// update is good enough, but if another sync is already running
