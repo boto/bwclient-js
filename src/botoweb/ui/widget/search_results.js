@@ -83,7 +83,7 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 		if (page === undefined)
 			hit_limit = true;
 
-		function add_row() {
+		var add_row = function() {
 			if (search_id != self.search_id)
 				return;
 
@@ -165,23 +165,25 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 		}
 
 		$.each(results, function (i, obj) {
+			var b;
+
 			if (!self.guide_block) {
-				self.guide_block = new botoweb.ui.markup.Block((obj.node || self.template.clone()), {
+				b = self.guide_block = new botoweb.ui.markup.Block((obj.node || self.template.clone()), {
 					obj: (obj.obj || obj),
 					editable: false,
 					no_cache: true
 				});
 			}
 			else {
-				self.guide_block.clone((obj.node || self.template.clone()), {
+				b = self.guide_block.clone((obj.node || self.template.clone()), {
 					obj: (obj.obj || obj),
 					editable: false,
 					no_cache: true
 				});
 			}
 
-			$(self.guide_block).bind('done', add_row);
-			self.guide_block.parse();
+			$(b).bind('done', add_row);
+			b.parse();
 		});
 
 		results = null;
