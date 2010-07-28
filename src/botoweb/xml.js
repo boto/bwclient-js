@@ -114,7 +114,16 @@ botoweb.xml = {
 		xml = $(xml);
 		if (!xml.get(0)) return;
 
-		var model = botoweb.env.models[opt.item_type || xml.get(0).tagName];
+		var model;
+
+		if (xml.get(0).tagName in botoweb.env.models)
+			model = botoweb.env.models[xml.get(0).tagName];
+
+		// Use item_type ONLY if the items returned do not specify their model,
+		// otherwise using item_type can cause strange pseudo typecasting when
+		// we query a superclass and receive subclassed objects.
+		else
+			model = botoweb.env.models[opt.item_type];
 
 		// If the object is cached, return it unless we are reloading the object
 		if (!opt.no_cache && model.objs[xml.attr('id')])
