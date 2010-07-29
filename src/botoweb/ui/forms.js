@@ -354,9 +354,11 @@ $forms.Field = function (prop, opt) {
 									if (!self.opt.block.opt.no_refresh)
 										$ui.page.refresh();
 
-									$($ldb.sync).bind('end', updated);
+									if ($ldb) {
+										$($ldb.sync).bind('end', updated);
 
-									$ldb.sync.update();
+										$ldb.sync.update();
+									}
 								}
 
 								$(self.opt.block).triggerHandler('save_complete', [obj, done]);
@@ -865,16 +867,12 @@ $forms.File = function () {
 				selections.before($('<br class="clear"/>'));
 			}, 10);
 
-			$($forms).unbind('save_complete.' + this.id);
 			$($forms).bind('save_complete.' + this.id, function (e, obj, fnc) {
 				if (!self.editing || !upload._input || !upload._input.value)
 					return;
 
 				upload._settings.action = $util.url_join($ui.page.location.base_href, botoweb.env.base_url, self.model.href, obj.id, self.prop.meta.name);
 				upload._settings.onComplete = function () {
-					// Do not allow the handler to stick around
-					$($forms).unbind('save_complete.' + self.id);
-
 					selections.find('.ui-icon')
 						.removeClass('ui-icon-clock')
 						.addClass('ui-icon-check');

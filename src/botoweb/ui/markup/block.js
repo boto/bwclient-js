@@ -365,7 +365,7 @@ botoweb.ui.markup.Block = function (node, opt) {
 				return;
 			}
 
-			this.ready = true;
+			self.ready = true;
 
 			if (self.can_init)
 				self.init();
