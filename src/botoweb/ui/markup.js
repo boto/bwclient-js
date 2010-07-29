@@ -179,6 +179,10 @@ botoweb.ui.markup = new function () {
 	this.page_show = function (html, fnc) {
 		var node = $(html);
 
+		$.each(botoweb.env.cfg.markup.page_show, function () {
+			this(node);
+		});
+
 		// Create a new block and wait for any synchronous parsing to finish.
 		var block = new botoweb.ui.markup.Block(node, $.extend(true, {
 			root: true
@@ -189,10 +193,6 @@ botoweb.ui.markup = new function () {
 		});
 
 		block.parse();
-
-		$.each(botoweb.env.cfg.markup.page_show, function () {
-			this(node);
-		});
 	};
 
 	/**

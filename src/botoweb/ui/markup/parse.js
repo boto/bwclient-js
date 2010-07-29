@@ -298,17 +298,17 @@
 									// If there are any properties of the object
 									// that we want besides those that are
 									// cached, we have to load the full object
-									node.find($markup.sel.attribute).each(function () {
+									contents.find($markup.sel.attribute).each(function () {
 										var prop_name = $(this).attr($markup.prop.attribute);
 
-										if ($.inArray() < 0) {
+										if ($.inArray(prop_name, botoweb.env.cfg.cache_props) < 0) {
 											dummy_obj = false;
 											return false;
 										}
 									});
 
 									if (dummy_obj) {
-										console.error('USING DUMMY ', node.html());
+										console.error('USING DUMMY ', contents.html());
 									}
 
 									botoweb.Object.val(block.model, (block.obj || block.obj_id), val, function (data) {
