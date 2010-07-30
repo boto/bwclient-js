@@ -247,7 +247,8 @@ botoweb.ui.widget.SearchResults = function(node, model, opt) {
 	var dt_opt = {
 		stop: true,
 		template: self.template,
-		search_results: this
+		search_results: this,
+		per_page: this.opt.per_page
 	};
 
 	if (self.node.is('tr, tbody')) {
