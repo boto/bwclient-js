@@ -52,6 +52,7 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 		sDom: dt_template,
 		bPaginate: paginate,
 		sPaginationType: 'full_numbers',
+		iDisplayLength: opt.per_page || 10,
 		"bAutoWidth": false
 	});
 
