@@ -618,9 +618,11 @@ botoweb.ldb = {
 				function (txn, results) {
 					// The object is not cached, so we have to query it
 					if (results.rows.length == 0) {
-						console.error('???????NOTHING ', id);
 						return model.get(id, function (obj) {
-							fnc(obj.data);
+							if (obj)
+								fnc(obj.data);
+							else
+								fnc();
 						});
 					}
 
