@@ -99,7 +99,10 @@ var botoweb = {
 			op = query_part[1];
 			value = query_part[2];
 
-			if(name.constructor.toString().indexOf("Array") != -1){
+			if(name.indexOf(",") > 0){
+				var tmp = name.split(",");
+				name = '["' + tmp.join('","') + '"]';
+			} else if(name.constructor.toString().indexOf("Array") != -1){
 				name = '["' + name.join('","') + '"]';
 			} else {
 				name = '"' + name + '"';
