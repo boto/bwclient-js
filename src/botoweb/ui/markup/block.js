@@ -283,6 +283,15 @@ botoweb.ui.markup.Block = function (node, opt) {
 				botoweb.ui.page.obj = this.obj;
 			}
 		}
+		// Some markup is not valid when there is no object
+		else {
+			$.extend(self.skip_markup, {
+				'condition': 1,
+				'attribute_list': 1,
+				'attribute': 1,
+				'relation': 1
+			});
+		}
 
 		if (this.data && typeof this.data == 'string') {
 			try {
