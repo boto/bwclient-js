@@ -163,8 +163,8 @@ botoweb.Model = function (name, href, methods, props) {
 		return obj;
 	}
 
-	this.instance = function (data, id) {
-		botoweb.Object.call(this, (id || botoweb.util.uuid()), self, data);
+	this.instance = function (data, id, opt) {
+		botoweb.Object.call(this, (id || botoweb.util.uuid()), self, data, opt);
 		this.unsaved = true;
 	};
 
