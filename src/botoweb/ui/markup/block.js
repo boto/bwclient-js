@@ -287,8 +287,6 @@ botoweb.ui.markup.Block = function (node, opt) {
 		else {
 			$.extend(self.skip_markup, {
 				'condition': 1,
-				'attribute_list': 1,
-				'attribute': 1,
 				'relation': 1
 			});
 		}
