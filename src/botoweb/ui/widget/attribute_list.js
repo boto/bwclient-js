@@ -32,6 +32,8 @@ botoweb.ui.widget.AttributeList = function(node, model) {
 		}
 		/()/.test(name);
 		var n = name.replace(/\.(.*)/, '');
+		if(!self.model)
+			return;
 		if (!(n in self.model.prop_map))
 			return;
 

@@ -85,7 +85,7 @@ var botoweb = {
 	// @param url: The URL to search at
 	// @param query: The Query to use, this must be an array of tuples [name, op, value]
 	// 		if "value" is a list, this is treated as an "or" and results in ["name" op "value" or "name" op "value"]
-	// 		"op" must be one of the following: (=|>=|<=|!=|<|>|starts-with|ends-with|like)
+	// 		"op" must be one of the following: (=|>=|<=|!=|<|>|starts-with|ends-with|like|not like)
 	// @param fnc: The callback function
 	//
 	query: function(url, query, obj_name, fnc, opt){
