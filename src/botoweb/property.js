@@ -95,7 +95,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			var retval =  data.val.toString();
 
 			// Handle Email Addresses
-			if(retval.indexOf("@") > 0){
+			if(retval.match("^[a-zA-Z\.0-9_\+\-]*@[a-zA-Z\.0-9\-]*$")){
 				var href = botoweb.env.cfg.format.email_href(retval, this, this.obj);
 				retval = "<a href='"+href+"' target='_blank'>"+retval+"</a>";
 			}
