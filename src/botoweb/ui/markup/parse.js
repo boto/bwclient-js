@@ -600,127 +600,129 @@
 					set_href = function (href) {
 						node.attr('href', href);
 					};
-
-					// Default href is just for show - will either be replaced or
-					// overridden with a bound event.
-					this.attr('href', '#' + val);
 				}
 
-				var view_href = '';
+				try {
+					var view_href = this.attr('href');
+					if(!view_href)
+						view_href = botoweb.env.cfg.templates.model;
 
-				if (block.obj_id)
-					view_href = '#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, block.model) + '?id=' + escape(block.obj_id);
+					if (block.obj_id)
+						view_href = '#' + botoweb.util.interpolate(view_href, block.model) + '?id=' + escape(block.obj_id);
 
-				if (data)
-					data = $util.interpolate(data, (block.obj || block.model))
+					if (data)
+						data = $util.interpolate(data, (block.obj || block.model))
 
-				switch (val) {
-					case 'update':
-					case 'edit':
-						// edit with data immediately updates the object with
-						// the given data
-						if (data) {
-							node.click(function (e) {
-								try {
-									eval('data = ' + data);
+					switch (val) {
+						case 'update':
+						case 'edit':
+							// edit with data immediately updates the object with
+							// the given data
+							if (data) {
+								node.click(function (e) {
+									try {
+										eval('data = ' + data);
 
-									for (var key in data) {
-										data[key] = [{ val: data[key] }];
-									}
+										for (var key in data) {
+											data[key] = [{ val: data[key] }];
+										}
 
-									botoweb.ui.overlay.show();
+										botoweb.ui.overlay.show();
 
-									// Force update data (will send XML for all
-									// provided data regardless of whether it
-									// matches the current value or not).
-									botoweb.Object.update(block.model, block.obj_id, data, function () {
-										botoweb.ui.overlay.hide();
-										botoweb.ui.page.refresh()
-									}, { force: true });
-								} catch (e) { }
+										// Force update data (will send XML for all
+										// provided data regardless of whether it
+										// matches the current value or not).
+										botoweb.Object.update(block.model, block.obj_id, data, function () {
+											botoweb.ui.overlay.hide();
+											botoweb.ui.page.refresh()
+										}, { force: true });
+									} catch (e) { }
 
-								e.preventDefault();
-								return false;
-							});
-							return;
-						}
-
-						set_href(view_href + '&action=edit');
-						break;
-
-					case 'clone':
-						set_href(view_href + '&action=clone');
-						break;
-
-					case 'create':
-						var model = node.attr($markup.prop.model);
-
-						if (model)
-							model = botoweb.env.models[model];
-
-						if (!model)
-							model = block.model;
-
-						var d = '';
-
-						// create with data sets the data as defaults in the
-						// editor
-						if (data) {
-							d = '&data=' + escape(data);
-						}
-
-						if (model.name in botoweb.env.cfg.templates.editor)
-							set_href('#' + botoweb.env.cfg.templates.editor[model.name] + '?action=edit' + d);
-						else
-							set_href('#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, model) + '?action=edit' + d);
-						break;
-
-					case 'attr':
-						if (data in block.model.prop_map) {
-							var href = block.obj.data[data].val();
-							var num_choices = 0;
-
-							if (href && href.length) {
-								num_choices = href.length;
-								href = href[0].val;
+									e.preventDefault();
+									return false;
+								});
+								return;
 							}
 
-							var text = this.text();
+							set_href(view_href + '&action=edit');
+							break;
 
-							// Convert emails to mailto: links
-							if (href && href.indexOf('@') >= 0) {
-								if (num_choices > 1 && text && text.indexOf('@') >= 0)
-									href = botoweb.env.cfg.format.email_href.call(this, text, val, block.obj);
-								else
-									href = botoweb.env.cfg.format.email_href.call(this, href, val, block.obj);
+						case 'clone':
+							set_href(view_href + '&action=clone');
+							break;
 
-								set_href(href);
+						case 'create':
+							var model = node.attr($markup.prop.model);
+
+							if (model)
+								model = botoweb.env.models[model];
+
+							if (!model)
+								model = block.model;
+
+							var d = '';
+
+							// create with data sets the data as defaults in the
+							// editor
+							if (data) {
+								d = '&data=' + escape(data);
 							}
 
-							// If the property is itself a link, ensure that it
-							// includes a protocol and use it as the href
-							else if (href && /(:\/\/|www\.|\.com)/.test(href)) {
-								if (RegExp.$1 != '://')
-									href = 'http://' + href;
-
-								if (num_choices > 1 && text && text.indexOf('://') >= 0)
-									href = botoweb.env.cfg.format.external_href.call(this, text, val, block.obj);
-								else
-									href = botoweb.env.cfg.format.external_href.call(this, href, val, block.obj);
-
-								set_href(href);
-							}
-
-							// Otherwise, link to the botoweb page which will
-							// display the content of the attribute
+							if (model.name in botoweb.env.cfg.templates.editor)
+								set_href('#' + botoweb.env.cfg.templates.editor[model.name] + '?action=edit' + d);
 							else
-								set_href(botoweb.util.url_join(botoweb.env.base_url, block.model.href, block.obj.id, data));
-						}
-						break;
+								set_href('#' + botoweb.util.interpolate(botoweb.env.cfg.templates.model, model) + '?action=edit' + d);
+							break;
 
-					default:
-						set_href(view_href);
-						break;
+						case 'attr':
+							if (data in block.model.prop_map) {
+								var href = block.obj.data[data].val();
+								var num_choices = 0;
+
+								if (href && href.length) {
+									num_choices = href.length;
+									href = href[0].val;
+								}
+
+								var text = this.text();
+
+								// Convert emails to mailto: links
+								if (href && href.indexOf('@') >= 0) {
+									if (num_choices > 1 && text && text.indexOf('@') >= 0)
+										href = botoweb.env.cfg.format.email_href.call(this, text, val, block.obj);
+									else
+										href = botoweb.env.cfg.format.email_href.call(this, href, val, block.obj);
+
+									set_href(href);
+								}
+
+								// If the property is itself a link, ensure that it
+								// includes a protocol and use it as the href
+								else if (href && /(:\/\/|www\.|\.com)/.test(href)) {
+									if (RegExp.$1 != '://')
+										href = 'http://' + href;
+
+									if (num_choices > 1 && text && text.indexOf('://') >= 0)
+										href = botoweb.env.cfg.format.external_href.call(this, text, val, block.obj);
+									else
+										href = botoweb.env.cfg.format.external_href.call(this, href, val, block.obj);
+
+									set_href(href);
+								}
+
+								// Otherwise, link to the botoweb page which will
+								// display the content of the attribute
+								else
+									set_href(botoweb.util.url_join(botoweb.env.base_url, block.model.href, block.obj.id, data));
+							}
+							break;
+
+						default:
+							set_href(view_href);
+							break;
+					}
+				} catch (e) {
+					console.error("Exception setting link: " + e);
 				}
 			});
 
