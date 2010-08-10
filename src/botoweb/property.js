@@ -91,8 +91,16 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	};
 
 	this.format_val = function (data) {
-		if ('val' in data && data.val !== null && data.val !== undefined)
-			return data.val.toString();
+		if ('val' in data && data.val !== null && data.val !== undefined){
+			var retval =  data.val.toString();
+
+			// Handle Email Addresses
+			if(retval.indexOf("@") > 0){
+				var href = botoweb.env.cfg.format.email_href(retval, this, this.obj);
+				retval = "<a href='"+href+"' target='_blank'>"+retval+"</a>";
+			}
+			return retval;
+		}
 	};
 
 
