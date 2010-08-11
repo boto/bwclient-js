@@ -60,6 +60,9 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			// value, then default it to undefined to signify "unknown"
 			if (model_prop.meta.no_store || model_prop.is_type('query', 'blob'))
 				this.data = [{val: undefined}];
+			// Dummy obj will lazily load any property if necessary.
+			else if (opt.dummy_obj)
+				this.data = [{val: undefined}];
 			// Otherwise default it to null to signify "no value"
 			else
 				this.data = [{val: null}];

@@ -287,28 +287,30 @@
 										catch (e) { console.error(e.message) }
 									}
 
-									// If we specify that the objects returned
-									// should be dummy objects with only an id,
-									// a separate request will be needed to load
-									// the object's properties. We only use this
-									// if all the properties that we need are in
-									// the local property cache.
-									var dummy_obj = true;
+									if (botoweb.ldb) {
+										// If we specify that the objects returned
+										// should be dummy objects with only an id,
+										// a separate request will be needed to load
+										// the object's properties. We only use this
+										// if all the properties that we need are in
+										// the local property cache.
+										var dummy_obj = true;
 
-									// If there are any properties of the object
-									// that we want besides those that are
-									// cached, we have to load the full object
-									$('<div/>').append(contents).find($markup.sel.attribute).each(function () {
-										var prop_name = $(this).attr($markup.prop.attribute);
+										// If there are any properties of the object
+										// that we want besides those that are
+										// cached, we have to load the full object
+										$('<div/>').append(contents).find($markup.sel.attribute).each(function () {
+											var prop_name = $(this).attr($markup.prop.attribute);
 
-										if ($.inArray(prop_name, botoweb.env.cfg.cache_props) < 0) {
-											dummy_obj = false;
-											return false;
+											if ($.inArray(prop_name, botoweb.env.cfg.cache_props) < 0) {
+												dummy_obj = false;
+												return false;
+											}
+										});
+
+										if (dummy_obj) {
+											console.error('USING DUMMY ', block.model.name);
 										}
-									});
-
-									if (dummy_obj) {
-										console.error('USING DUMMY ', block.model.name);
 									}
 
 									botoweb.Object.val(block.model, (block.obj || block.obj_id), val, function (data) {

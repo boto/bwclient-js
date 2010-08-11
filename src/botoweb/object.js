@@ -36,7 +36,7 @@ botoweb.Object = function(id, model, data, opt) {
 
 	$.each(self.model.props, function () {
 		if (!(self.data[this.meta.name]))
-			self.data[this.meta.name] = new this.instance();
+			self.data[this.meta.name] = new this.instance(undefined, opt);
 
 		self.data[this.meta.name].obj_id = self.id;
 		self.data[this.meta.name].obj_model = self.model;
@@ -56,8 +56,10 @@ botoweb.Object = function(id, model, data, opt) {
 			return fnc([], 0, 0);
 
 		// If the val is not undefined we have already loaded it.
-		if (values[0].val !== undefined)
-			return fnc(values || [], 0, 0);
+		if (values[0].val !== undefined) {
+			var objs = $.map(values, function (v) { return v.val });
+			return fnc(objs || [], 0, 0);
+		}
 
 		var objs = [];
 		var remaining = values.length;
@@ -88,7 +90,7 @@ botoweb.Object = function(id, model, data, opt) {
 						}
 						else {
 							botoweb.ldb.get_cached_props(model, val.id, function (data) {
-								var obj = new model.instance(data, val.id);
+								var obj = new model.instance(data, val.id, { dummy_obj: true });
 								model.dummy_objs[val.id] = obj;
 								objs.push(obj);
 
