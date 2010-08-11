@@ -169,7 +169,9 @@
 						e.preventDefault();
 
 						b.save(function (obj) {
-							botoweb.ui.page.refresh();
+							setTimeout(function () {
+								botoweb.ui.page.refresh()
+							}, 500);
 
 							return false;
 						});
