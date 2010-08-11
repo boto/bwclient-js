@@ -35,12 +35,13 @@ botoweb.ui = {
 	 * Shows a modal jQuery dialog which the user must close to continue.
 	 */
 	alert: function(msg, title, callback) {
-		$('<div/>')
+		return $('<div/>')
 			.attr('id', 'bw-alert')
 			.html(msg)
 			.dialog({
 				modal: true,
 				dialogClass: 'alert',
+				width: 'auto',
 				title: title || 'Alert',
 				zIndex: 99999,
 				buttons: {
