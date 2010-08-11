@@ -96,11 +96,18 @@ botoweb.Property = function(name, type, perm, model, opt) {
 	this.format_val = function (data) {
 		if ('val' in data && data.val !== null && data.val !== undefined){
 			var retval =  data.val.toString();
+			// Attempt to trim off any leading/trailing whitespaces
+			// If this causes issues, just ignore that and move on
+			try{
+				retval = retval.trim();
+			} catch(e){}
 
 			// Handle Email Addresses
-			if(retval.match("^[a-zA-Z\.0-9_\+\-]*@[a-zA-Z\.0-9\-]*$")){
+			if(/^[a-zA-Z\.0-9_\+\-]*@[a-zA-Z\.0-9\-]*$/.test(retval)){
 				var href = botoweb.env.cfg.format.email_href(retval, this, this.obj);
 				retval = "<a href='"+href+"' target='_blank'>"+retval+"</a>";
+			} else if (/^(feed|ftps|sftp|ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/.test(retval)){
+				retval = "<a href='"+retval+"' target='_blank'>"+retval+"</a>";
 			}
 			return retval;
 		}
