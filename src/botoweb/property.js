@@ -93,9 +93,15 @@ botoweb.Property = function(name, type, perm, model, opt) {
 		}
 	};
 
-	this.format_val = function (data) {
+	this.format_val = function (data, opt) {
 		if ('val' in data && data.val !== null && data.val !== undefined){
 			var retval =  data.val.toString();
+
+			// No HTML parsing should be done on raw data
+			if (opt.sql) {
+				return retval;
+			}
+
 			// Attempt to trim off any leading/trailing whitespaces
 			// If this causes issues, just ignore that and move on
 			try{
