@@ -123,12 +123,12 @@ $forms.Field = function (prop, opt) {
 		// important for lists where their immediate parent may just be a <ul>.
 		// We want to attach the event to the deepest parent that only contains
 		// this property.
-		if (this.node.parents('.row').find('.property').length == 1)
+		if (this.node.parents('.row').find($ui.markup.sel.attribute + ',' + $ui.markup.sel._attribute).length == 1)
 			this.node.parents('.row').dblclick(edit)
 
 		// Otherwise check the immediate parent, useful for attributes not in an
 		// attributeList
-		else if (this.node.parent().find('.property').length == 1)
+		else if (this.node.parent().find($ui.markup.sel.attribute + ',' + $ui.markup.sel._attribute).length == 1)
 			this.node.parent().dblclick(edit)
 
 		this.opt.node.dblclick(edit);
