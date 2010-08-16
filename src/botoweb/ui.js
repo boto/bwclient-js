@@ -110,8 +110,7 @@ botoweb.ui = {
 
 		var $styles = botoweb.env.cfg.styles;
 
-		var button = $('<button/>')
-			.attr('type', opt.type || 'button')
+		var button = $('<button type="' + (opt.type || 'button') + '"/>')
 			.addClass($styles.button + ' bw_button' + ((opt.mini) ? ' mini' : ''))
 			.html(text);
 
