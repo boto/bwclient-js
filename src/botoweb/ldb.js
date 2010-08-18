@@ -46,10 +46,42 @@ botoweb.ldb = {
 
 			botoweb.ldb.dbh = db = window.openDatabase(
 				botoweb.ldb.name,
-				version,
+				"",
 				botoweb.ldb.title,
 				est_size
 			);
+			if(db.version != version){
+				if(!db.changeVersion){
+					alert("ERROR: Your database is outdated and I can't upgrade it\nPlease remove your local DB manually and restart your browser");
+				} else {
+					alert("ERROR: Your database is outdated, attempting to update now");
+					try{
+						db.changeVersion(db.version, version, function(transaction){
+							transaction.executeSql("select name from sqlite_master where type = ? ", ['table'], function(txn, results){
+								for(var x=0; x< results.rows.length;  x++){
+									var tbl_name = results.rows.item(x);
+									if(tbl_name.name[0] != "_"){
+										console.log("DROP TABLE " + tbl_name.name);
+										txn.executeSql("DROP TABLE " + tbl_name.name, [], function(t, r){
+											console.log("OK");
+										});
+									}
+								}
+							}, function(){
+								// Failure
+								alert("Changing Versions Failed!\nPlease remove your local DB manually and restart your browser");
+								return;
+							}, function(){
+								// Success
+								alert("Local DB successfully upgraded");
+							});
+						});
+					} catch(e) {
+						alert("Changing Versions Failed!\nPlease remove your local DB manually and restart your browser");
+						return;
+					}
+				}
+			}
 		}
 
 		// If the database does not open, try up to 10 times
