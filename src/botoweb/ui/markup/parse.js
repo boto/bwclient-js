@@ -113,6 +113,10 @@
 			$markup.find(block.node, 'action', function(val, prop) {
 				matches = true;
 
+				this.bind('onsubmit', function (event) {
+					return false;
+				});
+
 				var model = this.attr($markup.prop.model);
 
 				if (model)
@@ -221,7 +225,7 @@
 					// Special cases
 					if (val == 'id')
 						return $markup.set_html(this, block.obj.id);
-					else if (val == 'model')
+					else if (val == 'model' && block.obj)
 						return $markup.set_html(this, block.obj.model.name);
 
 					// If the property is not supported, empty the container to
