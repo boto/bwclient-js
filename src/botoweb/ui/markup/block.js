@@ -128,6 +128,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 
 				if (self.opt.root) {
 					function update () {
+						$(botoweb.ui.forms).triggerHandler('save_complete.global', [obj, true]);
+
 						// Data may not be updated immediately
 						setTimeout(function () {
 							if (fnc && fnc(obj) === false)
@@ -166,6 +168,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 				self.saved = true;
 
 				var onsave = function () {
+					$(botoweb.ui.forms).triggerHandler('save_complete.global', [obj, true]);
+
 					// Allow the callback to block the redirection
 					if (fnc && fnc(obj) === false)
 						return;
