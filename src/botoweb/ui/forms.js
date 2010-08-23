@@ -867,7 +867,7 @@ $forms.File = function () {
 				selections.before($('<br class="clear"/>'));
 			}, 10);
 
-			$($forms).bind('save_complete.' + this.id, function (e, obj, fnc) {
+			$($forms).bind('save_complete.' + this.id, function (event, obj, fnc) {
 				if (!self.editing || !upload._input || !upload._input.value)
 					return;
 
