@@ -641,6 +641,7 @@
 										// provided data regardless of whether it
 										// matches the current value or not).
 										botoweb.Object.update(block.model, block.obj_id, data, function () {
+											$($forms).triggerHandler('save_complete.global', [null, true]);
 											botoweb.ui.overlay.hide();
 											botoweb.ui.page.refresh()
 										}, { force: true });
