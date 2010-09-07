@@ -44,12 +44,23 @@ botoweb.ldb = {
 			var est_size = Math.round(botoweb.ldb.size_mb * 1024 * 1024);
 			var version = botoweb.ldb.version.split(" ")[0];
 
-			botoweb.ldb.dbh = db = window.openDatabase(
-				botoweb.ldb.name,
-				"",
-				botoweb.ldb.title,
-				est_size
-			);
+			var db = null;
+			try{
+				db = window.openDatabase(
+					botoweb.ldb.name,
+					version,
+					botoweb.ldb.title,
+					est_size
+				);
+			} catch(e){
+				db = window.openDatabase(
+					botoweb.ldb.name,
+					"",
+					botoweb.ldb.title,
+					est_size
+				);
+			}
+			botoweb.ldb.dbh = db
 			if(db.version != version){
 				if(!db.changeVersion){
 					alert("ERROR: Your database is outdated and I can't upgrade it\nPlease remove your local DB manually and restart your browser");
@@ -77,6 +88,7 @@ botoweb.ldb = {
 							});
 						});
 					} catch(e) {
+						console.error(e);
 						alert("Changing Versions Failed!\nPlease remove your local DB manually and restart your browser");
 						return;
 					}
