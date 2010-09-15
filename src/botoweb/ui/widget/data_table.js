@@ -352,6 +352,8 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 			return $(node).find('> td').map(function() {
 				if (this.innerHTML.indexOf('<!-- DATA ') < 0)
 					return $util.sortable_string($(this).text()) + this.innerHTML.replace('\n',' ');
+				else
+					return this.innerHTML.replace(/^([\s\S]*)(<!-- DATA [\s\S]*?-->)([\s\S]*)$/, '$2$1$3');
 
 				return this.innerHTML.replace('\n',' ');
 			});
