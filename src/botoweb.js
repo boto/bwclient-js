@@ -108,10 +108,17 @@ var botoweb = {
 				name = '"' + name + '"';
 			}
 
+			var value_to_json = function (v) {
+				if (v === null)
+					return 'null';
+				else
+					return '"' + v + '"';
+			}
+
 			if(value.constructor.toString().indexOf("Array") != -1){
-				parts.push('[' + name + ',"' + op + '",["' + value.join('","') + '"]]');
+				parts.push('[' + name + ',"' + op + '",[' + $.map(value, value_to_json).join(',') + ']]');
 			} else {
-				parts.push('[' + name + ',"' + op + '","' + value + '"]');
+				parts.push('[' + name + ',"' + op + '",' + value_to_json(value) + ']');
 			}
 		}
 
