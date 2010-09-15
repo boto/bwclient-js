@@ -119,16 +119,35 @@ $forms.Field = function (prop, opt) {
 			return false;
 		}
 
+		var seen_attrs = {};
+
+		// Look for any different attributes in non-immediate row parent
+		var sib_attrs = this.node.parents('.row').find($ui.markup.sel.attribute + ',' + $ui.markup.sel._attribute);
+
+		// Look for any different attributes in immediate parent
+		if (sib_attrs.length == 0)
+			sib_attrs = this.node.parent().find($ui.markup.sel.attribute + ',' + $ui.markup.sel._attribute);
+
+		// Same attribute can be ignored (due to duplication in lists)
+		sib_attrs = $.grep(sib_attrs, function (item) {
+			var prop = $(item).attr($ui.markup.prop._attribute) || $(item).attr($ui.markup.prop.attribute);
+			if (prop in seen_attrs)
+				return;
+
+			seen_attrs[prop] = true;
+			return prop;
+		});
+
 		// In an attributeList, each property is in a row class. This check is
 		// important for lists where their immediate parent may just be a <ul>.
 		// We want to attach the event to the deepest parent that only contains
 		// this property.
-		if (this.node.parents('.row').find($ui.markup.sel.attribute + ',' + $ui.markup.sel._attribute).length == 1)
-			this.node.parents('.row').dblclick(edit)
+		if (sib_attrs.length == 1)
+			this.node.parents('.row').dblclick(edit);
 
 		// Otherwise check the immediate parent, useful for attributes not in an
 		// attributeList
-		else if (this.node.parent().find($ui.markup.sel.attribute + ',' + $ui.markup.sel._attribute).length == 1)
+		else if (sib_attrs.length == 1)
 			this.node.parent().dblclick(edit)
 
 		this.opt.node.dblclick(edit);
@@ -189,8 +208,8 @@ $forms.Field = function (prop, opt) {
 			node.hide();
 			setTimeout(function () {
 				if (sortable) {
-					field.css('width', self.node.width() - 42);
-					$ui.sort_icons(self.node.find('ul'));
+					field.css('width', self.node.width() - 44);
+					$ui.sort_icons(self.node.find('ul,ol'));
 				}
 				else
 					field.css('width', self.node.width() - 30);
@@ -201,7 +220,7 @@ $forms.Field = function (prop, opt) {
 			field.addClass('al');
 
 			if (sortable) {
-				this.node.find('ul').append(node);
+				this.node.find('ul,ol').append(node);
 				field.before($('<span class="ui-icon"/>'));
 			}
 			else
@@ -218,7 +237,7 @@ $forms.Field = function (prop, opt) {
 							node.remove();
 
 							if (sortable)
-								$ui.sort_icons(self.node.find('ul'));
+								$ui.sort_icons(self.node.find('ul,ol'));
 						}, 50);
 					}),
 				$('<br class="clear"/>')
@@ -276,7 +295,7 @@ $forms.Field = function (prop, opt) {
 		this.fields = [];
 
 		if (this.prop.is_type('list') && this.opt.allow_list)
-			this.node.append($ui.sortable($('<ul class="clear"/>')));
+			this.node.append($ui.sortable($('<ol class="plain clear"/>')));
 
 		this.set_values();
 

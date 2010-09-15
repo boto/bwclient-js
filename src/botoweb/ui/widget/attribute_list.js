@@ -94,6 +94,11 @@ botoweb.ui.widget.AttributeList = function(node, model) {
 
 		if (template.length)
 			container.append(template.clone());
+		else if (props.meta.list) {
+			container.append(
+				$('<ol class="plain"/>').append($('<li/>').attr(botoweb.ui.markup.prop.attribute, props.meta.name + follow))
+			);
+		}
 		else
 			container.attr(botoweb.ui.markup.prop.attribute, props.meta.name + follow);
 

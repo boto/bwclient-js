@@ -384,6 +384,8 @@
 											$.each(items.reverse(), function (i) {
 												node.after(node.clone().html('' + this + ((i > 0) ? '<span class="hidden">; </span>' : '')).show());
 											});
+
+											node.next().addClass('first-value');
 										}
 										else {
 											var str = p.toString();
