@@ -294,8 +294,16 @@ $forms.Field = function (prop, opt) {
 		this.editing = true;
 		this.fields = [];
 
-		if (this.prop.is_type('list') && this.opt.allow_list)
-			this.node.append($ui.sortable($('<ol class="plain clear"/>')));
+		// Nest the list editing fields in the proper list element. Ordered lists
+		// may be handled differently.
+		if (this.prop.is_type('list') && this.opt.allow_list) {
+			var list_type = 'ul';
+
+			if (this.opt.node && this.opt.node.parent() && this.opt.node.parent().is('ol'))
+				list_type = 'ol'
+
+			this.node.append($ui.sortable($('<' + list_type + ' class="plain clear"/>')));
+		}
 
 		this.set_values();
 
