@@ -115,7 +115,7 @@ var botoweb = {
 					return '"' + v + '"';
 			}
 
-			if(value.constructor.toString().indexOf("Array") != -1){
+			if(value && value.constructor.toString().indexOf("Array") != -1){
 				parts.push('[' + name + ',"' + op + '",[' + $.map(value, value_to_json).join(',') + ']]');
 			} else {
 				parts.push('[' + name + ',"' + op + '",' + value_to_json(value) + ']');
