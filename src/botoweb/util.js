@@ -217,8 +217,8 @@ $util.format = function (format, value, opt) {
 	var formatter = $util.formats[format];
 
 	if (!formatter) {
-		console.error('Formatter for ' + format + ' does not exist. Please add it to botoweb.util.formats');
-		return;
+		console.warn('Formatter for ' + format + ' does not exist. Please add it to botoweb.util.formats');
+		return value;
 	}
 
 	if (opt.node) {

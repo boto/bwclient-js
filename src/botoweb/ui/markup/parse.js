@@ -413,7 +413,12 @@
 						}
 
 						else if (block.obj && prop.is_type('blob')) {
-							$markup.set_html(node, botoweb.util.html_format(prop.toString()));
+							var str = prop.toString();
+
+							if (node.attr($markup.prop.format) != 'html')
+								str = botoweb.util.html_format(str);
+
+							$markup.set_html(node, str);
 						}
 
 						// Special tabular display of mappings
