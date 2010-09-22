@@ -171,14 +171,19 @@
 				botoweb.ui.button('Create ' + model.name, { icon: 'ui-icon-disk' })
 					.click(function (e) {
 						e.preventDefault();
-
-						b.save(function (obj) {
+						var onsave = function (obj) {
 							setTimeout(function () {
 								botoweb.ui.page.refresh()
 							}, 500);
 
 							return false;
-						});
+						};
+
+						// onsave function will interrupt the redirection
+						if (block.opt.redirect_on_save)
+							onsave = undefined;
+
+						b.save(onsave);
 
 						return false;
 					})
