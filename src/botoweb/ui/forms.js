@@ -31,7 +31,7 @@ $forms.prop_field = function (prop, opt) {
 		}
 	}
 
-	if (prop.is_type('text') || prop.meta.maxlength > 1024)
+	if (prop.is_type('text') || prop.meta.max_length > 1024)
 		return new $forms.File(prop, opt); // will show textarea w/ upload toggle
 	else if (prop.meta.choices)
 		return new $forms.Dropdown(prop, opt);
@@ -63,6 +63,16 @@ $forms.Field = function (prop, opt) {
 
 	this.node = $('<div class="prop_editor"/>').hide();
 
+	this.opt = $.extend(true, {
+		allow_list: true,
+		html: {
+			tagName: 'input',
+			attr: {}
+		},
+		choices: [],
+		type: 'string'
+	}, opt);
+
 	if (prop) {
 		this.prop = prop;
 		this.obj_id = prop.obj_id;
@@ -74,17 +84,10 @@ $forms.Field = function (prop, opt) {
 		// Lists are a special prop which can be of any type
 		if (prop.is_type('list'))
 			this.node.addClass('prop_type_list');
-	}
 
-	this.opt = $.extend(true, {
-		allow_list: true,
-		html: {
-			tagName: 'input',
-			attr: {}
-		},
-		choices: [],
-		type: 'string'
-	}, opt);
+		if (prop.meta.max_length)
+			this.opt.html.attr.maxlength = prop.meta.max_length;
+	}
 
 	this.template = this.opt.template;
 	this.fields = [];
