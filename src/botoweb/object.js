@@ -226,7 +226,7 @@ botoweb.Object = function(id, model, data, opt) {
 			}]);
 
 			botoweb.save(
-				botoweb.util.url_join(botoweb.env.base_url, self.model.href, ((is_new) ? null : self.id)),
+				botoweb.util.url_join(botoweb.env.base_url, self.model.href, ((self.id) ? self.id : null)),
 				self.model.name, changed, method, fnc
 			);
 		}
