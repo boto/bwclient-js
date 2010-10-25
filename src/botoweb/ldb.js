@@ -42,7 +42,10 @@ botoweb.ldb = {
 				return ready();
 
 			var est_size = Math.round(botoweb.ldb.size_mb * 1024 * 1024);
-			var version = botoweb.ldb.version.split(" ")[0];
+			var version = null;
+			if(botoweb.ldb.version){
+				version = botoweb.ldb.version.split(" ")[0];
+			}
 
 			var db = null;
 			try{
