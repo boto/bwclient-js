@@ -198,7 +198,7 @@ $forms.Field = function (prop, opt) {
 			.addClass('edit_field');
 
 		// Picklist has its own list handling
-		if (!(this instanceof $forms.Picklist) && (this.opt.allow_multiple || this.prop && this.prop.is_type('list') && this.opt.allow_list)) {
+		if (this.opt.allow_multiple || this.prop && this.prop.is_type('list') && this.opt.allow_list) {
 			var sortable = this.prop && this.prop.is_type('list');
 
 			var node;
@@ -1167,7 +1167,7 @@ $forms.Picklist = function () {
 		var new_field = false;
 
 		if (!field.length) {
-			field = $('<div class="ui-picklist"><div class="selections"></div><div class="search clear"></div></div>');
+			field = $('<div class="ui-picklist"><ol class="selections"></ol><div class="search clear"></div></div>');
 			new_field = true;
 		}
 
@@ -1198,6 +1198,10 @@ $forms.Picklist = function () {
 		var autohide;
 		var prev_value;
 		var focused = false;
+		var sortable = this.opt.node.is('ol');
+
+		if (sortable)
+			$ui.sortable(selections);
 
 		var search_box = field.find('.search input');
 
@@ -1274,7 +1278,7 @@ $forms.Picklist = function () {
 
 				if (obj && obj.model) {
 					selections.append(
-						$('<div class="selection clear"/>')
+						$('<li class="sortable_item selection clear"/>')
 							.attr('id', obj.id)
 							.attr($ui.markup.prop.model, obj.model.name)
 							.html(' ' + botoweb.env.cfg.format.picklist_result(obj.data.name.toString(), obj))
@@ -1288,7 +1292,11 @@ $forms.Picklist = function () {
 											template_field.remove();
 									})
 							)
+							.prepend((sortable) ? $('<span class="ui-icon"/>') : null)
 					);
+
+					if (sortable)
+						$ui.sort_icons(selections);
 				}
 			}
 
