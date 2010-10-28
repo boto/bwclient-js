@@ -494,14 +494,24 @@
 							// Ensure the template is nested in a single parent
 							contents = $('<div/>').append(contents);
 
+
 							// In order to have a template, a propert must be either
 							// a reference or query, and it must have at least one
 							// editable attribute or attrbuteList.
-							if (prop.is_type('reference','query') &&
-								(contents.find($markup.sel.attribute_list).length ||
-								contents.find($markup.sel.attribute).length > 1)
-							) {
-								opt.template = contents;
+							if (prop.is_type('reference','query')) {
+								var edit_template = contents.find($markup.sel.edit_template);
+								if (edit_template.length) {
+									opt.template = edit_template.remove();
+								}
+								// Explicit view template with no edit template
+								// means that the default edit template should
+								// be blocked;
+								else if (contents.find($markup.sel.view_template).length) {
+								}
+								else if (contents.find($markup.sel.attribute_list).length ||
+									contents.find($markup.sel.attribute).length > 1) {
+									opt.template = contents;
+								}
 							}
 
 							if (block.obj && val in block.obj.data)

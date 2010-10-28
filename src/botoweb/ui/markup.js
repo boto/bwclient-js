@@ -50,6 +50,7 @@ botoweb.ui.markup = new function () {
 		'date_time':      '*[bwWidget=dateTime]',
 		'editable':       '*[bwEditable]',
 		'editing_tools':  '*[bwWidget=editingTools]',
+		'edit_template':  '.bwEditTemplate',
 		'existing_only':  '*[bwExistingOnly]',
 		'header':         'header,div.header',
 		'ignore':         '*[bwWidget=ignore]',
@@ -65,6 +66,7 @@ botoweb.ui.markup = new function () {
 		'template':       '*[bwTemplate]',
 		'trigger':        '*[bwTrigger]',
 		'use_context':    '*[bwUseContext]',
+		'view_template':  '.bwViewTemplate',
 		'widget':         '*[bwWidget]'
 	};
 
