@@ -109,7 +109,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			} catch(e){}
 
 			// Handle Email Addresses
-			if(/^[a-zA-Z\.0-9_\+\-]*@[a-zA-Z\.0-9\-]*$/.test(retval)){
+			if(/^[a-zA-Z\.0-9_\+\-]+@[a-zA-Z\.0-9\-]*$/.test(retval)){
 				var href = botoweb.env.cfg.format.email_href(retval, this, this.obj);
 				retval = "<a href='"+href+"' target='_blank'>"+retval+"</a>";
 			} else if (/^(feed|ftps|sftp|ftp|http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?$/.test(retval)){
