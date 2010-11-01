@@ -1198,7 +1198,7 @@ $forms.Picklist = function () {
 		var autohide;
 		var prev_value;
 		var focused = false;
-		var sortable = this.opt.node.is('ol');
+		var sortable = this.opt.node && this.opt.node.is('ol');
 
 		if (sortable)
 			$ui.sortable(selections);
