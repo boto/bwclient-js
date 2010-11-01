@@ -226,7 +226,7 @@ $util.format = function (format, value, opt) {
 		n.addClass('format-' + format);
 
 		// Use the original value for sorting
-		if (n.html().indexOf('<!-- DATA') < 0) {
+		if (n.html().indexOf('bwSortHint') < 0) {
 			prefix = $util.sortable_string(value);
 		}
 	}
@@ -349,7 +349,7 @@ $util.sortable_string = function (str) {
 		str = '' + str;
 
 	// Remove non sortable characters, any leading spaces, and any duplicated spaces
-	return '<!-- DATA ' + str.toLowerCase().replace($util.re.non_sortable, '').replace(/^ +/, '').replace(/ {2,}/, ' ') + ' -->';
+	return '<span class="hidden" title="bwSortHint ' + str.toLowerCase().replace($util.re.non_sortable, '').replace(/^ +/, '').replace(/ {2,}/, ' ') + '"></span>';
 };
 
 $util.uuid = function () {

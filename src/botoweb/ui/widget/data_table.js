@@ -350,10 +350,10 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 		// easy data sorting.
 		function stringify (node) {
 			return $(node).find('> td').map(function() {
-				if (this.innerHTML.indexOf('<!-- DATA ') < 0)
+				if (this.innerHTML.indexOf('bwSortHint') < 0)
 					return $util.sortable_string($(this).text()) + this.innerHTML.replace('\n',' ');
 				else
-					return this.innerHTML.replace(/^([\s\S]*)(<!-- DATA [\s\S]*?-->)([\s\S]*)$/, '$2$1$3');
+					return this.innerHTML.replace(/^([\s\S]*)(<[^>]*bwSortHint[^>]*><\/[^>]*>)([\s\S]*)$/i, '$2$1$3');
 
 				return this.innerHTML.replace('\n',' ');
 			});
@@ -424,8 +424,8 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 };
 
 $dt.extract_data = function (str) {
-	if (str.indexOf('<!-- DATA') >= 0) {
-		/<!-- DATA\s*(.*?)\s*-->/.test(str);
+	if (str.indexOf('bwSortHint') >= 0) {
+		/bwSortHint ([^"']*)/i.test(str);
 		return RegExp.$1 || '';
 	}
 	else
