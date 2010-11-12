@@ -11,6 +11,8 @@ var $ui = botoweb.ui;
 var $forms = $ui.forms;
 var $ldb = botoweb.ldb;
 
+$forms.inputs = {};
+
 $forms.prop_field = function (prop, opt) {
 	opt = opt || {};
 
