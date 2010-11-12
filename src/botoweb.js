@@ -380,3 +380,15 @@ try {
 	};
 }
 
+
+// a jQuery .each enhancement, make $.each(null... work
+try{
+	jqEach = jQuery.each;
+	jQuery.each = function( object, callback, args ) {
+		if(object == null){
+			console.error("Null Object");
+			return;
+		}
+		return jqEach(object, callback, args);
+	}
+} catch (e){}
