@@ -30,7 +30,7 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 	self.search_results = $ui.nodes.search_results;
 	self.allow_multiple = false;
 	self.template = null;
-	self.onSelect = onSelect || function(){}
+	self.onSelect = onSelect || function(){};
 
 	var field = self.node.find('.ui-picklist');
 	var new_field = false;
@@ -163,7 +163,10 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 	}
 
 	function do_search() {
-		self.model.query([['name', 'like', '%' + self.search_box.val() + '%'],['name','sort','asc']], function (objs) {
+		var filterQuery = self.filters || [];
+		filterQuery.push(['name', 'like', '%' + self.search_box.val() + '%']);
+		filterQuery.push(['name','sort','asc']);
+		self.model.query(filterQuery, function (objs) {
 			self.search_results.hide();
 			selecting = true;
 
