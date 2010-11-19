@@ -31,6 +31,7 @@ $forms.prop_field = function (prop, opt) {
 			case 'valuemap': return new $forms.ValueMap(prop, opt);
 			case 'mapping': return new $forms.Mapping(prop, opt);
 			case 'color': return new $forms.ColorPicker(prop, opt);
+			case 'icon': return new $forms.IconPicker(prop, opt);
 		}
 	}
 
@@ -1560,6 +1561,46 @@ $forms.ColorPicker = function(){
 		});
 		return field;
 	}
+}
+/**
+ * IconPicker
+ */
+$forms.IconPicker = function(){
+	$forms.Field.apply(this, arguments);
+	var self = this;
+	console.log("Icon Picker");
+	console.log(self.node);
+
+	this.build_field = function (value, opt) {
+		if (value)
+			value = $util.html_unescape(value.val);
+		else
+			value = '';
+		var field = null;
+		if(bwIcons !== undefined){
+			field = $('<select/>');
+			for(iconNum in bwIcons){
+				var icon = bwIcons[iconNum];
+				var option = $("<option>");
+				option.text(icon);
+				option.attr('value', "icon://" + icon);
+				field.append(option);
+			}
+			field.data('get_val', function () {
+				return field.val();
+			});
+		} else {
+			// If they haven't set the bwIcons property,
+			// just revert to a text field
+			field = $('<input type="text"/>');
+			field.val(value);
+			field.data('get_val', function () {
+				return field.val();
+			});
+		}
+		return field;
+	}
+	
 }
 
 /**

@@ -305,6 +305,13 @@ $util.formats = {
 				.replace(/  /g, ' &nbsp;')
 				.replace(/\r?\n/g, '<br />');
 		}
+	},
+
+	"icon": {
+		type: "string",
+		fnc: function(text){
+			return '<img title="' + text + '" src="' + bwIconPath + text.replace("icon://","") + bwIconExt + '"/>';
+		}
 	}
 };
 
