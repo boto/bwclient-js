@@ -30,6 +30,7 @@ $forms.prop_field = function (prop, opt) {
 			case 'propertymap': return new $forms.PropertyMap(prop, opt);
 			case 'valuemap': return new $forms.ValueMap(prop, opt);
 			case 'mapping': return new $forms.Mapping(prop, opt);
+			case 'color': return new $forms.ColorPicker(prop, opt);
 		}
 	}
 
@@ -1536,6 +1537,30 @@ $forms.Picklist = function () {
 		return a_val;
 	};
 };
+
+/**
+ * ColorPicker
+ */
+$forms.ColorPicker = function(){
+	$forms.Field.apply(this, arguments);
+	var self = this;
+
+	this.build_field = function (value, opt) {
+		if (value)
+			value = $util.html_unescape(value.val);
+		else
+			value = '';
+		var field = $('<input type="text"/>');
+		field.val(value);
+		setTimeout(function(){
+			field.jPicker();
+		}, 100);
+		field.data('get_val', function () {
+			return "#" + field.val();
+		});
+		return field;
+	}
+}
 
 /**
  * Remove all non-global events attached to the central forms obj
