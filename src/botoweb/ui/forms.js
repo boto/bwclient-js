@@ -1579,11 +1579,16 @@ $forms.IconPicker = function(){
 		var field = null;
 		if(bwIcons !== undefined){
 			field = $('<select/>');
+			// Add a "null" option
+			field.append($('<option value="">-- No Icon --</option>'));
 			for(iconNum in bwIcons){
 				var icon = bwIcons[iconNum];
 				var option = $("<option>");
 				option.text(icon);
 				option.attr('value', "icon://" + icon);
+				if(value == icon || value == "icon://" + icon){
+					option.attr("selected", "selected");
+				}
 				field.append(option);
 			}
 			field.data('get_val', function () {
