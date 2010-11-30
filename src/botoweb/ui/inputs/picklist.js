@@ -23,38 +23,36 @@ if($forms.inputs == undefined)
 	$forms.inputs = {};
 
 $forms.inputs.Picklist = function (node, model, onSelect) {
-	var self = this;
-	self.model = model;
-	self.node = node;
-	self.search_box = node.find("input");
-	self.search_results = $ui.nodes.search_results;
-	self.allow_multiple = false;
-	self.template = null;
-	self.onSelect = onSelect || function(){};
+	var search_box = node.find("input");
+	var search_results = $ui.nodes.search_results;
+	var allow_multiple = false;
+	var template = null;
+	var onSelect = onSelect || function(){};
+	var filters = null;
 
-	var field = self.node.find('.ui-picklist');
+	var field = node.find('.ui-picklist');
 	var new_field = false;
 
 	if (!field.length) {
 		field = $('<div class="ui-picklist"><ol class="selections"></ol><div class="search clear"></div></div>');
-		self.node.prepend(field);
+		node.prepend(field);
 	}
 
 	// Picklists may be marked as not searchable which means that the user
 	// cannot search for new items to add to the list.
-	if (self.node) {
-		var searchable = self.node.attr($ui.markup.prop.searchable);
+	if (node) {
+		var searchable = node.attr($ui.markup.prop.searchable);
 
 		if (searchable == 'false')
 			field.find('.search, .selections').hide();
 
-		self.filters = self.node.attr($ui.markup.prop.filter);
+		filters = node.attr($ui.markup.prop.filter);
 
-		if (self.filters) {
+		if (filters) {
 			try {
-				self.filters = $util.interpolate(self.filters, self.model);
-				eval('self.filters = ' + self.filters);
-			} catch (e) { console.error('Filter parsing error: ' + self.filters) }
+				filters = $util.interpolate(filters, model);
+				eval('filters = ' + filters);
+			} catch (e) { console.error('Filter parsing error: ' + filters) }
 		}
 	}
 
@@ -74,14 +72,14 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 
 	function navigate_results (e) {
 		if (e.keyCode == 13) {
-			add_selection(self.search_results.find('button.ui-state-highlight').attr('id'));
+			add_selection(search_results.find('button.ui-state-highlight').attr('id'));
 			return;
 		}
 
 		if (e.keyCode != 40 && e.keyCode != 38)
 			return;
 
-		var current = self.search_results.find('button.ui-state-highlight');
+		var current = search_results.find('button.ui-state-highlight');
 
 		var target;
 
@@ -93,8 +91,8 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 		if (target.length) {
 			var position = target.position();
 
-			self.search_results.stop();
-			self.search_results.scrollTo(target, 250, {offset: -60});
+			search_results.stop();
+			search_results.scrollTo(target, 250, {offset: -60});
 
 			current.removeClass('ui-state-highlight');
 		}
@@ -102,11 +100,11 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 
 	function cancel_search (clear_value) {
 		selecting = false;
-		self.search_results.hide();
-		self.search_box.unbind('keyup', navigate_results);
+		search_results.hide();
+		search_box.unbind('keyup', navigate_results);
 
 		if (clear_value)
-			self.search_box.val('');
+			search_box.val('');
 	}
 
 	function add_selection (obj) {
@@ -115,71 +113,83 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 
 		// obj may just be a string ID
 		if (typeof obj == 'string') {
-			self.model.get(obj, add_selection);
+			model.get(obj, add_selection);
 			return;
-		}
-
-		// Don't add if already selected
-		if (selections.find('#' + obj.id).length == 0) {
-			if (!self.allow_multiple) {
-				selections.empty();
-				self.node.find('.editing_template').parent().remove();
-			}
-
-			var template_field;
-			if (self.template) {
-				template_field = self.add_field(obj, { use_template: true });
-			}
-
-			if (obj && obj.model) {
-				selections.append(
-					$('<li class="sortable_item selection clear"/>')
-						.attr('id', obj.id)
-						.attr($ui.markup.prop.model, obj.model.name)
-						.html(' ' + botoweb.env.cfg.format.picklist_result(obj.data.name.toString(), obj))
-						.prepend(
-							$ui.button('', { icon: 'ui-icon-close', no_text: true, mini: true, primary: false })
-								.addClass('ui-state-error')
-								.click(function () {
-									$(this).parent().remove();
-
-									if (template_field)
-										template_field.remove();
-								})
-						)
-						.prepend((sortable) ? $('<span class="ui-icon"/>') : null)
-				);
-
-				if (sortable)
-					$ui.sort_icons(selections);
-			}
 		}
 
 		cancel_search(true);
 
 		// Call the optional callback, don't worry
 		// if it was null we set it to a null function
-		self.onSelect(obj);
+		// If the select returns false (not null), then
+		// we ignore this selection
+		var shouldChoose = onSelect(obj);
+		if(shouldChoose === false){
+		} else {
+			// Don't add if already selected
+			if (selections.find('#' + obj.id).length == 0) {
+				if (!allow_multiple) {
+					selections.empty();
+					node.find('.editing_template').parent().remove();
+				}
+
+				var template_field;
+				if (template) {
+					template_field = add_field(obj, { use_template: true });
+				}
+
+				if (obj && obj.model) {
+					selections.append(
+						$('<li class="sortable_item selection clear"/>')
+							.attr('id', obj.id)
+							.attr($ui.markup.prop.model, obj.model.name)
+							.html(' ' + botoweb.env.cfg.format.picklist_result(obj.data.name.toString(), obj))
+							.prepend(
+								$ui.button('', { icon: 'ui-icon-close', no_text: true, mini: true, primary: false })
+									.addClass('ui-state-error')
+									.click(function () {
+										$(this).parent().remove();
+
+										if (template_field)
+											template_field.remove();
+									})
+							)
+							.prepend((sortable) ? $('<span class="ui-icon"/>') : null)
+					);
+
+					if (sortable)
+						$ui.sort_icons(selections);
+				}
+			}
+		}
+
 	}
 
+	var last_input = null;
 	function do_search() {
-		var filterQuery = self.filters || [];
-		filterQuery.push(['name', 'like', '%' + self.search_box.val() + '%']);
+		last_input = search_box.val();
+		var filterQuery = [];
+		if(filters){
+			for(filternum in filters){
+				filterQuery.push(filters[filternum]);
+			}
+		}
+		filterQuery.push(['name', 'like', '%' + search_box.val() + '%']);
 		filterQuery.push(['name','sort','asc']);
-		self.model.query(filterQuery, function (objs) {
-			self.search_results.hide();
+		model.query(filterQuery, function (objs) {
+			search_results.hide();
 			selecting = true;
 
 			// Reposition the search results
 			var offset = search.offset();
-			var results_offset = self.search_results.offset();
-			var w = self.search_box.width();
-			var h = self.search_box.height();
+			var results_offset = search_results.offset();
+			var w = search_box.width();
+			var h = search_box.height();
 
-			var result_node = self.search_results.find('.search_results').empty();
+			var result_node = search_results.find('.search_results').empty();
 			var items = [];
 
-			self.search_results
+			search_results
 				.unbind('mousedown mouseout')
 				.mousedown(function () {
 					setTimeout(function () {
@@ -187,7 +197,7 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 					}, 100);
 				})
 				.mouseout(function (e) {
-					self.search_box.focus();
+					search_box.focus();
 				});
 
 			if (objs.length == 0) {
@@ -217,12 +227,12 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 				result_node.find('*:first').addClass('ui-state-highlight');
 			}
 
-			self.search_box.keyup(navigate_results);
+			search_box.keyup(navigate_results);
 
 			var new_h = (objs.length || 1) * 20;
 
 			if (results_offset.left != offset.left || results_offset.top != offset.top + h) {
-				self.search_results.css({
+				search_results.css({
 					left: offset.left + 1 + 'px',
 					top: offset.top + h + 1 + 'px',
 					width: w - 4 + 'px',
@@ -232,27 +242,34 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 				if (new_h > 200)
 					result_node.css('padding-right', '15px');
 
-				self.search_results.slideDown(function () {
+				search_results.slideDown(function () {
 					if (new_h > 200)
 						result_node.css('padding-right', '');
 				});
 			}
 
-			self.search_results.show();
+			search_results.show();
 		});
 	}
-	self.search_timeout = null;
+	var search_timeout = null;
 
-	node.find("input").bind("keyup", function(){
-		if(self.search_timeout){
-			clearTimeout(self.search_timeout);
+	node.find("input").bind("keyup", function(e){
+		if(search_timeout){
+			clearTimeout(search_timeout);
 		}
-		// Only do an auto-search if they have entered something
-		if(self.search_box.val()){
-			self.search_timeout = setTimeout(do_search, 1000);
+		// If they hit escape, we want to clear
+		// any search results they may have showing now
+		if (e.keyCode == 27){
+			search_results.hide();
+		} else {
+			// Only do an auto-search if they have entered something
+			// that's greater then 1 character, and not what they previously
+			// searched for
+			var search_val = search_box.val();
+			if(search_val && search_val.length > 1 && search_val != last_input){
+				search_timeout = setTimeout(do_search, 1000);
+			}
 		}
 	});
-	node.find("button").bind("click", function(){
-		do_search();
-	});
+	node.find("button").bind("click", do_search);
 };
