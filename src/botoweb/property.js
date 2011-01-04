@@ -259,7 +259,7 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				function process (objs) {
 					var data = [];
 
-					if (objs.length) {
+					if (objs.length && objs[0] != null) {
 						$.each(objs, function () {
 							data.push({ val: this, id: this.id });
 						});
