@@ -151,7 +151,7 @@ botoweb.ui = {
 			stop: function() {
 				botoweb.ui.sort_icons(node);
 			}
-		}).disableSelection();
+		}); // this causes problems with forms .disableSelection();
 	},
 
 	sort_icons: function(node) {
