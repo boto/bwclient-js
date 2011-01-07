@@ -1518,7 +1518,7 @@ $forms.Picklist = function () {
 		var val = {};
 
 		// Preserve field order according to the DOM
-		this.node.find('> .edit_field').each(function () {
+		this.node.find('> .edit_field, > .sortable_item > .edit_field').each(function () {
 			var field = self.fields[this.id.replace('_' + self.id, '') * 1];
 
 			if (field) {
