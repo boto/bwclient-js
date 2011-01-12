@@ -745,6 +745,10 @@
 								// display the content of the attribute
 								else
 									set_href(botoweb.util.url_join(botoweb.env.base_url, block.model.href, block.obj.id, data));
+							} else {
+								// If it's a property we don't know about, just link to it
+								// as a normal attribute
+								set_href(botoweb.util.url_join(botoweb.env.base_url, block.model.href, block.obj.id, data));
 							}
 							break;
 
