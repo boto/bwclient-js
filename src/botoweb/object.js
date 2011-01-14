@@ -79,20 +79,20 @@ botoweb.Object = function(id, model, data, opt) {
 					}
 					// Load memory cached object
 					else if (model.objs[val.id]) {
-						objs.push(model.objs[val.id]);
+						objs[i] = model.objs[val.id];
 						remaining--;
 					}
 					// Load only cached data by id, make a dummy object
 					else if (opt.dummy_obj && botoweb.ldb) {
 						if (model.dummy_objs[val.id]) {
-							objs.push(model.dummy_objs[val.id]);
+							objs[i] = model.dummy_objs[val.id];
 							remaining--;
 						}
 						else {
 							botoweb.ldb.get_cached_props(model, val.id, function (data) {
 								var obj = new model.instance(data, val.id, { dummy_obj: true });
 								model.dummy_objs[val.id] = obj;
-								objs.push(obj);
+								objs[i] = obj;
 
 								remaining--;
 								if (remaining <= 0)
@@ -103,7 +103,7 @@ botoweb.Object = function(id, model, data, opt) {
 					// Load full object by id
 					else {
 						model.get(val.id, function(o) {
-							objs.push(o);
+							objs[i] = o;
 
 							remaining--;
 							if (remaining <= 0)
@@ -135,6 +135,7 @@ botoweb.Object = function(id, model, data, opt) {
 		var is_new = this.unsaved || !this.id;
 
 		$.each(data, function (name, val) {
+			console.log(name);
 			var model_prop = self.model.prop_map[name];
 
 			if (!model_prop.meta.write)
@@ -211,8 +212,8 @@ botoweb.Object = function(id, model, data, opt) {
 		if (changed_any || is_new) {
 			this.clear_reference_data();
 
-			if (is_new)
-				changed['id'] = [{val:self.id, type:'string'}];
+			//if (is_new)
+				//changed['id'] = [{val:self.id, type:'string'}];
 
 			var method = ((is_new) ? 'POST' : 'PUT');
 
