@@ -39,8 +39,26 @@ botoweb.ui.widget.Search = function(node, block) {
 			self.props = self.model.props;
 			return;
 		}
+		
+		else if (this == '__query__') {
+			var field = new botoweb.ui.forms.Text(self.model.prop_map.name);
+			field.__query__ = 1;
 
-		if (this in self.model.prop_map) {
+			field.edit();
+
+			self.header.append(
+				$('<label class="clear"/>')
+					.text('Raw Query')
+			);
+
+			field.node
+				.appendTo(self.header)
+				.show();
+
+			self.fields.push(field);
+		}
+
+		else if (this in self.model.prop_map) {
 			var prop = self.model.prop_map[this];
 
 			self.props.push(prop);
@@ -79,6 +97,23 @@ botoweb.ui.widget.Search = function(node, block) {
 
 		$.each(self.fields, function(i, field) {
 			var val = field.val();
+			
+			if (field.__query__) {
+				if (!val)
+					return;
+					
+				try {
+					eval('var data = ' + val[0].val);
+					$.each(data, function () {
+						query.push(this);
+					});
+				}
+				catch(e) {
+					console.error(e);
+					alert('Query formatting error');
+				}
+				return;
+			}
 
 			var op = '=';
 			var before = '';
