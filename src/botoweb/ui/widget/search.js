@@ -41,7 +41,7 @@ botoweb.ui.widget.Search = function(node, block) {
 		}
 		
 		else if (this == '__query__') {
-			var field = new botoweb.ui.forms.Text(self.model.prop_map.name);
+			var field = new botoweb.ui.forms.Text(self.model.prop_map.sys_modstamp);
 			field.__query__ = 1;
 
 			field.edit();
