@@ -58,8 +58,17 @@ botoweb.ui.widget.Search = function(node, block) {
 			self.fields.push(field);
 		}
 
-		else if (this in self.model.prop_map) {
-			var prop = self.model.prop_map[this];
+		else {
+			var prop;
+			
+			if (this in self.model.prop_map) {
+				prop = self.model.prop_map[this];
+			}
+			else if (this == '__id__') {
+				prop = new botoweb.Property('__id__', 'string', ['read'], null, {label: 'Item ID'})
+			}
+			else
+				return;
 
 			self.props.push(prop);
 
@@ -94,12 +103,14 @@ botoweb.ui.widget.Search = function(node, block) {
 
 		if (self.def)
 			query = self.def.slice();
+			
+		var hasRawQuery = false;
 
 		$.each(self.fields, function(i, field) {
 			var val = field.val();
 			
 			if (field.__query__) {
-				if (!val)
+				if (!val[0].val)
 					return;
 					
 				try {
@@ -107,6 +118,8 @@ botoweb.ui.widget.Search = function(node, block) {
 					$.each(data, function () {
 						query.push(this);
 					});
+
+					hasRawQuery = true;
 				}
 				catch(e) {
 					console.error(e);
@@ -138,13 +151,27 @@ botoweb.ui.widget.Search = function(node, block) {
 			}
 
 			if (val.length > 1)
-				query.push([field.prop.meta.name, op, $.map(val, function(v) { return before + v.val + after; })]);
-			else if (val.length && val[0].val)
+				query.push([field.prop.meta.name, op, $.map(val, function(v) { 
+					if (v.val.indexOf('%') >= 0)
+						return v.val;
+						
+					return before + v.val + after; 
+				})]);
+			else if (val.length && val[0].val) {
+				if (val[0].val.indexOf('%') >= 0)
+					before = after = '';
+					
 				query.push([field.prop.meta.name, op, before + val[0].val + after]);
+			}
 		});
-
+		
 		self.results.reset();
-
+		
+		// Remove the 1 page limit if the query is now blank
+		if (hasRawQuery) {
+			this.results.limit_pages = 1;
+		}
+		
 		var search_id = self.results.search_id;
 
 		$(botoweb.ui.page).triggerHandler('search_begin', [self.model, query]);

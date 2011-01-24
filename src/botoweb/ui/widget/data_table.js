@@ -416,6 +416,7 @@ var $dt = botoweb.ui.widget.DataTable = function(table, opt) {
 	this.reset = function() {
 		if (this.progressbar) {
 			this.status.empty()
+			delete this.button_stop;
 			this.progressbar = null;
 			this.pending = [];
 		}
