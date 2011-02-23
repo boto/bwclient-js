@@ -291,8 +291,10 @@ botoweb.ldb.sync = {
 	find_local_models: function (fnc) {
 		botoweb.ldb.dbh.transaction(function (txn) {
 			var completed = 0;
+			var total = 0;
 
 			$.each(botoweb.env.models, function (i, model) {
+				total++;
 				txn.executeSql('SELECT 1 FROM ' + botoweb.ldb.model_to_table(model) + ' LIMIT 1', [], function (txn, results) {
 					completed++;
 
@@ -308,14 +310,14 @@ botoweb.ldb.sync = {
 						model.has_local_data = true;
 					}
 
-					if (fnc && completed == botoweb.env.model_names.length)
+					if (fnc && completed == total)
 						fnc();
 				}, function () {
 					completed++;
 
 					model.local = false;
 
-					if (fnc && completed == botoweb.env.model_names.length)
+					if (fnc && completed == total)
 						fnc();
 				})
 			});
