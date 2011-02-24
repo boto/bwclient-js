@@ -474,7 +474,7 @@
 							var str = prop.toString();
 
 							// Add any conditions here where we might want to preserve HTML
-							if (node.attr($markup.prop.format) != 'html' && !prop.is_type('complexType', 's3key'))
+							if (node.attr($markup.prop.format) != 'html' && prop.is_type('blob'))
 								str = botoweb.util.html_format(str);
 															
 							$markup.set_html(node, str || '');
