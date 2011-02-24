@@ -473,7 +473,8 @@
 						else if (block.obj) {
 							var str = prop.toString();
 
-							if (node.attr($markup.prop.format) != 'html')
+							// Add any conditions here where we might want to preserve HTML
+							if (node.attr($markup.prop.format) != 'html' && !prop.is_type('complexType', 's3key'))
 								str = botoweb.util.html_format(str);
 															
 							$markup.set_html(node, str || '');
