@@ -471,7 +471,12 @@
 						}
 
 						else if (block.obj) {
-							$markup.set_html(node, prop.toString() || '');
+							var str = prop.toString();
+
+							if (node.attr($markup.prop.format) != 'html')
+								str = botoweb.util.html_format(str);
+															
+							$markup.set_html(node, str || '');
 						}
 
 						if (editable && prop.meta.write) {

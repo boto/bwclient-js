@@ -472,14 +472,14 @@ $forms.Field = function (prop, opt) {
 			var val = self.prop.meta.def;
 
 			if ('val' in self.opt) {
-				val = self.opt.val;
+				val = self.opt.val.toString();
 			}
 			else if ('def' in self.opt) {
-				val = self.opt.def;
+				val = self.opt.def.toString();
 			}
 
 			if (!$(this).val().length)
-				$(this).val(val);
+				$(this).val(val.replace(/</g, '&lt;'));
 		});
 	}
 
@@ -605,11 +605,12 @@ $forms.Field = function (prop, opt) {
 	 * interfaces.
 	 */
 	this.build_field = function (value) {
+		
 		if (value)
-			value = $util.html_unescape(value.val);
+			value = value.val; //$util.html_unescape(value.val);
 		else
 			value = '';
-
+			
 		if (this.opt.template) {
 			return this.opt.template.clone().addClass('editing_template');
 		}
