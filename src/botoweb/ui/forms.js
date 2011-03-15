@@ -992,7 +992,7 @@ $forms.Mapping = function () {
 		field.before(
 			$('<input type="text" class="clear key al p30"/>')
 				.val(key),
-			$('<span class="al">&nbsp;-&raquo;&nbsp;</span>'));
+			$('<span class="al">&nbsp;&rarr;&nbsp;</span>'));
 	};
 
 	/**
