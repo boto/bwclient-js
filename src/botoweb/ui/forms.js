@@ -987,12 +987,12 @@ $forms.Mapping = function () {
 		if (this.prop.data)
 			key = this.prop.data[index].key
 
-		field.css('width', '30% !important');
+		field.css('width', '50% !important');
 
 		field.before(
 			$('<input type="text" class="clear key al p30"/>')
 				.val(key),
-			$('<span class="al">&nbsp;maps to&nbsp;</span>'));
+			$('<span class="al">&nbsp;-&raquo;&nbsp;</span>'));
 	};
 
 	/**
