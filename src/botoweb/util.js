@@ -141,7 +141,7 @@ $util.interpolate = function (str, data) {
 	if (data instanceof botoweb.Object) {
 		replacement = function (m, key) {
 			if (key in data.data)
-				return data.data[key].toString() || '';
+				return data.data[key].to_sql() || '';
 
 			eval('ret = data.' + key);
 
