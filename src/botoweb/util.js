@@ -133,7 +133,7 @@ $util.interpolate = function (str, data) {
 	if (!str) return str;
 	if (!data) data = {};
 
-	var replacement;
+	var replacement = '';
 
 	data.__user__ = botoweb.env.user;
 	data.__obj__ = botoweb.ui.page.obj || {};
@@ -161,6 +161,8 @@ $util.interpolate = function (str, data) {
 			return ret || '';
 		};
 	}
+	
+	replacement = replacement.replace(/\\/g, "\\").replace(/(['"])/g, "\\$1");
 
 	return str.replace(/\{\{\s*(.*?)\s*\}\}/g, replacement);
 };
