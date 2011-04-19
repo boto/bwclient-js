@@ -162,7 +162,8 @@ $util.interpolate = function (str, data) {
 		};
 	}
 	
-	replacement = replacement.replace(/\\/g, "\\").replace(/(['"])/g, "\\$1");
+	if (replacement && typeof replacement == 'string')
+		replacement = replacement.replace(/\\/g, "\\").replace(/(['"])/g, "\\$1");
 
 	return str.replace(/\{\{\s*(.*?)\s*\}\}/g, replacement);
 };
