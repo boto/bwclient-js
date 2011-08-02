@@ -313,7 +313,7 @@
 										$('<div/>').append(contents).find($markup.sel.attribute).each(function () {
 											var prop_name = $(this).attr($markup.prop.attribute);
 
-											if ($.inArray(prop_name, botoweb.env.cfg.cache_props) < 0) {
+											if ($.inArray(prop_name, botoweb.env.cfg.db.cache_props) < 0) {
 												dummy_obj = false;
 												return false;
 											}
