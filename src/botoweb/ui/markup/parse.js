@@ -307,17 +307,35 @@
 										// the local property cache.
 										var dummy_obj = true;
 
-										// If there are any properties of the object
-										// that we want besides those that are
-										// cached, we have to load the full object
-										$('<div/>').append(contents).find($markup.sel.attribute).each(function () {
+										var test_dummy_eligibility = function () {
 											var prop_name = $(this).attr($markup.prop.attribute);
 
 											if ($.inArray(prop_name, botoweb.env.cfg.db.cache_props) < 0) {
 												dummy_obj = false;
 												return false;
 											}
-										});
+										};
+
+										// If this property is loaded more than once in a table row
+										// we need to check all of the sub-properties that are
+										// referenced in order to determine whether a dummy can be
+										// used. The consequence of not doing this is that one row
+										// may require only a cached property and as such the object
+										// is loaded as a dummy. Other rows needing more data for
+										// the object will have to load it asynchronously. This
+										// /should/ eventually be supported (probably by changing
+										// how the block waiting count works).
+										if (block.node.is('tr')) {
+											block.node
+												.find($markup.sel.attribute + '=' + prop.meta.name)
+												.find($markup.sel.attribute).each(test_dummy_eligibility);
+										}
+										else {
+											// If there are any properties of the object
+											// that we want besides those that are
+											// cached, we have to load the full object
+											$('<div/>').append(contents).find($markup.sel.attribute).each(test_dummy_eligibility);
+										}
 
 										if (dummy_obj) {
 											console.error('USING DUMMY ', block.model.name);
@@ -476,7 +494,7 @@
 							// Add any conditions here where we might want to preserve HTML
 							if (node.attr($markup.prop.format) != 'html' && prop.is_type('blob'))
 								str = botoweb.util.html_format(str);
-															
+
 							$markup.set_html(node, str || '');
 						}
 
