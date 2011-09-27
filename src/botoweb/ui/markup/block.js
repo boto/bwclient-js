@@ -61,6 +61,8 @@ botoweb.ui.markup.Block = function (node, opt) {
 	} catch (e) {}
 
 	if (this.opt.root) {
+		botoweb.ui.markup.root_block = this;
+
 		$(botoweb.ui.page)
 			.bind('change', function (e, loc, new_page) {
 
