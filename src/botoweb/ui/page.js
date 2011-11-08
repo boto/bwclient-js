@@ -227,6 +227,7 @@ botoweb.ui.page = new function() {
 	 * @private
 	 */
 	function store (url, data) {
+		return null;
 		if (typeof localStorage != 'undefined')
 			localStorage.setItem('page_' + url.replace(/\W/g, '_'), data);
 	}
@@ -239,6 +240,7 @@ botoweb.ui.page = new function() {
 	 * @private
 	 */
 	function retrieve (url) {
+		return null;
 		if (typeof localStorage != 'undefined')
 			return localStorage['page_' + url.replace(/\W/g, '_')];
 	}
