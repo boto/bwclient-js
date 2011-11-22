@@ -1010,7 +1010,8 @@ $forms.Mapping = function () {
 			var key = $(this).siblings('input.key').val();
 			var index = this.id.replace(/_.*/, '') * 1;
 
-			val.push({key: key, val: sel, type: 'string'});
+			if (key)
+				val.push({key: key, val: sel, type: 'string'});
 		});
 
 		return val;
