@@ -284,6 +284,16 @@ botoweb.Object = function(id, model, data, opt) {
 		});
 	};
 
+	this.fetchRawProp = function(name, fnc){
+		/*
+		 * Uses ajax to fetch a single attribute's value, calling back
+		 * "fnc" with it's raw form.
+		 */
+		botoweb.ajax.get(botoweb.util.url_join(botoweb.env.base_url, self.model.href, self.id, name), function (data, xhr) {
+			fnc(data, xhr);
+		});
+	}
+
 	this.val = function(prop, fnc, opt) {
 		opt = opt || {};
 		var prop = this.data[prop];

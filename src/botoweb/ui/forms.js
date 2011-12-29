@@ -984,7 +984,7 @@ $forms.Mapping = function () {
 		var index = field.attr('id').replace(/_.*/, '') * 1;
 		var key = '';
 
-		if (this.prop.data)
+		if (this.prop.data && this.prop.data[index])
 			key = this.prop.data[index].key
 
 		field.css('width', '50% !important');
