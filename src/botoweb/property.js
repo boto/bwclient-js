@@ -477,8 +477,18 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			// property, the val property will be null. undefined is used ONLY
 			// when the value has not yet been loaded. If val is null or
 			// anything else, this statement will evaluate to true.
-			if (this.is_loaded())
-				return fnc(this.data, this);
+			if (this.is_loaded()){
+				try {
+					return fnc(this.data, this);
+				} catch(e) {
+					if(e.stack){
+						console.log(e.stack);
+					} else {
+						console.log(e);
+					}
+					return this.data;
+				}
+			}
 
 			// Load the data as defined by its type
 			if (this.load)
