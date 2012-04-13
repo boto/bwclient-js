@@ -308,7 +308,11 @@ botoweb.Property = function(name, type, perm, model, opt) {
 				if (data.val.toString().indexOf('/') >= 0)
 					return data.val.toString();
 
-				return botoweb.util.from_timestamp(data.val.toString());
+				if(data.val instanceof Date){
+					return botoweb.util.from_timestamp(data.val);
+				} else {
+					return botoweb.util.from_timestamp(data.val.toString());
+				}
 			};
 			break;
 		case 'boolean':

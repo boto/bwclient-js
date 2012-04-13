@@ -62,26 +62,30 @@ $util.timestamp = function (d) {
  * @param {String} ts An ISO 8601 timestamp string.
  */
 $util.from_timestamp = function (ts, format) {
-	var t = ts.match(/(\d+)-(\d+)-(\d+)(?:T(\d+):(\d+):(\d+))?/);
+	var date_time = ts;
+	var has_time = true;
+	if(typeof(ts) == 'string'){
+		var t = ts.match(/(\d+)-(\d+)-(\d+)(?:T(\d+):(\d+):(\d+))?/);
 
-	if (!t || t.length < 7)
-		return
+		if (!t || t.length < 7)
+			return
 
-	// String to number
-	for (var i in t)
-		t[i] *= 1;
+		// String to number
+		for (var i in t)
+			t[i] *= 1;
 
-	// If the time is exactly midnight, assume that this is a date with unspecified time
-	var has_time = (t[4] || t[5] || t[6]);
-	var date_time;
+		// If the time is exactly midnight, assume that this is a date with unspecified time
+		has_time = (t[4] || t[5] || t[6]);
 
-	if (has_time)
-		date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3],t[4],t[5],t[6]));
+		if (has_time)
+			date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3],t[4],t[5],t[6]));
 
-	// We use NOON if there is no time because this prevents seeing a different
-	// date after TZ conversion, as would happen if we used MIDNIGHT.
-	else
-		date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3], 12, 0, 0));
+		// We use NOON if there is no time because this prevents seeing a different
+		// date after TZ conversion, as would happen if we used MIDNIGHT.
+		else
+			date_time = new Date(Date.UTC(t[1],t[2] - 1,t[3], 12, 0, 0));
+	}
+
 
 	var time_str;
 
