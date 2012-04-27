@@ -616,7 +616,8 @@
 				// If bwLink starts with a "#" or a "/", then we know it's a special action link
 				// and we just replace any instances of {{id}} with the object id
 				if ( val && (val[0] == '#' | val[0] == '!')){
-					this.attr('href', val.replace('{{id}}', block.obj_id));
+					val = $util.interpolate(val, (block.obj || block.model))
+					this.attr('href', val);
 					return;
 				}
 
