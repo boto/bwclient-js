@@ -612,6 +612,14 @@
 
 				this.removeAttr(prop);
 
+
+				// If bwLink starts with a "#" or a "/", then we know it's a special action link
+				// and we just replace any instances of {{id}} with the object id
+				if ( val && (val[0] == '#' | val[0] == '!')){
+					this.attr('href', val.replace('{{id}}', block.obj_id));
+					return;
+				}
+
 				// Additional data may be included in parens after the link type
 				/()/.test(''); // reset RegExp backrefs
 				val = val.replace(/\((.*?)\)/, '');
