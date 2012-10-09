@@ -512,7 +512,19 @@
 
 							// Force value for the field
 							if (prop.meta.name in block.data) {
-								opt.val = [{val: block.data[prop.meta.name]}];
+								var data = block.data[prop.meta.name];
+
+								// Split array value into an array of {"val":foo}
+								// pairs
+								if ($.isArray(data)) {
+									opt.val = $.map(data, function(value) {
+										return {val:value};
+									});
+								}
+								// Otherwise assign single values directly
+								else {
+									opt.val = [{val: data}];
+								}
 							}
 
 							// Ensure the template is nested in a single parent
