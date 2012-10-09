@@ -144,12 +144,20 @@ $util.interpolate = function (str, data) {
 
 	if (data instanceof botoweb.Object) {
 		replacement = function (m, key) {
-			if (key in data.data)
-				return data.data[key].to_sql() || '';
+			var ret = '';
 
-			eval('ret = data.' + key);
+			if (key in data.data) {
+				ret = data.data[key].to_sql();
+			}
+			else {
+				eval('ret = data.' + key);
 
-			return ret || data[key] || '';
+				ret = ret || data[key];
+			}
+			
+			// Stringify and sanitize
+			ret = '' + ret;
+			return ret.replace(/\\/g, "\\").replace(/(['"])/g, "\\$1");
 		};
 	}
 	else {
@@ -162,7 +170,10 @@ $util.interpolate = function (str, data) {
 		replacement = function (m, key) {
 			var ret;
 			eval('ret = data.' + key);
-			return ret || '';
+
+			// Stringify and sanitize
+			ret = '' + ret;
+			return ret.replace(/\\/g, "\\").replace(/(['"])/g, "\\$1");
 		};
 	}
 	
