@@ -103,40 +103,35 @@ botoweb.Environment = function(base_url, fnc, cfg) {
 	var self = this;
 
 	// Parse API xml to set up environment
-	botoweb.ajax.get(this.base_url, function(xml, xhr){
-		xml = $(xml);
+	botoweb.conn.init(this.base_url);
+
+	botoweb.conn.get('/', function(data){
+		console.log('DESCRIBE');
+		console.log(data);
 
 		// Setup our name
-		self.name = xml.find("Index").attr("name");
+		self.name = data.__name__;
 
 		// Get our version
-		self.version = xml.find("Index").attr("version");
+		self.version = data.__version__;
 		$("#apiversion").text(self.version);
 
 		// Initialize the model names so that references to other models can be
 		// verified while building the Model instances.
-		xml.find('api').each(function () {
-			self.models[$(this).attr('name')] = null;
+		$.each(data.resources, function(x, key){
+			self.models[key] = null;
 		});
 
 		// Set our routes and model APIs
-		xml.find('api').each(function(){
-			var m = botoweb.xml.to_model(this);
+		$.each(data.resources, function(x, key){
+			var m = botoweb.json.to_model(data.resources[key]);
 			self.models[m.name] = m;
 			self.model_names.push(m.name);
 		});
 
 		// Do not allow the user object to be cached - it is a minimal form of
 		// the actual User object so we need to be able
-		self.user = botoweb.xml.to_obj(xml.find('Index > User:first'), { no_cache: true });
-
-		try {
-			// Find the time offset between the server and client computer
-			var server_date = Date.parse(xhr.getResponseHeader('Date'));
-			var client_date = new Date().valueOf();
-
-			self.cfg.time_delta = server_date - client_date;
-		} catch (e) {}
+		self.user = botoweb.json.to_obj(data.User, { no_cache: true });
 
 		if(fnc){ fnc(self); }
 	});
