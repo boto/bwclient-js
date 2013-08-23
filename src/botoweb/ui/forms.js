@@ -1097,6 +1097,7 @@ $forms.Picklist = function () {
 
 	// The form will manage list behavior itself.
 	this.opt.allow_list = false;
+	this.opt.allow_multiple = false;
 
 	this.model = botoweb.env.models[this.prop.meta.item_type];
 
