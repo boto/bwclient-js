@@ -171,12 +171,11 @@ $forms.inputs.Picklist = function (node, model, onSelect) {
 		var filterQuery = [];
 		if(filters){
 			for(filternum in filters){
+				// TODO: Make this convert to a bq
 				filterQuery.push(filters[filternum]);
 			}
 		}
-		filterQuery.push(['name', 'like', '%' + search_box.val() + '%']);
-		filterQuery.push(['name','sort','asc']);
-		model.query(filterQuery, function (objs) {
+		model.find({q: search_box.val()}, function (objs) {
 			search_results.hide();
 			selecting = true;
 

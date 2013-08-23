@@ -1310,7 +1310,7 @@ $forms.Picklist = function () {
 		}
 
 		function do_search() {
-			self.model.query([['name', 'like', '%' + search_box.val() + '%'],['name','sort','asc']], function (objs) {
+			self.model.find({q: search_box.val()}, function (objs) {
 				search_results.hide();
 				selecting = true;
 
