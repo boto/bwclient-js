@@ -107,6 +107,17 @@ botoweb.Property = function(name, type, perm, model, opt) {
 			try{
 				retval = retval.trim();
 			} catch(e){}
+			
+			// If there are options, we must display the Display Name, not just the
+			// raw value
+			if(this.meta.choices){
+				$.each(this.meta.choices, function(){
+					if(this.name && this.value == retval){
+						retval = this.name;
+						return false;
+					}
+				});
+			}
 
 			// Handle Email Addresses
 			if(/^[a-z\.0-9_\+\-]+@[a-z\.0-9-]+\.[a-z]+$/i.test(retval)){
