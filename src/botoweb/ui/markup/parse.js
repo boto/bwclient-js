@@ -83,13 +83,13 @@
 
 				if (node.hasClass('deny-all')) {
 					authorized = false;
-					$(botoweb.env.user.data.auth_groups.toString(true)).each(function() {
+					$(botoweb.env.user.data.auth_groups.toString(true, {sql: true})).each(function() {
 						if (node.hasClass('allow-' + this))
 							authorized = true;
 					});
 				}
 				else {
-					$(botoweb.env.user.data.auth_groups.toString(true)).each(function() {
+					$(botoweb.env.user.data.auth_groups.toString(true, {sql: true})).each(function() {
 						if (node.hasClass('deny-' + this))
 							authorized = false;
 					});
