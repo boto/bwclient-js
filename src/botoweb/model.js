@@ -126,6 +126,22 @@ botoweb.Model = function (name, href, methods, props) {
 		return this.find(query, fnc, $.extend(opt, {op: 'query'}));
 	}
 
+	this.search = function(query, fnc, opt){
+		var filters = {
+			q: query
+		};
+		opt = $.extend({op: 'find'}, opt);
+		$(botoweb).triggerHandler('log', [{
+			method: 'GET',
+			op: opt.op,
+			model: this.name,
+			filters: filters,
+			local: false
+		}]);
+		botoweb[opt.op](botoweb.util.url_join(botoweb.env.base_url, this.href), filters, botoweb.env.model_names.join(','), fnc, opt);
+
+	}
+
 	this.all = function(fnc, opt){
 		return this.find([], fnc, opt);
 	}
