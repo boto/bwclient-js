@@ -127,18 +127,20 @@ botoweb.Model = function (name, href, methods, props) {
 	}
 
 	this.search = function(query, fnc, opt){
-		var filters = {
-			q: query
-		};
+		if(typeof query != 'object'){
+			query = {
+				q: query
+			};
+		}
 		opt = $.extend({op: 'find'}, opt);
 		$(botoweb).triggerHandler('log', [{
 			method: 'GET',
 			op: opt.op,
 			model: this.name,
-			filters: filters,
+			filters: query,
 			local: false
 		}]);
-		botoweb[opt.op](botoweb.util.url_join(botoweb.env.base_url, this.href), filters, botoweb.env.model_names.join(','), fnc, opt);
+		botoweb[opt.op](botoweb.util.url_join(botoweb.env.base_url, this.href), query, botoweb.env.model_names.join(','), fnc, opt);
 
 	}
 
